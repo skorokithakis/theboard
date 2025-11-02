@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}{{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <h1 class="page-title">{{ request.site.name }}</h1>
+        <p class="page-lead"><i>Be careful what you wish for.</i></p>
+    </div>
+</section>
+
+<section class="about-section">
+    <h2>What is {{ request.site.name }}?</h2>
+    <p>{{ request.site.name }} is an open-source feature board web app. You can propose features and vote on them.</p>
+    <p>There's one twist, though: Every night, at midnight UTC, the top-voted feature is automatically implemented, on {{ request.site.name }}. The site vibe-codes itself.</p>
+    <p>What will you make of {{ request.site.name }}? There's only one way to find out.</p>
+</section>
+
+<section class="about-section">
+    <h2>How it works</h2>
+    <ul>
+        <li>Submit a feature request for something you want to see changed on this site.</li>
+        <li>Vote on feature requests.</li>
+        <li>Every day, at midnight UTC, the top-rated feature request will be automatically implemented by AI and deployed to this site.</li>
+        <li>All votes are also wiped at midnight.</li>
+    </ul>
+</section>
+{% endblock %}

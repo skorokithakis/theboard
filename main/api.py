@@ -1,0 +1,484 @@
+"""Django Ninja API configuration and endpoints."""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from django.contrib.auth import authenticate, login, logout
+from django.core.cache import caches
+from django.core.cache.backends.base import InvalidCacheBackendError
+from django.db import connections
+from django.db.models import Count, Prefetch
+from django.db.utils import OperationalError
+from django.http import HttpRequest
+from ninja import NinjaAPI
+from ninja.errors import HttpError
+from ninja.security import SessionAuth
+
+from . import models, schemas, turnstile
+
+FEATURE_DAILY_LIMIT = 1
+logger = logging.getLogger(__name__)
+
+
+def custom_exception_handler(request: HttpRequest, exc: Exception):
+    """Custom exception handler to format errors with 'error' key instead of 'detail'."""
+    from django.http import JsonResponse
+
+    if isinstance(exc, HttpError):
+        return JsonResponse({"error": exc.message}, status=exc.status_code)
+    return None
+
+
+api = NinjaAPI(
+    title="The Board API",
+    version="1.0.0",
+    description="A self-modifying feature board API",
+    docs_url="/docs",
+)
+
+# Register custom exception handler.
+api.exception_handler(HttpError)(custom_exception_handler)
+
+session_auth = SessionAuth(csrf=False)
+
+
+def _user_vote_ids(user: models.User) -> set[int]:
+    """Get set of feature IDs the user has voted for."""
+    if not user.is_authenticated:
+        return set()
+    return set(user.votes.values_list("feature_id", flat=True))
+
+
+def _serialize_user(user: models.User) -> dict[str, Any]:
+    """Convert a user model to a dictionary for schema validation."""
+    return {
+        "id": user.pk,
+        "email": user.email,
+        "display_name": user.display_name,
+        "is_superuser": user.is_superuser,
+    }
+
+
+def _serialize_feature(
+    feature: models.Feature,
+    user_has_voted: bool = False,
+) -> dict[str, Any]:
+    """Convert a feature model to a dictionary for schema validation."""
+    last_vote = feature.votes.order_by("-created_at").first()
+
+    data: dict[str, Any] = {
+        "id": feature.pk,
+        "title": feature.title,
+        "description": feature.description,
+        "created_at": feature.created_at,
+        "creator": _serialize_user(feature.creator),
+        "vote_total": feature.vote_total,
+        "user_has_voted": user_has_voted,
+        "last_upvote_at": last_vote.created_at if last_vote else None,
+    }
+
+    if hasattr(feature, "variation_count"):
+        data["variation_count"] = feature.variation_count
+
+    if feature.parent_id:
+        data["parent"] = {
+            "id": feature.parent.pk,
+            "title": feature.parent.title,
+        }
+    else:
+        data["parent"] = None
+
+    return data
+
+
+def _client_ip(request: HttpRequest) -> str | None:
+    """Extract client IP from request headers."""
+    forwarded = request.META.get("HTTP_CF_CONNECTING_IP") or request.META.get(
+        "HTTP_X_FORWARDED_FOR"
+    )
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")
+
+
+@api.get(
+    "/features", response=schemas.FeaturesListResponse, operation_id="api_features_list"
+)
+def features_list(request: HttpRequest) -> dict[str, Any]:
+    """List all features ordered by popularity."""
+    features_qs = (
+        models.Feature.objects.ordered_by_popularity()
+        .select_related("creator", "parent")
+        .annotate(variation_count=Count("variations", distinct=True))
+    )
+
+    vote_ids = _user_vote_ids(request.user)
+    features = [
+        _serialize_feature(feature, feature.id in vote_ids) for feature in features_qs
+    ]
+
+    can_submit = (
+        request.user.is_authenticated
+        and not models.Feature.user_has_reached_daily_limit(
+            request.user, limit=FEATURE_DAILY_LIMIT
+        )
+    )
+
+    return {
+        "features": features,
+        "can_submit": can_submit,
+        "user": _serialize_user(request.user)
+        if request.user.is_authenticated
+        else None,
+    }
+
+
+@api.post(
+    "/features/create",
+    response={201: schemas.FeatureCreateResponse},
+    auth=session_auth,
+    operation_id="api_feature_create",
+)
+def feature_create(
+    request: HttpRequest, data: schemas.FeatureCreateInput
+) -> tuple[int, dict[str, Any]]:
+    """Create a new feature or variation."""
+    if models.Feature.user_has_reached_daily_limit(
+        request.user, limit=FEATURE_DAILY_LIMIT
+    ):
+        raise HttpError(
+            403,
+            f"Daily submission limit reached: {FEATURE_DAILY_LIMIT}",
+        )
+
+    if turnstile.is_enabled():
+        verification_token = data.turnstile_token or ""
+        verification = turnstile.verify(
+            verification_token,
+            remote_ip=_client_ip(request),
+        )
+
+        if not verification.success:
+            logger.info(
+                "Turnstile verification failed for user=%s errors=%s",
+                request.user.pk,
+                verification.error_codes,
+            )
+            raise HttpError(400, "Verification failed. Please try again.")
+
+    title = data.title.strip()
+    description = data.description.strip()
+
+    if not title or not description:
+        raise HttpError(400, "Title and description are required")
+
+    parent_feature = None
+    if data.parent_id:
+        try:
+            parent_feature = models.Feature.objects.get(pk=data.parent_id)
+        except models.Feature.DoesNotExist as exc:
+            raise HttpError(404, "Parent feature not found") from exc
+
+    feature = models.Feature.objects.create(
+        title=title,
+        description=description,
+        creator=request.user,
+        parent=parent_feature,
+    )
+
+    models.Vote.objects.create(user=request.user, feature=feature)
+
+    vote_ids = _user_vote_ids(request.user)
+    return 201, {
+        "feature": _serialize_feature(feature, feature.id in vote_ids),
+        "message": "Feature created successfully",
+    }
+
+
+@api.get(
+    "/features/{pk}",
+    response=schemas.FeatureDetailResponse,
+    operation_id="api_feature_detail",
+)
+def feature_detail(request: HttpRequest, pk: int) -> dict[str, Any]:
+    """Get a single feature with its variations."""
+    variations_qs = (
+        models.Feature.objects.ordered_by_popularity()
+        .select_related("creator")
+        .annotate(variation_count=Count("variations", distinct=True))
+    )
+
+    try:
+        feature = (
+            models.Feature.objects.ordered_by_popularity()
+            .select_related("creator", "parent")
+            .prefetch_related(Prefetch("variations", queryset=variations_qs))
+            .annotate(variation_count=Count("variations", distinct=True))
+            .get(pk=pk)
+        )
+    except models.Feature.DoesNotExist as exc:
+        raise HttpError(404, "Feature not found") from exc
+
+    vote_ids = _user_vote_ids(request.user)
+    variations = [
+        _serialize_feature(variation, variation.id in vote_ids)
+        for variation in feature.variations.all()
+    ]
+
+    can_submit_variation = (
+        request.user.is_authenticated
+        and not models.Feature.user_has_reached_daily_limit(
+            request.user, limit=FEATURE_DAILY_LIMIT
+        )
+    )
+
+    return {
+        "feature": _serialize_feature(feature, feature.id in vote_ids),
+        "variations": variations,
+        "can_submit_variation": can_submit_variation,
+        "user": _serialize_user(request.user)
+        if request.user.is_authenticated
+        else None,
+    }
+
+
+@api.post(
+    "/features/{pk}/delete",
+    response=schemas.MessageResponse,
+    auth=session_auth,
+    operation_id="api_feature_delete",
+)
+def feature_delete(request: HttpRequest, pk: int) -> dict[str, str]:
+    """Delete a feature (only by its creator)."""
+    try:
+        feature = models.Feature.objects.get(pk=pk)
+    except models.Feature.DoesNotExist as exc:
+        raise HttpError(404, "Feature not found") from exc
+
+    if not (request.user.is_superuser or feature.creator_id == request.user.id):
+        raise HttpError(403, "You do not have permission to delete this feature")
+
+    feature.delete()
+    return {"message": "Feature deleted successfully"}
+
+
+@api.post(
+    "/features/{pk}/vote",
+    response=schemas.VoteToggleResponse,
+    auth=session_auth,
+    operation_id="api_vote_toggle",
+)
+def vote_toggle(
+    request: HttpRequest, pk: int, data: schemas.VoteToggleInput
+) -> dict[str, Any]:
+    """Toggle a vote on a feature (requires Turnstile verification in production)."""
+    try:
+        feature = (
+            models.Feature.objects.select_related("creator")
+            .annotate(total_votes=Count("votes", distinct=True))
+            .get(pk=pk)
+        )
+    except models.Feature.DoesNotExist as exc:
+        raise HttpError(404, "Feature not found") from exc
+
+    if turnstile.is_enabled():
+        verification_token = data.turnstile_token or ""
+        verification = turnstile.verify(
+            verification_token,
+            remote_ip=_client_ip(request),
+        )
+
+        if not verification.success:
+            logger.info(
+                "Turnstile verification failed for user=%s feature=%s errors=%s",
+                request.user.pk,
+                feature.pk,
+                verification.error_codes,
+            )
+            raise HttpError(400, "Verification failed. Please try again.")
+
+    vote, created = models.Vote.objects.get_or_create(
+        feature=feature,
+        user=request.user,
+    )
+    if not created:
+        vote.delete()
+        action = "removed"
+    else:
+        action = "added"
+
+    feature.refresh_from_db(fields=["created_at"])
+    vote_total = feature.votes.count()
+    has_voted = models.Vote.objects.filter(
+        user=request.user,
+        feature=feature,
+    ).exists()
+
+    return {
+        "action": action,
+        "has_voted": has_voted,
+        "vote_total": vote_total,
+    }
+
+
+@api.post("/auth/login", response=schemas.LoginResponse, operation_id="api_login")
+def auth_login(request: HttpRequest, data: schemas.LoginInput) -> dict[str, Any]:
+    """Authenticate a user."""
+    email = data.email.strip()
+    password = data.password.strip()
+
+    if not email or not password:
+        raise HttpError(400, "Email and password are required")
+
+    user = authenticate(request, username=email, password=password)
+    if user is None:
+        raise HttpError(401, "Invalid credentials")
+
+    login(request, user)
+    return {
+        "message": "Login successful",
+        "user": _serialize_user(user),
+    }
+
+
+@api.post("/auth/logout", response=schemas.MessageResponse, operation_id="api_logout")
+def auth_logout(request: HttpRequest) -> dict[str, str]:
+    """Log out the current user."""
+    logout(request)
+    return {"message": "Logout successful"}
+
+
+@api.post(
+    "/auth/signup", response={201: schemas.SignupResponse}, operation_id="api_signup"
+)
+def auth_signup(
+    request: HttpRequest, data: schemas.SignupInput
+) -> tuple[int, dict[str, Any]]:
+    """Register a new user account."""
+    if request.user.is_authenticated:
+        raise HttpError(400, "Already authenticated")
+
+    email = data.email.strip()
+    password = data.password.strip()
+    password_confirm = data.password_confirm.strip()
+
+    if not email or not password:
+        raise HttpError(400, "Email and password are required")
+
+    if password != password_confirm:
+        raise HttpError(400, "Passwords do not match")
+
+    if models.User.objects.filter(email=email).exists():
+        raise HttpError(400, "Email already in use")
+
+    user = models.User.objects.create_user(email=email, password=password)
+    login(request, user)
+    return 201, {
+        "message": "Account created successfully",
+        "user": _serialize_user(user),
+    }
+
+
+@api.get(
+    "/auth/me",
+    response=schemas.CurrentUserResponse,
+    auth=session_auth,
+    operation_id="api_current_user",
+)
+def current_user(request: HttpRequest) -> dict[str, Any]:
+    """Get the current authenticated user."""
+    can_submit = not models.Feature.user_has_reached_daily_limit(
+        request.user, limit=FEATURE_DAILY_LIMIT
+    )
+
+    return {
+        "user": _serialize_user(request.user),
+        "can_submit": can_submit,
+    }
+
+
+@api.get("/top", response=schemas.FeatureDetailResponse, operation_id="api_top")
+def top_feature(request: HttpRequest) -> dict[str, Any]:
+    """Return the highest-rated feature as JSON."""
+    variations_qs = (
+        models.Feature.objects.ordered_by_popularity()
+        .select_related("creator")
+        .annotate(variation_count=Count("variations", distinct=True))
+    )
+
+    feature = (
+        models.Feature.objects.ordered_by_popularity()
+        .select_related("creator", "parent")
+        .prefetch_related(Prefetch("variations", queryset=variations_qs))
+        .annotate(variation_count=Count("variations", distinct=True))
+        .first()
+    )
+    if not feature:
+        raise HttpError(404, "No features available.")
+
+    vote_ids = _user_vote_ids(request.user)
+    variations = [
+        _serialize_feature(variation, variation.id in vote_ids)
+        for variation in feature.variations.all()
+    ]
+
+    can_submit_variation = (
+        request.user.is_authenticated
+        and not models.Feature.user_has_reached_daily_limit(
+            request.user, limit=FEATURE_DAILY_LIMIT
+        )
+    )
+
+    return {
+        "feature": _serialize_feature(feature, feature.id in vote_ids),
+        "variations": variations,
+        "can_submit_variation": can_submit_variation,
+        "user": _serialize_user(request.user)
+        if request.user.is_authenticated
+        else None,
+    }
+
+
+# Health check endpoint (separate from main API, not included in Swagger).
+health_api = NinjaAPI(
+    title="Health Check",
+    version="1.0.0",
+    docs_url=None,
+    urls_namespace="health",
+)
+
+
+@health_api.get("", response=schemas.HealthCheckResponse, operation_id="healthz")
+def healthz(request: HttpRequest) -> tuple[int, dict[str, Any]]:
+    """Health endpoint touching database and cache connections."""
+    status = 200
+    results: dict[str, Any] = {}
+
+    try:
+        connection = connections["default"]
+        with connection.cursor():
+            pass
+        results["database"] = "ok"
+    except OperationalError as exc:
+        results["database"] = "error"
+        results["database_error"] = str(exc)
+        status = 503
+
+    try:
+        cache = caches["default"]
+        cache.set("healthz-ping", "pong", 5)
+        if cache.get("healthz-ping") == "pong":
+            results["cache"] = "ok"
+        else:
+            results["cache"] = "error"
+            status = 503
+    except InvalidCacheBackendError:
+        results["cache"] = "unconfigured"
+    except Exception as exc:
+        results["cache"] = "error"
+        results["cache_error"] = str(exc)
+        status = 503
+
+    return status, results

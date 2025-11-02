@@ -1,0 +1,30 @@
+{
+  "formation": {
+    "web": {
+      "quantity": 1
+    }
+  },
+  "healthchecks": {
+    "web": [
+      {
+        "attempts": 3,
+        "description": "Checking if the app responds to the / endpoint",
+        "name": "web check",
+        "path": "/",
+        "type": "startup"
+      },
+      {
+        "attempts": 3,
+        "description": "Checking app health",
+        "name": "healthz",
+        "path": "/healthz",
+        "type": "startup"
+      }
+    ]
+  },
+  "scripts": {
+    "dokku": {
+      "predeploy": "python /code/manage.py migrate --noinput"
+    }
+  }
+}

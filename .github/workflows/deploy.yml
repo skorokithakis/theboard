@@ -1,0 +1,33 @@
+name: 🚀 Deploy to Dokku
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: 🔐 Setup SSH
+      uses: webfactory/ssh-agent@v0.9.0
+      with:
+        ssh-private-key: ${{ secrets.DOKKU_SSH_KEY }}
+
+    - name: 🔧 Configure SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "Host theboard.stavros.io" >> ~/.ssh/config
+        echo "  Hostname 91.99.120.158" >> ~/.ssh/config
+        echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+        echo "  UserKnownHostsFile=/dev/null" >> ~/.ssh/config
+
+    - name: 🚀 Deploy to Dokku
+      run: |
+        git remote add dokku dokku@theboard.stavros.io:theboard
+        git push dokku main --force

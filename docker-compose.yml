@@ -1,0 +1,51 @@
+services:
+  redis:
+    image: redis
+  db:
+    image: postgres:10
+    user: ${UID:-1000}:${UID:-1000}
+    stop_signal: SIGINT  # Fast shutdown.
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./misc/dbdata:/var/lib/postgresql/data:delegated
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5432 -U postgres"]
+      timeout: 30s
+      interval: 5s
+  web:
+    command: >
+      bash -c "./manage.py migrate;
+
+               while :;
+               do exec ./manage.py runserver_plus 0.0.0.0:8000;
+               done;
+               "
+    image: "web"
+    user: ${UID:-1000}:${UID:-1000}
+    build: .
+    stop_signal: SIGINT  # The devserver only stops on SIGINT.
+    stdin_open: true
+    tty: true
+    volumes:
+      - .:/code:cached
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      IN_DOCKER: 1
+  webserver:
+    image: jumanjiman/caddy
+    depends_on:
+      - web
+    ports:
+      - "80:8000"
+    command: -conf /code/misc/caddyfile.conf
+    volumes:
+      - .:/code:cached

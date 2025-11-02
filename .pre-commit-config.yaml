@@ -1,0 +1,35 @@
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v6.0.0
+  hooks:
+    - id: pretty-format-json
+      exclude: "(package(-lock|)|tsconfig.*)\\.json"
+      args: ["--autofix"]
+    - id: check-json
+      exclude: "(package|tsconfig.*)\\.json"
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.14.3
+  hooks:
+    - id: ruff-check
+    - id: ruff-format
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.18.2
+  hooks:
+  - id: mypy
+    name: Run MyPy typing checks.
+    args: ["--ignore-missing-imports", "--install-types", "--non-interactive"]
+- repo: local
+  hooks:
+    - id: migrations-check
+      language: system
+      name: Check for uncreated migrations.
+      entry: bash -c "uv run ./manage.py makemigrations --check --dry-run"
+      types: ["python"]
+      pass_filenames: false
+
+    - id: django-tests
+      language: system
+      name: Django tests
+      entry: bash -c 'uv run ./manage.py test'
+      types: ["python"]
+      pass_filenames: false

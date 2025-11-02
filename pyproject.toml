@@ -1,0 +1,36 @@
+[project]
+name = "theboard"
+version = "0.1.0"
+description = ""
+requires-python = ">=3.13"
+dependencies = [
+    "django>=2.2",
+    "djangoql",
+    "django-extensions",
+    "django-redis",
+    "psycopg2-binary",
+    "pytest",
+    "pytest-cov",
+    "shortuuid",
+    "uwsgi",
+    "werkzeug",
+    "whitenoise",
+    "django-ninja>=1.4.5",
+    "typing-extensions>=4.12.2,<4.13",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "ipython",
+    "bpython",
+    "pudb",
+    "django-stubs",
+]
+package = false
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+lint.ignore = ["F403", "E501", "N802", "N803", "N806", "C901", "D100", "D102", "D102", "D10"]

@@ -1,0 +1,40 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta property="og:title" content="{{ request.site.name }}">
+    <meta property="og:description" content="Be careful what you wish for.">
+    <meta property="og:type" content="website">
+    <title>{% block title %}{{ request.site.name }}{% endblock %}</title>
+    <link href="{% static 'css/main.css' %}" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="theme-dark theme-art-deco"{% if settings.TURNSTILE_ENABLED %} data-turnstile-sitekey="{{ settings.TURNSTILE_SITE_KEY }}"{% endif %}>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a class="brand" href="{% url 'main:index' %}">{{ request.site.name }}</a>
+        </div>
+    </header>
+    <main class="site-main container">
+        {% if messages %}
+            <div class="flash-messages">
+                {% for message in messages %}
+                    <div class="flash flash-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+        <div class="container">
+            <small>&copy; {% now "Y" %} {{ request.site.name }}.</small>
+        </div>
+    </footer>
+    <script src="{% static 'js/theboard.js' %}" defer></script>
+    {% if settings.TURNSTILE_ENABLED %}
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&amp;onload=onTurnstileLoad" async defer></script>
+    {% endif %}
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -11,7 +11,7 @@ class UserSchema(Schema):
     """User representation in API responses."""
 
     id: int
-    email: str
+    username: str
     display_name: str
     is_superuser: bool
 
@@ -68,14 +68,14 @@ class FeatureCreateInput(Schema):
 class LoginInput(Schema):
     """Input for user login."""
 
-    email: str
+    username: str
     password: str
 
 
 class SignupInput(Schema):
     """Input for user registration."""
 
-    email: str
+    username: str
     password: str
     password_confirm: str
 

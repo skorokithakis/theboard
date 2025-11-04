@@ -12,7 +12,7 @@ from . import models
 class CustomUserCreationForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = models.User
-        fields = ("email",)
+        fields = ("username",)
 
 
 class CustomUserChangeForm(UserChangeForm):
@@ -23,19 +23,19 @@ class CustomUserChangeForm(UserChangeForm):
 
 @admin.register(models.User)
 class CustomUserAdmin(BaseUserAdmin):
-    """Configure admin interface for the email-based user model."""
+    """Configure admin interface for the username-based user model."""
 
     add_form = CustomUserCreationForm
     form = CustomUserChangeForm
     model = models.User
 
-    list_display = ("email", "first_name", "last_name", "is_staff", "is_active")
+    list_display = ("username", "first_name", "last_name", "is_staff", "is_active")
     list_filter = ("is_staff", "is_superuser", "is_active", "groups")
-    ordering = ("email",)
-    search_fields = ("email", "first_name", "last_name")
+    ordering = ("username",)
+    search_fields = ("username", "first_name", "last_name")
 
     fieldsets = (
-        (None, {"fields": ("email", "password")}),
+        (None, {"fields": ("username", "password")}),
         ("Personal info", {"fields": ("first_name", "last_name")}),
         (
             "Permissions",
@@ -57,7 +57,7 @@ class CustomUserAdmin(BaseUserAdmin):
             {
                 "classes": ("wide",),
                 "fields": (
-                    "email",
+                    "username",
                     "password1",
                     "password2",
                     "is_staff",
@@ -82,7 +82,7 @@ class FeatureAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
         "display_vote_total",
     )
     list_filter = ("created_at", "implemented_at", "parent")
-    search_fields = ("title", "description", "creator__email")
+    search_fields = ("title", "description", "creator__username")
     autocomplete_fields = ("creator", "parent")
     ordering = ("-created_at",)
 

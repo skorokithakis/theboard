@@ -55,7 +55,7 @@ def _serialize_user(user: models.User) -> dict[str, Any]:
     """Convert a user model to a dictionary for schema validation."""
     return {
         "id": user.pk,
-        "email": user.email,
+        "username": user.username,
         "display_name": user.display_name,
         "is_superuser": user.is_superuser,
     }
@@ -372,13 +372,13 @@ def vote_toggle(
 @api.post("/auth/login", response=schemas.LoginResponse, operation_id="api_login")
 def auth_login(request: HttpRequest, data: schemas.LoginInput) -> dict[str, Any]:
     """Authenticate a user."""
-    email = data.email.strip()
+    username = data.username.strip()
     password = data.password.strip()
 
-    if not email or not password:
-        raise HttpError(400, "Email and password are required")
+    if not username or not password:
+        raise HttpError(400, "Username and password are required")
 
-    user = authenticate(request, username=email, password=password)
+    user = authenticate(request, username=username, password=password)
     if user is None:
         raise HttpError(401, "Invalid credentials")
 
@@ -406,20 +406,20 @@ def auth_signup(
     if request.user.is_authenticated:
         raise HttpError(400, "Already authenticated")
 
-    email = data.email.strip()
+    username = data.username.strip()
     password = data.password.strip()
     password_confirm = data.password_confirm.strip()
 
-    if not email or not password:
-        raise HttpError(400, "Email and password are required")
+    if not username or not password:
+        raise HttpError(400, "Username and password are required")
 
     if password != password_confirm:
         raise HttpError(400, "Passwords do not match")
 
-    if models.User.objects.filter(email=email).exists():
-        raise HttpError(400, "Email already in use")
+    if models.User.objects.filter(username=username).exists():
+        raise HttpError(400, "Username already in use")
 
-    user = models.User.objects.create_user(email=email, password=password)
+    user = models.User.objects.create_user(username=username, password=password)
     login(request, user)
     return 201, {
         "message": "Account created successfully",

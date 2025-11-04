@@ -272,7 +272,7 @@
       ".tb-user-badge { display: flex; align-items: center; gap: 0.75rem; }",
       ".tb-user-avatar { width: 2.75rem; height: 2.75rem; border-radius: 14px; background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; }",
       ".tb-user-name { font-size: 1rem; font-weight: 600; color: #1a1a1a; }",
-      ".tb-user-email { font-size: 0.875rem; color: #999999; }",
+      ".tb-user-handle { font-size: 0.875rem; color: #999999; }",
       ".tb-user-actions { display: inline-flex; gap: 0.75rem; align-items: center; }",
       ".tb-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 2rem; border-top: 2px solid #e5e5e5; flex-shrink: 0; background: #fafafa; }",
       ".tb-footer-nav { display: flex; gap: 1rem; align-items: center; }",
@@ -280,7 +280,7 @@
       ".tb-footer-nav a:hover { color: #1a1a1a; }",
       ".tb-footer-icon { width: 1.25rem; height: 1.25rem; fill: currentColor; }",
       ".tb-auth-section { display: flex; align-items: center; gap: 1rem; }",
-      ".tb-footer-email { font-size: 0.875rem; color: #666666; }",
+      ".tb-footer-username { font-size: 0.875rem; color: #666666; }",
       ".tb-btn-text { background: transparent; color: #666666; border: none; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; border-radius: 8px; }",
       ".tb-btn-text:hover { color: #1a1a1a; background: #f5f5f5; }",
       ".tb-toast-stack { position: fixed; bottom: 2rem; right: 2rem; display: flex; flex-direction: column; gap: 1rem; z-index: 2147483647; pointer-events: none; }",
@@ -307,7 +307,7 @@
         ".tb-body::-webkit-scrollbar-thumb, .tb-detail-body::-webkit-scrollbar-thumb, .tb-implemented-body::-webkit-scrollbar-thumb { background: #143b47; }",
         ".tb-header, .tb-footer, .tb-auth-panel, .tb-submit-panel, .tb-controls { background: rgba(14, 38, 48, 0.95); border-color: rgba(243, 201, 105, 0.28); color: #fdf7e3; }",
         ".tb-detail-footer { background: rgba(12, 32, 41, 0.95); border-top-color: rgba(243, 201, 105, 0.28); }",
-        ".tb-header-user, .tb-footer-email, .tb-helper, .tb-form-note, .tb-subtitle, .tb-feature-meta { color: #d8cbb3; }",
+        ".tb-header-user, .tb-footer-username, .tb-helper, .tb-form-note, .tb-subtitle, .tb-feature-meta { color: #d8cbb3; }",
         ".tb-detail-meta { color: #d8cbb3; }",
         ".tb-detail-actions .tb-meta-dot { color: #d8cbb3; }",
         ".tb-status { color: #f3c969; }",
@@ -354,7 +354,7 @@
         ".tb-footer-nav a { color: #94a3b8; }",
         ".tb-footer-nav a:hover { color: #dbeafe; }",
         ".tb-user-name { color: #f1f5f9; }",
-        ".tb-user-email { color: #94a3b8; }"
+        ".tb-user-handle { color: #94a3b8; }"
       ]);
     }
     style.textContent = css.join("\n");
@@ -923,10 +923,10 @@
     authSection.innerHTML = "";
 
     if (STATE.user) {
-      var email = document.createElement("span");
-      email.className = "tb-footer-email";
-      email.textContent = STATE.user.email || "";
-      authSection.appendChild(email);
+      var usernameLabel = document.createElement("span");
+      usernameLabel.className = "tb-footer-username";
+      usernameLabel.textContent = STATE.user.username || "";
+      authSection.appendChild(usernameLabel);
       var logoutBtn = document.createElement("button");
       logoutBtn.type = "button";
       logoutBtn.className = "tb-btn-text";
@@ -986,13 +986,13 @@
       var name = document.createElement("span");
       name.className = "tb-user-name";
       name.textContent =
-        STATE.user.display_name || STATE.user.email || "Board member";
+        STATE.user.display_name || STATE.user.username || "Board member";
       info.appendChild(name);
 
-      var email = document.createElement("span");
-      email.className = "tb-user-email";
-      email.textContent = STATE.user.email;
-      info.appendChild(email);
+      var handle = document.createElement("span");
+      handle.className = "tb-user-handle";
+      handle.textContent = STATE.user.username;
+      info.appendChild(handle);
 
       badge.appendChild(info);
       card.appendChild(badge);
@@ -1058,11 +1058,11 @@
 
     if (STATE.authView === "signup") {
       buildInput(form, {
-        id: "tb-signup-email",
-        label: "Email",
-        type: "email",
-        name: "email",
-        autocomplete: "email",
+        id: "tb-signup-username",
+        label: "Username",
+        type: "text",
+        name: "username",
+        autocomplete: "username",
         required: true,
       });
       buildInput(form, {
@@ -1090,11 +1090,11 @@
       form.addEventListener("submit", handleSignup);
     } else {
       buildInput(form, {
-        id: "tb-login-email",
-        label: "Email",
-        type: "email",
-        name: "email",
-        autocomplete: "email",
+        id: "tb-login-username",
+        label: "Username",
+        type: "text",
+        name: "username",
+        autocomplete: "username",
         required: true,
       });
       buildInput(form, {
@@ -2013,11 +2013,11 @@
   function handleLogin(event) {
     event.preventDefault();
     var form = event.currentTarget;
-    var email = (form.elements.email.value || "").trim();
+    var username = (form.elements.username.value || "").trim();
     var password = form.elements.password.value || "";
 
-    if (!email || !password) {
-      STATE.authError = "Email and password are required.";
+    if (!username || !password) {
+      STATE.authError = "Username and password are required.";
       renderAuth();
       return;
     }
@@ -2028,7 +2028,7 @@
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify({ email: email, password: password }),
+      body: JSON.stringify({ username: username, password: password }),
     })
       .then(function (response) {
         if (!response.ok) {
@@ -2060,11 +2060,11 @@
   function handleSignup(event) {
     event.preventDefault();
     var form = event.currentTarget;
-    var email = (form.elements.email.value || "").trim();
+    var username = (form.elements.username.value || "").trim();
     var password = form.elements.password.value || "";
     var confirm = form.elements.password_confirm.value || "";
 
-    if (!email || !password || !confirm) {
+    if (!username || !password || !confirm) {
       STATE.authError = "All fields are required.";
       renderAuth();
       return;
@@ -2082,7 +2082,7 @@
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({
-        email: email,
+        username: username,
         password: password,
         password_confirm: confirm,
       }),
@@ -2582,13 +2582,15 @@
 
   function getCreatorName(feature) {
     if (feature && feature.creator) {
-      return feature.creator.display_name || feature.creator.email || "Unknown";
+      return (
+        feature.creator.display_name || feature.creator.username || "Unknown"
+      );
     }
     return "Unknown";
   }
 
   function getInitials(user) {
-    var name = (user.display_name || user.email || "TB").trim();
+    var name = (user.display_name || user.username || "TB").trim();
     var parts = name.split(/\s+/).filter(Boolean);
     if (!parts.length) {
       return "TB";

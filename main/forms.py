@@ -48,7 +48,7 @@ class FeatureForm(forms.ModelForm):
 
 
 class SignUpForm(forms.ModelForm):
-    """Registration form that captures email and password."""
+    """Registration form that captures username and password."""
 
     password1 = forms.CharField(
         label=_("Password"),
@@ -73,12 +73,12 @@ class SignUpForm(forms.ModelForm):
 
     class Meta:
         model = models.User
-        fields = ("email",)
+        fields = ("username",)
         widgets = {
-            "email": forms.EmailInput(
+            "username": forms.TextInput(
                 attrs={
-                    "placeholder": _("Email address"),
-                    "autocomplete": "email",
+                    "placeholder": _("Username"),
+                    "autocomplete": "username",
                 }
             )
         }
@@ -89,11 +89,11 @@ class SignUpForm(forms.ModelForm):
             existing_classes = field.widget.attrs.get("class", "")
             field.widget.attrs["class"] = (existing_classes + " input").strip()
 
-    def clean_email(self) -> str:
-        email = self.cleaned_data.get("email", "")
-        if email:
-            return email.lower()
-        raise forms.ValidationError(_("Please provide an email address."))
+    def clean_username(self) -> str:
+        username = (self.cleaned_data.get("username") or "").strip()
+        if not username:
+            raise forms.ValidationError(_("Please choose a username."))
+        return username
 
     def clean_password2(self) -> str:
         password1 = self.cleaned_data.get("password1")

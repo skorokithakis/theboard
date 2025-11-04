@@ -12,29 +12,31 @@ from django.utils import timezone
 
 
 class UserManager(BaseUserManager):
-    """Custom manager that uses email as the unique identifier."""
+    """Custom manager that uses a unique username for authentication."""
 
     use_in_migrations = True
 
-    def _create_user(self, email: str, password: str | None, **extra_fields) -> "User":
-        if not email:
-            raise ValueError("An email address must be provided.")
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
+    def _create_user(
+        self, username: str, password: str | None, **extra_fields
+    ) -> "User":
+        if not username:
+            raise ValueError("A username must be provided.")
+        username = self.model.normalize_username(username)
+        user = self.model(username=username, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
     def create_user(
-        self, email: str, password: str | None = None, **extra_fields
+        self, username: str, password: str | None = None, **extra_fields
     ) -> "User":
         extra_fields.setdefault("is_staff", False)
         extra_fields.setdefault("is_superuser", False)
-        return self._create_user(email, password, **extra_fields)
+        return self._create_user(username, password, **extra_fields)
 
     def create_superuser(
         self,
-        email: str,
+        username: str,
         password: str | None,
         **extra_fields,
     ) -> "User":
@@ -47,13 +49,17 @@ class UserManager(BaseUserManager):
         if extra_fields.get("is_superuser") is not True:
             raise ValueError("Superuser must have is_superuser=True.")
 
-        return self._create_user(email, password, **extra_fields)
+        return self._create_user(username, password, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    """Custom user model that uses email as the username field."""
+    """Custom user model that authenticates with a unique username."""
 
-    email = models.EmailField(unique=True)
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        help_text="Unique handle members use to sign in and identify themselves.",
+    )
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     is_staff = models.BooleanField(default=False)
@@ -62,8 +68,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = UserManager()
 
-    USERNAME_FIELD = "email"
-    EMAIL_FIELD = "email"
+    USERNAME_FIELD = "username"
     REQUIRED_FIELDS: list[str] = []
 
     class Meta:
@@ -77,13 +82,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     def display_name(self) -> str:
         """Readable name for templates and API payloads."""
         full_name = self.get_full_name()
-        return full_name if full_name else self.email
+        return full_name if full_name else self.username
 
     def get_full_name(self) -> str:
         return " ".join(filter(None, [self.first_name, self.last_name]))
 
     def get_short_name(self) -> str:
-        return self.first_name or self.email
+        return self.first_name or self.username
 
 
 class FeatureQuerySet(models.QuerySet):

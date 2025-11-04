@@ -17,12 +17,13 @@ User = get_user_model()
 class FeatureBoardTests(TestCase):
     def setUp(self) -> None:
         site = Site.objects.get_current()
+        domain_slug = site.domain.replace(".", "_")
         self.owner = User.objects.create_user(
-            email=f"owner@{site.domain}",
+            username=f"owner_{domain_slug}",
             password="test-pass-1",
         )
         self.other = User.objects.create_user(
-            email=f"other@{site.domain}",
+            username=f"other_{domain_slug}",
             password="test-pass-2",
         )
 
@@ -91,8 +92,7 @@ class FeatureBoardTests(TestCase):
             implemented_at=implemented_at
         )
 
-        site = Site.objects.get_current()
-        self.client.login(email=f"owner@{site.domain}", password="test-pass-1")
+        self.client.login(username=self.owner.username, password="test-pass-1")
 
         response = self.client.get(f"/api/features/{feature.pk}")
         self.assertEqual(response.status_code, 200)
@@ -103,8 +103,7 @@ class FeatureBoardTests(TestCase):
     @override_settings(TURNSTILE_ENABLED=True)
     def test_vote_toggle_adds_and_removes_vote(self) -> None:
         feature = self._submit_feature()
-        site = Site.objects.get_current()
-        self.client.login(email=f"owner@{site.domain}", password="test-pass-1")
+        self.client.login(username=self.owner.username, password="test-pass-1")
 
         vote_url = f"/api/features/{feature.pk}/vote"
         with mock.patch("main.api.turnstile.verify") as verify_mock:
@@ -143,8 +142,7 @@ class FeatureBoardTests(TestCase):
     @override_settings(TURNSTILE_ENABLED=True)
     def test_vote_toggle_requires_successful_turnstile(self) -> None:
         feature = self._submit_feature()
-        site = Site.objects.get_current()
-        self.client.login(email=f"owner@{site.domain}", password="test-pass-1")
+        self.client.login(username=self.owner.username, password="test-pass-1")
 
         vote_url = f"/api/features/{feature.pk}/vote"
         with mock.patch("main.api.turnstile.verify") as verify_mock:
@@ -167,8 +165,7 @@ class FeatureBoardTests(TestCase):
 
     def test_vote_toggle_skips_turnstile_when_disabled(self) -> None:
         feature = self._submit_feature()
-        site = Site.objects.get_current()
-        self.client.login(email=f"owner@{site.domain}", password="test-pass-1")
+        self.client.login(username=self.owner.username, password="test-pass-1")
 
         vote_url = f"/api/features/{feature.pk}/vote"
         with (
@@ -188,8 +185,7 @@ class FeatureBoardTests(TestCase):
         )
 
     def test_daily_limit_blocks_second_submission(self) -> None:
-        site = Site.objects.get_current()
-        self.client.login(email=f"owner@{site.domain}", password="test-pass-1")
+        self.client.login(username=self.owner.username, password="test-pass-1")
         self._submit_feature()
 
         create_url = "/api/features/create"
@@ -211,8 +207,7 @@ class FeatureBoardTests(TestCase):
         self.assertTrue(can_submit)
 
     def test_feature_create_auto_votes_for_creator(self) -> None:
-        site = Site.objects.get_current()
-        self.client.login(email=f"owner@{site.domain}", password="test-pass-1")
+        self.client.login(username=self.owner.username, password="test-pass-1")
 
         response = self.client.post(
             "/api/features/create",
@@ -233,8 +228,7 @@ class FeatureBoardTests(TestCase):
 
     def test_feature_create_auto_votes_for_variation(self) -> None:
         parent = self._submit_feature(creator=self.other)
-        site = Site.objects.get_current()
-        self.client.login(email=f"owner@{site.domain}", password="test-pass-1")
+        self.client.login(username=self.owner.username, password="test-pass-1")
 
         response = self.client.post(
             "/api/features/create",
@@ -294,8 +288,7 @@ class FeatureBoardTests(TestCase):
         models.Feature.objects.filter(pk=feature.pk).update(
             implemented_at=timezone.now()
         )
-        site = Site.objects.get_current()
-        self.client.login(email=f"owner@{site.domain}", password="test-pass-1")
+        self.client.login(username=self.owner.username, password="test-pass-1")
 
         vote_url = f"/api/features/{feature.pk}/vote"
         response = self.client.post(
@@ -316,8 +309,7 @@ class FeatureBoardTests(TestCase):
         models.Feature.objects.filter(pk=parent.pk).update(
             implemented_at=timezone.now()
         )
-        site = Site.objects.get_current()
-        self.client.login(email=f"owner@{site.domain}", password="test-pass-1")
+        self.client.login(username=self.owner.username, password="test-pass-1")
 
         response = self.client.post(
             "/api/features/create",
@@ -338,8 +330,7 @@ class FeatureBoardTests(TestCase):
         parent = self._submit_feature()
         child = self._submit_feature(title="Variation", parent=parent)
 
-        site = Site.objects.get_current()
-        self.client.login(email=f"owner@{site.domain}", password="test-pass-1")
+        self.client.login(username=self.owner.username, password="test-pass-1")
         response = self.client.post(
             f"/api/features/{parent.pk}/delete",
             content_type="application/json",
@@ -355,10 +346,11 @@ class FeatureBoardTests(TestCase):
         feature = self._submit_feature(creator=self.other)
 
         site = Site.objects.get_current()
+        domain_slug = site.domain.replace(".", "_")
         superuser = User.objects.create_superuser(
-            email=f"admin@{site.domain}", password="admin-pass"
+            username=f"admin_{domain_slug}", password="admin-pass"
         )
-        self.client.login(email=superuser.email, password="admin-pass")
+        self.client.login(username=superuser.username, password="admin-pass")
 
         response = self.client.post(
             f"/api/features/{feature.pk}/delete",

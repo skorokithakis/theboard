@@ -254,6 +254,7 @@
       ".tb-auth-tabs { display: inline-flex; background: #f5f5f5; border-radius: 999px; padding: 0.25rem; gap: 0.25rem; }",
       ".tb-tab { border: none; border-radius: 999px; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; background: transparent; color: #666666; cursor: pointer; transition: all 0.2s ease; }",
       ".tb-tab-active { background: #059669; color: #ffffff; }",
+      ".tb-submit-title { margin: 0; font-size: 1.125rem; font-weight: 600; color: #1a1a1a; }",
       ".tb-helper { font-size: 0.875rem; color: #999999; }",
       ".tb-variation-notice { margin: 1rem 0 0; padding: 0.75rem 1rem; border-radius: 10px; background: rgba(14, 165, 233, 0.08); color: #0369a1; font-size: 0.875rem; font-weight: 500; }",
       ".tb-form { display: flex; flex-direction: column; gap: 1rem; }",
@@ -310,6 +311,7 @@
         ".tb-header-user, .tb-footer-username, .tb-helper, .tb-form-note, .tb-subtitle, .tb-feature-meta { color: #d8cbb3; }",
         ".tb-detail-meta { color: #d8cbb3; }",
         ".tb-detail-actions .tb-meta-dot { color: #d8cbb3; }",
+        ".tb-submit-title { color: #2bb3af; }",
         ".tb-status { color: #f3c969; }",
         ".tb-link { color: #2bb3af; }",
         ".tb-link:hover { color: #7fe0d8; }",
@@ -322,6 +324,14 @@
         ".tb-btn-secondary { color: #fdf7e3; border-color: rgba(243, 201, 105, 0.26); background: rgba(14, 49, 63, 0.7); }",
         ".tb-btn-secondary:hover { background: rgba(43, 179, 175, 0.24); border-color: rgba(43, 179, 175, 0.45); }",
         ".tb-btn-secondary[disabled] { opacity: 0.5; cursor: not-allowed; }",
+        ".tb-auth-card { background: rgba(14, 40, 52, 0.94); border-color: rgba(243, 201, 105, 0.24); color: #fdf7e3; }",
+        ".tb-auth-tabs { background: rgba(14, 49, 63, 0.7); }",
+        ".tb-tab { color: #d8cbb3; }",
+        ".tb-tab:hover { color: #fdf7e3; }",
+        ".tb-tab-active { background: rgba(243, 201, 105, 0.85); color: #0b161b; }",
+        ".tb-label { color: #fdf7e3; }",
+        ".tb-submit { background: #2bb3af; border-color: #2bb3af; color: #062027; }",
+        ".tb-submit:hover { background: #7fe0d8; border-color: #7fe0d8; color: #062027; box-shadow: 0 2px 8px rgba(43, 179, 175, 0.35); }",
         ".tb-btn-text { color: #d8cbb3; }",
         ".tb-btn-text:hover { color: #fdf7e3; background: rgba(243, 201, 105, 0.18); }",
         ".tb-input, .tb-textarea { background: rgba(11, 31, 38, 0.85); border-color: rgba(243, 201, 105, 0.28); color: #fdf7e3; }",
@@ -1169,10 +1179,7 @@
     card.className = "tb-auth-card";
 
     var title = document.createElement("h3");
-    title.style.margin = "0";
-    title.style.fontSize = "1.125rem";
-    title.style.fontWeight = "600";
-    title.style.color = "#1a1a1a";
+    title.className = "tb-submit-title";
     title.textContent = "Submit a New Feature";
     card.appendChild(title);
 

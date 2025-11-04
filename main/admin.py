@@ -91,7 +91,7 @@ class FeatureAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
         # Use the same annotation name the model's ``vote_total`` property expects
         # so the property can read the cached value without Django attempting to
         # assign to the read-only attribute.
-        return queryset.annotate(total_votes=Count("votes", distinct=True))
+        return queryset.annotate(total_votes=Count("vote_records", distinct=True))
 
     @admin.display(description="Votes", ordering="total_votes")
     def display_vote_total(self, obj: models.Feature) -> int:

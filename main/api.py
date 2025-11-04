@@ -66,7 +66,7 @@ def _serialize_feature(
     user_has_voted: bool = False,
 ) -> dict[str, Any]:
     """Convert a feature model to a dictionary for schema validation."""
-    last_vote = feature.votes.order_by("-created_at").first()
+    last_vote = feature.vote_records.order_by("-created_at").first()
 
     data: dict[str, Any] = {
         "id": feature.pk,
@@ -320,7 +320,7 @@ def vote_toggle(
     try:
         feature = (
             models.Feature.objects.select_related("creator")
-            .annotate(total_votes=Count("votes", distinct=True))
+            .annotate(total_votes=Count("vote_records", distinct=True))
             .get(pk=pk)
         )
     except models.Feature.DoesNotExist as exc:
@@ -356,7 +356,7 @@ def vote_toggle(
         action = "added"
 
     feature.refresh_from_db(fields=["created_at"])
-    vote_total = feature.votes.count()
+    vote_total = feature.vote_records.count()
     has_voted = models.Vote.objects.filter(
         user=request.user,
         feature=feature,

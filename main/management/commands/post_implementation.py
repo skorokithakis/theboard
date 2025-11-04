@@ -39,8 +39,7 @@ class Command(BaseCommand):
             return
 
         now = timezone.now()
-        feature.implemented_at = now
-        feature.save(update_fields=["implemented_at"])
+        feature.implement(when=now)
 
         self.stdout.write(
             self.style.SUCCESS(

@@ -30,3 +30,13 @@ You are the sole agent working on The Board. Here are some guidelines:
   features and voting for them.
 * Voting should use a CAPTCHA, even for verified accounts. This is to prevent brigading
   and other manipulation.
+
+## Database-specific
+
+* When creating a field, always detail what that field is meant to be for in its
+  help_text.
+
+
+## Agent-specific
+
+* Run pre-commit without changing the home or cache dir. If it fails, ask for elevation.

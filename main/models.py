@@ -90,7 +90,7 @@ class FeatureQuerySet(models.QuerySet):
     """Custom queryset utilities for Feature objects."""
 
     def with_vote_totals(self) -> "FeatureQuerySet":
-        return self.annotate(total_votes=models.Count("votes", distinct=True))
+        return self.annotate(total_votes=models.Count("vote_records", distinct=True))
 
     def ordered_by_popularity(self) -> "FeatureQuerySet":
         return self.with_vote_totals().order_by("-total_votes", "-created_at")
@@ -128,6 +128,14 @@ class Feature(models.Model):
         blank=True,
         help_text="Timestamp for when the feature was implemented.",
     )
+    votes = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text=(
+            "Historical vote count captured at implementation time. "
+            "Only used once the feature is implemented to keep showing votes after nightly cleanup."
+        ),
+    )
 
     objects = FeatureQuerySet.as_manager()
 
@@ -138,14 +146,32 @@ class Feature(models.Model):
         return self.title
 
     @property
+    def live_vote_total(self) -> int:
+        """Return the live vote count, using an annotation when available."""
+        annotated_total = getattr(self, "total_votes", None)
+        if annotated_total is not None:
+            return annotated_total
+        return self.vote_records.count()
+
+    @property
     def vote_total(self) -> int:
         """Return pre-annotated vote totals or compute on demand."""
-        return getattr(self, "total_votes", self.votes.count())
+        if self.is_implemented and self.votes is not None:
+            return self.votes
+        return self.live_vote_total
 
     @property
     def is_implemented(self) -> bool:
         """Return True when the feature has been marked as implemented."""
         return self.implemented_at is not None
+
+    def implement(self, when: datetime | None = None) -> None:
+        """Mark the feature as implemented and snapshot its vote total."""
+        timestamp = when or timezone.now()
+        snapshot = self.live_vote_total
+        self.implemented_at = timestamp
+        self.votes = snapshot
+        self.save(update_fields=["implemented_at", "votes"])
 
     @classmethod
     def submissions_in_utc_day(cls, user: User, when: datetime | None = None) -> int:
@@ -180,7 +206,7 @@ class Vote(models.Model):
     )
     feature = models.ForeignKey(
         Feature,
-        related_name="votes",
+        related_name="vote_records",
         on_delete=models.CASCADE,
     )
     created_at = models.DateTimeField(auto_now_add=True)

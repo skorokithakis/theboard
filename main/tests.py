@@ -268,12 +268,26 @@ class FeatureBoardTests(TestCase):
 
         feature.refresh_from_db()
         self.assertIsNotNone(feature.implemented_at)
+        self.assertEqual(feature.votes, 1)
+        self.assertEqual(feature.vote_total, 1)
         self.assertTrue(
             models.Vote.objects.filter(user=self.owner, feature=feature).exists()
         )
         self.assertTrue(
             models.Vote.objects.filter(user=self.other, feature=other_feature).exists()
         )
+
+    def test_vote_total_uses_snapshot_after_votes_cleared(self) -> None:
+        feature = self._submit_feature()
+        models.Vote.objects.create(user=self.owner, feature=feature)
+        models.Vote.objects.create(user=self.other, feature=feature)
+
+        feature.implement()
+        models.Vote.objects.filter(feature=feature).delete()
+
+        feature.refresh_from_db()
+        self.assertEqual(feature.votes, 2)
+        self.assertEqual(feature.vote_total, 2)
 
     def test_vote_toggle_rejects_implemented_feature(self) -> None:
         feature = self._submit_feature()

@@ -1294,7 +1294,17 @@
     }
 
     var fragment = document.createDocumentFragment();
-    STATE.features.forEach(function (feature) {
+    var ordered = STATE.features.slice().sort(function (a, b) {
+      var aVotes = typeof (a && a.vote_total) === "number" ? a.vote_total : 0;
+      var bVotes = typeof (b && b.vote_total) === "number" ? b.vote_total : 0;
+      if (aVotes !== bVotes) {
+        return bVotes - aVotes;
+      }
+      var aCreated = a && a.created_at ? new Date(a.created_at).getTime() : 0;
+      var bCreated = b && b.created_at ? new Date(b.created_at).getTime() : 0;
+      return bCreated - aCreated;
+    });
+    ordered.forEach(function (feature) {
       fragment.appendChild(createFeatureCard(feature));
     });
     list.appendChild(fragment);

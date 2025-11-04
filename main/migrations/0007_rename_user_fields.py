@@ -37,7 +37,6 @@ def populate_usernames(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("main", "0006_feature_votes_alter_vote_feature"),
     ]

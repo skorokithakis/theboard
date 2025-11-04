@@ -95,6 +95,14 @@ class FeatureQuerySet(models.QuerySet):
     def ordered_by_popularity(self) -> "FeatureQuerySet":
         return self.with_vote_totals().order_by("-total_votes", "-created_at")
 
+    def pending(self) -> "FeatureQuerySet":
+        """Return features that have not been implemented yet."""
+        return self.filter(implemented_at__isnull=True)
+
+    def implemented(self) -> "FeatureQuerySet":
+        """Return features that have been marked as implemented."""
+        return self.filter(implemented_at__isnull=False)
+
 
 class Feature(models.Model):
     """A feature request or variation proposed by the community."""
@@ -115,6 +123,11 @@ class Feature(models.Model):
         help_text="Optional parent feature for marking this as a variation.",
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    implemented_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp for when the feature was implemented.",
+    )
 
     objects = FeatureQuerySet.as_manager()
 
@@ -128,6 +141,11 @@ class Feature(models.Model):
     def vote_total(self) -> int:
         """Return pre-annotated vote totals or compute on demand."""
         return getattr(self, "total_votes", self.votes.count())
+
+    @property
+    def is_implemented(self) -> bool:
+        """Return True when the feature has been marked as implemented."""
+        return self.implemented_at is not None
 
     @classmethod
     def submissions_in_utc_day(cls, user: User, when: datetime | None = None) -> int:

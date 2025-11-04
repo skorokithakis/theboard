@@ -5,6 +5,7 @@ from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
@@ -47,6 +48,57 @@ class FeatureBoardTests(TestCase):
         features = data["features"]
         self.assertEqual(features[0]["title"], "Top votes")
         self.assertEqual(features[0]["vote_total"], 2)
+        self.assertTrue(all(item["implemented_at"] is None for item in features))
+        self.assertEqual(data["implemented_features"], [])
+
+    def test_feature_list_excludes_implemented_features(self) -> None:
+        visible = self._submit_feature(title="Visible")
+        hidden = self._submit_feature(title="Hidden")
+        models.Feature.objects.filter(pk=hidden.pk).update(
+            implemented_at=timezone.now()
+        )
+
+        response = self.client.get("/api/features")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        titles = [item["title"] for item in data["features"]]
+        self.assertIn(visible.title, titles)
+        self.assertNotIn(hidden.title, titles)
+        implemented_titles = [item["title"] for item in data["implemented_features"]]
+        self.assertIn(hidden.title, implemented_titles)
+
+    def test_feature_list_returns_implemented_chronologically(self) -> None:
+        first = self._submit_feature(title="First done")
+        later = self._submit_feature(title="Later done")
+        now = timezone.now()
+        models.Feature.objects.filter(pk=first.pk).update(
+            implemented_at=now - timedelta(days=1)
+        )
+        models.Feature.objects.filter(pk=later.pk).update(
+            implemented_at=now + timedelta(hours=1)
+        )
+
+        response = self.client.get("/api/features")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        implemented_titles = [item["title"] for item in data["implemented_features"]]
+        self.assertEqual(implemented_titles, ["Later done", "First done"])
+
+    def test_feature_detail_includes_implemented_feature(self) -> None:
+        feature = self._submit_feature(title="Already shipped")
+        implemented_at = timezone.now()
+        models.Feature.objects.filter(pk=feature.pk).update(
+            implemented_at=implemented_at
+        )
+
+        site = Site.objects.get_current()
+        self.client.login(email=f"owner@{site.domain}", password="test-pass-1")
+
+        response = self.client.get(f"/api/features/{feature.pk}")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsNotNone(data["feature"]["implemented_at"])
+        self.assertFalse(data["can_submit_variation"])
 
     @override_settings(TURNSTILE_ENABLED=True)
     def test_vote_toggle_adds_and_removes_vote(self) -> None:
@@ -205,6 +257,68 @@ class FeatureBoardTests(TestCase):
         self.assertTrue(
             models.Vote.objects.filter(user=self.owner, feature=feature).exists()
         )
+
+    def test_post_implementation_command_marks_timestamp_and_keeps_votes(self) -> None:
+        feature = self._submit_feature()
+        other_feature = self._submit_feature(title="Second feature", creator=self.other)
+        models.Vote.objects.create(user=self.owner, feature=feature)
+        models.Vote.objects.create(user=self.other, feature=other_feature)
+
+        call_command("post_implementation", str(feature.pk))
+
+        feature.refresh_from_db()
+        self.assertIsNotNone(feature.implemented_at)
+        self.assertTrue(
+            models.Vote.objects.filter(user=self.owner, feature=feature).exists()
+        )
+        self.assertTrue(
+            models.Vote.objects.filter(user=self.other, feature=other_feature).exists()
+        )
+
+    def test_vote_toggle_rejects_implemented_feature(self) -> None:
+        feature = self._submit_feature()
+        models.Feature.objects.filter(pk=feature.pk).update(
+            implemented_at=timezone.now()
+        )
+        site = Site.objects.get_current()
+        self.client.login(email=f"owner@{site.domain}", password="test-pass-1")
+
+        vote_url = f"/api/features/{feature.pk}/vote"
+        response = self.client.post(
+            vote_url,
+            {},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertIn("implemented", data["error"].lower())
+        self.assertFalse(
+            models.Vote.objects.filter(user=self.owner, feature=feature).exists()
+        )
+
+    def test_variation_creation_blocked_when_parent_implemented(self) -> None:
+        parent = self._submit_feature(creator=self.other)
+        models.Feature.objects.filter(pk=parent.pk).update(
+            implemented_at=timezone.now()
+        )
+        site = Site.objects.get_current()
+        self.client.login(email=f"owner@{site.domain}", password="test-pass-1")
+
+        response = self.client.post(
+            "/api/features/create",
+            {
+                "title": "Variation attempt",
+                "description": "Should be blocked",
+                "parent_id": parent.pk,
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertIn("implemented", data["error"].lower())
+        self.assertFalse(models.Feature.objects.filter(parent=parent).exists())
 
     def test_delete_feature_clears_parent_for_children(self) -> None:
         parent = self._submit_feature()

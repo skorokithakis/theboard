@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.core.cache import caches
 from django.core.cache.backends.base import InvalidCacheBackendError
 from django.db import connections
-from django.db.models import Count, Prefetch
+from django.db.models import Count, Prefetch, Q
 from django.db.utils import OperationalError
 from django.http import HttpRequest
 from ninja import NinjaAPI
@@ -73,6 +73,7 @@ def _serialize_feature(
         "title": feature.title,
         "description": feature.description,
         "created_at": feature.created_at,
+        "implemented_at": feature.implemented_at,
         "creator": _serialize_user(feature.creator),
         "vote_total": feature.vote_total,
         "user_has_voted": user_has_voted,
@@ -107,16 +108,41 @@ def _client_ip(request: HttpRequest) -> str | None:
     "/features", response=schemas.FeaturesListResponse, operation_id="api_features_list"
 )
 def features_list(request: HttpRequest) -> dict[str, Any]:
-    """List all features ordered by popularity."""
-    features_qs = (
-        models.Feature.objects.ordered_by_popularity()
+    """List pending features ordered by popularity and implemented features chronologically."""
+    pending_qs = (
+        models.Feature.objects.pending()
+        .ordered_by_popularity()
         .select_related("creator", "parent")
-        .annotate(variation_count=Count("variations", distinct=True))
+        .annotate(
+            variation_count=Count(
+                "variations",
+                filter=Q(variations__implemented_at__isnull=True),
+                distinct=True,
+            )
+        )
+    )
+
+    implemented_qs = (
+        models.Feature.objects.implemented()
+        .with_vote_totals()
+        .select_related("creator", "parent")
+        .annotate(
+            variation_count=Count(
+                "variations",
+                filter=Q(variations__implemented_at__isnull=True),
+                distinct=True,
+            )
+        )
+        .order_by("-implemented_at", "-created_at")
     )
 
     vote_ids = _user_vote_ids(request.user)
     features = [
-        _serialize_feature(feature, feature.id in vote_ids) for feature in features_qs
+        _serialize_feature(feature, feature.id in vote_ids) for feature in pending_qs
+    ]
+    implemented_features = [
+        _serialize_feature(feature, feature.id in vote_ids)
+        for feature in implemented_qs
     ]
 
     can_submit = (
@@ -128,6 +154,7 @@ def features_list(request: HttpRequest) -> dict[str, Any]:
 
     return {
         "features": features,
+        "implemented_features": implemented_features,
         "can_submit": can_submit,
         "user": _serialize_user(request.user)
         if request.user.is_authenticated
@@ -180,6 +207,8 @@ def feature_create(
             parent_feature = models.Feature.objects.get(pk=data.parent_id)
         except models.Feature.DoesNotExist as exc:
             raise HttpError(404, "Parent feature not found") from exc
+        if parent_feature.is_implemented:
+            raise HttpError(400, "Cannot add variations to an implemented feature")
 
     feature = models.Feature.objects.create(
         title=title,
@@ -205,9 +234,16 @@ def feature_create(
 def feature_detail(request: HttpRequest, pk: int) -> dict[str, Any]:
     """Get a single feature with its variations."""
     variations_qs = (
-        models.Feature.objects.ordered_by_popularity()
+        models.Feature.objects.pending()
+        .ordered_by_popularity()
         .select_related("creator")
-        .annotate(variation_count=Count("variations", distinct=True))
+        .annotate(
+            variation_count=Count(
+                "variations",
+                filter=Q(variations__implemented_at__isnull=True),
+                distinct=True,
+            )
+        )
     )
 
     try:
@@ -215,7 +251,13 @@ def feature_detail(request: HttpRequest, pk: int) -> dict[str, Any]:
             models.Feature.objects.ordered_by_popularity()
             .select_related("creator", "parent")
             .prefetch_related(Prefetch("variations", queryset=variations_qs))
-            .annotate(variation_count=Count("variations", distinct=True))
+            .annotate(
+                variation_count=Count(
+                    "variations",
+                    filter=Q(variations__implemented_at__isnull=True),
+                    distinct=True,
+                )
+            )
             .get(pk=pk)
         )
     except models.Feature.DoesNotExist as exc:
@@ -228,7 +270,8 @@ def feature_detail(request: HttpRequest, pk: int) -> dict[str, Any]:
     ]
 
     can_submit_variation = (
-        request.user.is_authenticated
+        not feature.is_implemented
+        and request.user.is_authenticated
         and not models.Feature.user_has_reached_daily_limit(
             request.user, limit=FEATURE_DAILY_LIMIT
         )
@@ -282,6 +325,9 @@ def vote_toggle(
         )
     except models.Feature.DoesNotExist as exc:
         raise HttpError(404, "Feature not found") from exc
+
+    if feature.is_implemented:
+        raise HttpError(400, "Feature has already been implemented")
 
     if turnstile.is_enabled():
         verification_token = data.turnstile_token or ""
@@ -403,16 +449,30 @@ def current_user(request: HttpRequest) -> dict[str, Any]:
 def top_feature(request: HttpRequest) -> dict[str, Any]:
     """Return the highest-rated feature as JSON."""
     variations_qs = (
-        models.Feature.objects.ordered_by_popularity()
+        models.Feature.objects.pending()
+        .ordered_by_popularity()
         .select_related("creator")
-        .annotate(variation_count=Count("variations", distinct=True))
+        .annotate(
+            variation_count=Count(
+                "variations",
+                filter=Q(variations__implemented_at__isnull=True),
+                distinct=True,
+            )
+        )
     )
 
     feature = (
-        models.Feature.objects.ordered_by_popularity()
+        models.Feature.objects.pending()
+        .ordered_by_popularity()
         .select_related("creator", "parent")
         .prefetch_related(Prefetch("variations", queryset=variations_qs))
-        .annotate(variation_count=Count("variations", distinct=True))
+        .annotate(
+            variation_count=Count(
+                "variations",
+                filter=Q(variations__implemented_at__isnull=True),
+                distinct=True,
+            )
+        )
         .first()
     )
     if not feature:

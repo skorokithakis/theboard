@@ -1,24 +1,24 @@
-"""Management command to delete a feature after implementation."""
+"""Management command to mark a feature as implemented."""
 
 from __future__ import annotations
 
 from django.core.management.base import BaseCommand
 from django.core.management.base import CommandError
+from django.utils import timezone
 
 from main.models import Feature
-from main.models import Vote
 
 
 class Command(BaseCommand):
-    """Delete a feature by ID after it has been implemented."""
+    """Mark a feature as implemented by setting a timestamp."""
 
-    help = "Delete a feature by ID after it has been implemented"
+    help = "Mark a feature as implemented"
 
     def add_arguments(self, parser) -> None:
         parser.add_argument(
             "feature_id",
             type=int,
-            help="The ID of the feature to delete",
+            help="The ID of the feature to mark as implemented",
         )
 
     def handle(self, *args, **options) -> None:
@@ -30,12 +30,20 @@ class Command(BaseCommand):
             raise CommandError(f"Feature with ID {feature_id} does not exist")
 
         feature_title = feature.title
-        feature.delete()
+        if feature.implemented_at is not None:
+            self.stdout.write(
+                self.style.WARNING(
+                    f'Feature "{feature_title}" (ID: {feature_id}) was already marked as implemented at {feature.implemented_at.isoformat()}'
+                )
+            )
+            return
 
-        Vote.objects.all().delete()
+        now = timezone.now()
+        feature.implemented_at = now
+        feature.save(update_fields=["implemented_at"])
 
         self.stdout.write(
             self.style.SUCCESS(
-                f'Successfully deleted feature "{feature_title}" (ID: {feature_id})'
+                f'Successfully marked feature "{feature_title}" (ID: {feature_id}) as implemented at {now.isoformat()}'
             )
         )

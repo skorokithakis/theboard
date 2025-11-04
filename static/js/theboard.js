@@ -37,6 +37,7 @@
 
   var STATE = {
     features: [],
+    implementedFeatures: [],
     user: null,
     canSubmit: false,
     loading: false,
@@ -56,6 +57,8 @@
   var detailModalOpen = false;
   var detailFeatureId = null;
   var lastDetailTrigger = null;
+  var implementedModalOpen = false;
+  var lastImplementedTrigger = null;
 
   ready(initialize);
   ready(initializeTurnstileAutoRender);
@@ -73,6 +76,7 @@
     createLauncher();
     createModal();
     createFeatureDetailModal();
+    createImplementedFeaturesModal();
     createAuthModal();
     attachGlobalShortcuts();
     renderHeaderUser();
@@ -152,6 +156,12 @@
       ".tb-detail-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 2rem; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); z-index: 2147483636; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.2s ease; }",
       ".tb-detail-overlay.tb-open { opacity: 1; visibility: visible; pointer-events: auto; }",
       ".tb-detail-modal { position: relative; width: min(720px, 95vw); max-height: 85vh; background: #ffffff; border-radius: 20px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2); overflow: hidden; display: flex; flex-direction: column; }",
+      ".tb-implemented-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 2rem; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); z-index: 2147483635; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.2s ease; }",
+      ".tb-implemented-overlay.tb-open { opacity: 1; visibility: visible; pointer-events: auto; }",
+      ".tb-implemented-modal { position: relative; width: min(840px, 95vw); max-height: 85vh; background: #ffffff; border-radius: 20px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2); overflow: hidden; display: flex; flex-direction: column; }",
+      ".tb-implemented-body { flex: 1; overflow-y: auto; padding: 1.5rem 2rem 2rem; }",
+      ".tb-implemented-body::-webkit-scrollbar { width: 8px; }",
+      ".tb-implemented-body::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 4px; }",
       ".tb-detail-body { flex: 1; overflow-y: auto; padding: 1.5rem 2rem 2rem; }",
       ".tb-detail-body::-webkit-scrollbar { width: 8px; }",
       ".tb-detail-body::-webkit-scrollbar-thumb { background: #d4d4d4; border-radius: 4px; }",
@@ -178,6 +188,7 @@
       ".tb-button-group { display: flex; gap: 0.75rem; }",
       ".tb-btn-secondary { border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; background: transparent; color: #666666; border: 2px solid #e5e5e5; cursor: pointer; transition: all 0.2s ease; min-height: 46px; }",
       ".tb-btn-secondary:hover { background: #f5f5f5; border-color: #d4d4d4; }",
+      ".tb-btn-secondary[disabled] { opacity: 0.6; cursor: not-allowed; }",
       ".tb-main-panel { flex: 1 1 auto; display: flex; flex-direction: column; }",
       ".tb-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 2rem; border-bottom: 1px solid #e5e5e5; background: #fafafa; }",
       ".tb-status { font-size: 0.875rem; font-weight: 500; color: #666666; flex: 1 1 auto; }",
@@ -234,6 +245,7 @@
       ".tb-vote-count { font-size: 0.875rem; }",
       ".tb-vote.tb-vote-loading { pointer-events: none; position: relative; color: transparent; }",
       ".tb-vote.tb-vote-loading::after { content: \"\"; position: absolute; width: 1.1rem; height: 1.1rem; border-radius: 50%; border: 2px solid rgba(5, 150, 105, 0.3); border-top-color: #059669; animation: tb-spin 0.8s linear infinite; }",
+      ".tb-vote.tb-vote-disabled { pointer-events: none; opacity: 0.6; }",
       ".tb-loading { display: flex; align-items: center; justify-content: center; gap: 0.75rem; padding: 3rem 1rem; color: #1a1a1a; font-weight: 600; background: rgba(5, 150, 105, 0.05); }",
       ".tb-spinner { width: 1.1rem; height: 1.1rem; border-radius: 50%; border: 2px solid rgba(5, 150, 105, 0.3); border-top-color: #059669; animation: tb-spin 0.8s linear infinite; }",
       ".tb-empty { padding: 3rem 2rem; text-align: center; color: #999999; background: #fafafa; font-weight: 500; }",
@@ -289,10 +301,10 @@
         ".tb-launcher:hover { box-shadow: 0 20px 50px rgba(243, 201, 105, 0.45); }",
         ".tb-launcher-dot { background: rgba(43, 179, 175, 0.25); box-shadow: inset 0 0 0 2px rgba(43, 179, 175, 0.4); }",
         ".tb-launcher-dot::after { background: #2bb3af; }",
-        ".tb-modal, .tb-auth-modal, .tb-detail-modal { background: #0f2731; color: #fdf7e3; border: 1px solid rgba(243, 201, 105, 0.32); box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.75); }",
-        ".tb-detail-overlay { background: rgba(5, 17, 24, 0.78); }",
-        ".tb-body, .tb-detail-body { background: #0d1f29; color: #fdf7e3; }",
-        ".tb-body::-webkit-scrollbar-thumb, .tb-detail-body::-webkit-scrollbar-thumb { background: #143b47; }",
+        ".tb-modal, .tb-auth-modal, .tb-detail-modal, .tb-implemented-modal { background: #0f2731; color: #fdf7e3; border: 1px solid rgba(243, 201, 105, 0.32); box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.75); }",
+        ".tb-detail-overlay, .tb-implemented-overlay { background: rgba(5, 17, 24, 0.78); }",
+        ".tb-body, .tb-detail-body, .tb-implemented-body { background: #0d1f29; color: #fdf7e3; }",
+        ".tb-body::-webkit-scrollbar-thumb, .tb-detail-body::-webkit-scrollbar-thumb, .tb-implemented-body::-webkit-scrollbar-thumb { background: #143b47; }",
         ".tb-header, .tb-footer, .tb-auth-panel, .tb-submit-panel, .tb-controls { background: rgba(14, 38, 48, 0.95); border-color: rgba(243, 201, 105, 0.28); color: #fdf7e3; }",
         ".tb-detail-footer { background: rgba(12, 32, 41, 0.95); border-top-color: rgba(243, 201, 105, 0.28); }",
         ".tb-header-user, .tb-footer-email, .tb-helper, .tb-form-note, .tb-subtitle, .tb-feature-meta { color: #d8cbb3; }",
@@ -309,6 +321,7 @@
         ".tb-btn-primary:hover { background: #ffe1a3; border-color: #f3c969; box-shadow: 0 1px 2px rgba(243, 201, 105, 0.4); }",
         ".tb-btn-secondary { color: #fdf7e3; border-color: rgba(243, 201, 105, 0.26); background: rgba(14, 49, 63, 0.7); }",
         ".tb-btn-secondary:hover { background: rgba(43, 179, 175, 0.24); border-color: rgba(43, 179, 175, 0.45); }",
+        ".tb-btn-secondary[disabled] { opacity: 0.5; cursor: not-allowed; }",
         ".tb-btn-text { color: #d8cbb3; }",
         ".tb-btn-text:hover { color: #fdf7e3; background: rgba(243, 201, 105, 0.18); }",
         ".tb-input, .tb-textarea { background: rgba(11, 31, 38, 0.85); border-color: rgba(243, 201, 105, 0.28); color: #fdf7e3; }",
@@ -336,6 +349,7 @@
         ".tb-vote { border-color: rgba(148, 163, 184, 0.35); color: #cbd5f5; background: rgba(15, 23, 42, 0.35); }",
         ".tb-vote:hover { border-color: rgba(96, 165, 250, 0.65); background: #2563eb; color: #ffffff; }",
         ".tb-vote[data-voted=\"true\"] { border-color: #16a34a; background: #16a34a; color: #ffffff; }",
+        ".tb-vote.tb-vote-disabled { opacity: 0.5; }",
         ".tb-toast { box-shadow: 0 14px 40px rgba(2, 10, 28, 0.55); }",
         ".tb-footer-nav a { color: #94a3b8; }",
         ".tb-footer-nav a:hover { color: #dbeafe; }",
@@ -557,11 +571,113 @@
     }
   }
 
+  function createImplementedFeaturesModal() {
+    if (!document.body || ELEMENTS.implementedOverlay) {
+      return;
+    }
+
+    var overlay = document.createElement("div");
+    overlay.className = "tb-implemented-overlay";
+    overlay.setAttribute("aria-hidden", "true");
+
+    var modal = document.createElement("div");
+    modal.className = "tb-implemented-modal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-labelledby", "tb-implemented-title");
+    modal.tabIndex = -1;
+    modal.tabIndex = -1;
+
+    modal.innerHTML = [
+      '<header class="tb-header tb-implemented-header">',
+      '  <div class="tb-brand">',
+      '    <span class="tb-logo" id="tb-implemented-title">THE BOARD</span>',
+      '    <span class="tb-subtitle">Implemented features</span>',
+      "  </div>",
+      '  <button type="button" class="tb-close" aria-label="Close implemented features">&times;</button>',
+      "</header>",
+      '<div class="tb-implemented-body">',
+      '  <div class="tb-feature-list" id="tb-implemented-feature-list"></div>',
+      "</div>",
+    ].join("");
+
+    overlay.appendChild(modal);
+
+    overlay.addEventListener("click", function (event) {
+      if (event.target === overlay) {
+        closeImplementedFeaturesModal();
+      }
+    });
+
+    document.body.appendChild(overlay);
+
+    ELEMENTS.implementedOverlay = overlay;
+    ELEMENTS.implementedModal = modal;
+    ELEMENTS.implementedList = modal.querySelector(
+      "#tb-implemented-feature-list"
+    );
+    ELEMENTS.implementedClose = modal.querySelector(".tb-close");
+
+    if (ELEMENTS.implementedClose) {
+      ELEMENTS.implementedClose.addEventListener(
+        "click",
+        closeImplementedFeaturesModal
+      );
+    }
+  }
+
+  function openImplementedFeaturesModal(trigger) {
+    if (!ELEMENTS.implementedOverlay || !ELEMENTS.implementedModal) {
+      return;
+    }
+    lastImplementedTrigger = trigger || null;
+    renderImplementedFeatures();
+    ELEMENTS.implementedOverlay.classList.add("tb-open");
+    ELEMENTS.implementedOverlay.setAttribute("aria-hidden", "false");
+    implementedModalOpen = true;
+    document.body.classList.add("tb-modal-open");
+    setTimeout(function () {
+      if (ELEMENTS.implementedModal) {
+        ELEMENTS.implementedModal.focus();
+      }
+    }, 0);
+  }
+
+  function closeImplementedFeaturesModal() {
+    if (!ELEMENTS.implementedOverlay) {
+      return;
+    }
+    if (detailModalOpen) {
+      closeFeatureDetail();
+    }
+    ELEMENTS.implementedOverlay.classList.remove("tb-open");
+    ELEMENTS.implementedOverlay.setAttribute("aria-hidden", "true");
+    implementedModalOpen = false;
+    if (
+      !detailModalOpen &&
+      !authModalOpen &&
+      !isOpen() &&
+      document.body.classList.contains("tb-modal-open")
+    ) {
+      document.body.classList.remove("tb-modal-open");
+    }
+    if (lastImplementedTrigger && typeof lastImplementedTrigger.focus === "function") {
+      try {
+        lastImplementedTrigger.focus();
+      } catch (error) {
+        // Ignore focus errors
+      }
+    }
+    lastImplementedTrigger = null;
+  }
+
   function attachGlobalShortcuts() {
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
         if (detailModalOpen) {
           closeFeatureDetail();
+        } else if (implementedModalOpen) {
+          closeImplementedFeaturesModal();
         } else if (authModalOpen) {
           closeAuthModal();
         } else if (isOpen()) {
@@ -601,6 +717,7 @@
       return;
     }
     closeFeatureDetail();
+    closeImplementedFeaturesModal();
     ELEMENTS.overlay.classList.remove("tb-open");
     ELEMENTS.overlay.setAttribute("aria-hidden", "true");
     document.body.classList.remove("tb-modal-open");
@@ -669,7 +786,14 @@
         return response.json();
       })
       .then(function (data) {
-        STATE.features = Array.isArray(data.features) ? data.features : [];
+        var features = Array.isArray(data.features) ? data.features : [];
+        var implemented = Array.isArray(data.implemented_features)
+          ? data.implemented_features
+          : [];
+        STATE.features = features.filter(function (feature) {
+          return !feature.implemented_at;
+        });
+        STATE.implementedFeatures = implemented;
         STATE.user = data.user || null;
         STATE.canSubmit = Boolean(data.can_submit);
         STATE.authError = null;
@@ -690,6 +814,7 @@
         renderControlsActions();
         renderStatus();
         renderFeatures();
+        renderImplementedFeatures();
         if (force) {
           if (STATE.error) {
             showToast(STATE.error, "error");
@@ -730,6 +855,23 @@
       });
       buttonGroup.appendChild(submitButton);
     }
+
+    var implementedButton = document.createElement("button");
+    implementedButton.type = "button";
+    implementedButton.className = "tb-btn-secondary";
+    implementedButton.textContent = "View implemented";
+    implementedButton.disabled = STATE.implementedFeatures.length === 0;
+    if (implementedButton.disabled) {
+      implementedButton.setAttribute("aria-disabled", "true");
+      implementedButton.title = "No implemented features yet.";
+    } else {
+      implementedButton.removeAttribute("aria-disabled");
+      implementedButton.title = "See recently implemented features.";
+      implementedButton.addEventListener("click", function (event) {
+        openImplementedFeaturesModal(event.currentTarget);
+      });
+    }
+    buttonGroup.appendChild(implementedButton);
 
     var refreshButton = document.createElement("button");
     refreshButton.type = "button";
@@ -1220,9 +1362,62 @@
     refreshOpenFeatureDetail();
   }
 
+  function renderImplementedFeatures() {
+    var list = ELEMENTS.implementedList;
+    if (!list) {
+      return;
+    }
+
+    list.innerHTML = "";
+
+    if (STATE.loading && !STATE.implementedFeatures.length) {
+      var loading = document.createElement("div");
+      loading.className = "tb-status tb-status-info";
+      loading.textContent = "Loading implemented features...";
+      list.appendChild(loading);
+      return;
+    }
+
+    if (STATE.error) {
+      var error = document.createElement("div");
+      error.className = "tb-status tb-status-error";
+      error.textContent = STATE.error;
+      list.appendChild(error);
+      return;
+    }
+
+    if (!STATE.implementedFeatures.length) {
+      var empty = document.createElement("div");
+      empty.className = "tb-empty";
+      empty.textContent = "No features have been implemented yet.";
+      list.appendChild(empty);
+      return;
+    }
+
+    var fragment = document.createDocumentFragment();
+    var ordered = STATE.implementedFeatures.slice().sort(function (a, b) {
+      var aImplemented = a && a.implemented_at ? new Date(a.implemented_at).getTime() : 0;
+      var bImplemented = b && b.implemented_at ? new Date(b.implemented_at).getTime() : 0;
+      if (aImplemented === bImplemented) {
+        var aCreated = a && a.created_at ? new Date(a.created_at).getTime() : 0;
+        var bCreated = b && b.created_at ? new Date(b.created_at).getTime() : 0;
+        return bCreated - aCreated;
+      }
+      return bImplemented - aImplemented;
+    });
+    ordered.forEach(function (feature) {
+      fragment.appendChild(createFeatureCard(feature));
+    });
+    list.appendChild(fragment);
+
+    refreshOpenFeatureDetail();
+  }
+
   function createFeatureCard(feature) {
     var card = document.createElement("article");
     card.className = "tb-feature";
+
+    var isImplemented = Boolean(feature.implemented_at);
 
     var vote = document.createElement("button");
     vote.type = "button";
@@ -1230,6 +1425,11 @@
     vote.setAttribute("data-voted", feature.user_has_voted ? "true" : "false");
     if (VOTE_IN_FLIGHT.has(feature.id)) {
       vote.classList.add("tb-vote-loading");
+    }
+    if (isImplemented) {
+      vote.classList.add("tb-vote-disabled");
+      vote.disabled = true;
+      vote.setAttribute("aria-disabled", "true");
     }
 
     var arrow = document.createElement("span");
@@ -1242,11 +1442,13 @@
     count.textContent = formatNumber(feature.vote_total);
     vote.appendChild(count);
 
-    vote.addEventListener("click", function (event) {
-      event.preventDefault();
-      event.stopPropagation();
-      handleVote(feature.id);
-    });
+    if (!isImplemented) {
+      vote.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        handleVote(feature.id);
+      });
+    }
 
     var body = document.createElement("div");
     body.className = "tb-feature-body";
@@ -1288,7 +1490,10 @@
     meta.appendChild(createMetaDot());
     var time = document.createElement("span");
     time.className = "tb-meta-item";
-    time.textContent = formatRelativeTime(feature.created_at);
+    var timeline = feature.implemented_at
+      ? "Implemented " + formatRelativeTime(feature.implemented_at)
+      : formatRelativeTime(feature.created_at);
+    time.textContent = timeline;
     meta.appendChild(time);
 
     if (
@@ -1305,16 +1510,11 @@
 
     var actionsGroup = document.createElement("span");
     actionsGroup.className = "tb-meta-actions";
-    actionsGroup.appendChild(createMetaDot());
-    actionsGroup.appendChild(createVariationButton(feature));
-
-    var deleteAction = createDeleteButton(feature);
-    if (deleteAction) {
-      actionsGroup.appendChild(createMetaDot());
-      actionsGroup.appendChild(deleteAction);
+    appendMetaAction(actionsGroup, createVariationButton(feature));
+    appendMetaAction(actionsGroup, createDeleteButton(feature));
+    if (actionsGroup.childNodes.length) {
+      meta.appendChild(actionsGroup);
     }
-
-    meta.appendChild(actionsGroup);
 
     body.appendChild(meta);
 
@@ -1331,8 +1531,16 @@
     return dot;
   }
 
+  function appendMetaAction(container, action) {
+    if (!container || !action) {
+      return;
+    }
+    container.appendChild(createMetaDot());
+    container.appendChild(action);
+  }
+
   function canDeleteFeature(feature) {
-    if (!STATE.user || !feature) {
+    if (!STATE.user || !feature || feature.implemented_at) {
       return false;
     }
     if (STATE.user.is_superuser) {
@@ -1345,6 +1553,9 @@
   }
 
   function createVariationButton(feature) {
+    if (!feature || feature.implemented_at) {
+      return null;
+    }
     var variationButton = document.createElement("button");
     variationButton.type = "button";
     variationButton.className = "tb-feature-variation";
@@ -1504,7 +1715,10 @@
   function formatFeatureMeta(feature) {
     var parts = [];
     parts.push("by " + getCreatorName(feature));
-    parts.push(formatRelativeTime(feature.created_at));
+    var timeline = feature.implemented_at
+      ? "Implemented " + formatRelativeTime(feature.implemented_at)
+      : formatRelativeTime(feature.created_at);
+    parts.push(timeline);
     if (typeof feature.variation_count === "number" && feature.variation_count > 0) {
       parts.push("Variations: " + formatNumber(feature.variation_count));
     }
@@ -1516,10 +1730,14 @@
       return null;
     }
     var target = String(id);
-    for (var i = 0; i < STATE.features.length; i += 1) {
-      var feature = STATE.features[i];
-      if (String(feature.id) === target) {
-        return feature;
+    var pools = [STATE.features, STATE.implementedFeatures];
+    for (var p = 0; p < pools.length; p += 1) {
+      var list = pools[p] || [];
+      for (var i = 0; i < list.length; i += 1) {
+        var feature = list[i];
+        if (String(feature.id) === target) {
+          return feature;
+        }
       }
     }
     return null;
@@ -1527,6 +1745,12 @@
 
   function handleVote(featureId) {
     if (VOTE_IN_FLIGHT.has(featureId)) {
+      return;
+    }
+
+    var targetFeature = getFeatureById(featureId);
+    if (targetFeature && targetFeature.implemented_at) {
+      showToast("Implemented features are read-only.", "info");
       return;
     }
 

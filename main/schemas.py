@@ -30,6 +30,7 @@ class FeatureSchema(Schema):
     title: str
     description: str
     created_at: datetime
+    implemented_at: datetime | None = None
     creator: UserSchema
     vote_total: int
     user_has_voted: bool
@@ -45,6 +46,7 @@ class FeatureDetailSchema(Schema):
     title: str
     description: str
     created_at: datetime
+    implemented_at: datetime | None = None
     creator: UserSchema
     vote_total: int
     user_has_voted: bool
@@ -88,6 +90,7 @@ class FeaturesListResponse(Schema):
     """Response for features list endpoint."""
 
     features: list[FeatureSchema]
+    implemented_features: list[FeatureSchema]
     can_submit: bool
     user: UserSchema | None
 

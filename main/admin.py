@@ -73,8 +73,15 @@ class CustomUserAdmin(BaseUserAdmin):
 
 @admin.register(models.Feature)
 class FeatureAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
-    list_display = ("title", "creator", "created_at", "parent", "display_vote_total")
-    list_filter = ("created_at", "parent")
+    list_display = (
+        "title",
+        "creator",
+        "created_at",
+        "implemented_at",
+        "parent",
+        "display_vote_total",
+    )
+    list_filter = ("created_at", "implemented_at", "parent")
     search_fields = ("title", "description", "creator__email")
     autocomplete_fields = ("creator", "parent")
     ordering = ("-created_at",)

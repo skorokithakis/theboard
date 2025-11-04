@@ -198,3 +198,4 @@ report.xml
 .claude/
 CLAUDE.md
 .pre-commit-cache/
+.idea

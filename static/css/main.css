@@ -34,6 +34,8 @@ body {
     radial-gradient(circle at top center, rgba(75, 183, 170, 0.18), rgba(10, 19, 24, 0) 55%),
     linear-gradient(180deg, rgba(7, 25, 33, 0.85), rgba(7, 22, 30, 0.95) 20%, rgba(11, 28, 39, 0.95) 80%, rgba(8, 20, 26, 0.98));
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   position: relative;
   letter-spacing: 0.01em;
   z-index: 0;
@@ -240,6 +242,7 @@ a:hover {
   padding-top: 3rem;
   padding-bottom: 5rem;
   position: relative;
+  flex: 1 0 auto;
 }
 
 .page-header {
@@ -660,6 +663,7 @@ a:hover {
   text-align: center;
   position: relative;
   overflow: hidden;
+  margin-top: auto;
 }
 
 .site-footer::before {

@@ -237,7 +237,8 @@ a:hover {
 }
 
 .site-main {
-  padding: 3rem 0 5rem;
+  padding-top: 3rem;
+  padding-bottom: 5rem;
   position: relative;
 }
 

@@ -18,7 +18,7 @@ from ninja.security import SessionAuth
 
 from . import models, schemas, turnstile
 
-FEATURE_DAILY_LIMIT = 1
+FEATURE_DAILY_LIMIT = 3
 logger = logging.getLogger(__name__)
 
 

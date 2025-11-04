@@ -184,9 +184,10 @@ class FeatureBoardTests(TestCase):
             models.Vote.objects.filter(user=self.owner, feature=feature).exists()
         )
 
-    def test_daily_limit_blocks_second_submission(self) -> None:
+    def test_daily_limit_blocks_fourth_submission(self) -> None:
         self.client.login(username=self.owner.username, password="test-pass-1")
-        self._submit_feature()
+        for index in range(3):
+            self._submit_feature(title=f"Existing request {index + 1}")
 
         create_url = "/api/features/create"
         response = self.client.post(

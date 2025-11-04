@@ -196,7 +196,7 @@ class Feature(models.Model):
         )
 
     @classmethod
-    def user_has_reached_daily_limit(cls, user: User, limit: int = 1) -> bool:
+    def user_has_reached_daily_limit(cls, user: User, limit: int = 3) -> bool:
         """Return True if the user has already hit the submission limit for the UTC day."""
         return cls.submissions_in_utc_day(user) >= limit
 

@@ -59,6 +59,12 @@
   var lastDetailTrigger = null;
   var implementedModalOpen = false;
   var lastImplementedTrigger = null;
+  var SQUEAK_LISTENER_OPTIONS = { capture: true };
+  var squeakState = {
+    context: null,
+    enabled: true,
+    lastPlayedAt: 0,
+  };
 
   ready(initialize);
   ready(initializeTurnstileAutoRender);
@@ -79,6 +85,7 @@
     createImplementedFeaturesModal();
     createAuthModal();
     attachGlobalShortcuts();
+    initializeSqueakyCursor();
     renderHeaderUser();
     renderAuth();
     renderSubmitPanel();
@@ -128,6 +135,129 @@
     }
 
     queueRender(document);
+  }
+
+  function initializeSqueakyCursor() {
+    if (!(window.AudioContext || window.webkitAudioContext)) {
+      squeakState.enabled = false;
+      return;
+    }
+    document.addEventListener(
+      "pointerdown",
+      handleSqueakPointerDown,
+      SQUEAK_LISTENER_OPTIONS
+    );
+  }
+
+  function ensureSqueakContext() {
+    if (!squeakState.enabled) {
+      return null;
+    }
+    if (!squeakState.context) {
+      var AudioCtor = window.AudioContext || window.webkitAudioContext;
+      try {
+        squeakState.context = new AudioCtor();
+      } catch (err) {
+        squeakState.enabled = false;
+        return null;
+      }
+    }
+    return squeakState.context;
+  }
+
+  function resumeSqueakContext(ctx) {
+    if (!ctx || typeof ctx.resume !== "function") {
+      return Promise.resolve();
+    }
+    if (ctx.state === "running") {
+      return Promise.resolve();
+    }
+    try {
+      return ctx.resume();
+    } catch (err) {
+      return Promise.reject(err);
+    }
+  }
+
+  function handleSqueakPointerDown(event) {
+    if (typeof event.isPrimary === "boolean" && !event.isPrimary) {
+      return;
+    }
+    var ctx = ensureSqueakContext();
+    if (!ctx) {
+      disableSqueakyCursor();
+      return;
+    }
+    resumeSqueakContext(ctx)
+      .then(function () {
+        var now = ctx.currentTime;
+        if (
+          squeakState.lastPlayedAt &&
+          now - squeakState.lastPlayedAt < 0.08
+        ) {
+          return;
+        }
+        squeakState.lastPlayedAt = now;
+        try {
+          playSqueak(ctx, now);
+        } catch (err) {
+          disableSqueakyCursor();
+        }
+      })
+      .catch(disableSqueakyCursor);
+  }
+
+  function playSqueak(ctx, when) {
+    var duration = 0.2;
+    var oscillator = ctx.createOscillator();
+    var gain = ctx.createGain();
+    var filter =
+      typeof ctx.createBiquadFilter === "function"
+        ? ctx.createBiquadFilter()
+        : null;
+
+    oscillator.type = "square";
+    oscillator.frequency.setValueAtTime(1400, when);
+    oscillator.frequency.exponentialRampToValueAtTime(700, when + duration);
+    if (oscillator.detune && typeof oscillator.detune.setValueAtTime === "function") {
+      oscillator.detune.setValueAtTime((Math.random() - 0.5) * 120, when);
+    }
+
+    gain.gain.setValueAtTime(0, when);
+    gain.gain.linearRampToValueAtTime(0.18, when + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.001, when + duration);
+
+    oscillator.connect(gain);
+    if (filter) {
+      filter.type = "bandpass";
+      filter.frequency.setValueAtTime(1000, when);
+      filter.Q.value = 6;
+      gain.connect(filter);
+      filter.connect(ctx.destination);
+    } else {
+      gain.connect(ctx.destination);
+    }
+
+    oscillator.start(when);
+    oscillator.stop(when + duration + 0.02);
+  }
+
+  function disableSqueakyCursor() {
+    squeakState.enabled = false;
+    document.removeEventListener(
+      "pointerdown",
+      handleSqueakPointerDown,
+      SQUEAK_LISTENER_OPTIONS
+    );
+    if (squeakState.context) {
+      try {
+        squeakState.context.close();
+      } catch (err) {
+        // Ignore context close errors
+      }
+    }
+    squeakState.context = null;
+    squeakState.lastPlayedAt = 0;
   }
 
   function injectCSS() {

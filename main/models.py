@@ -22,6 +22,7 @@ class UserManager(BaseUserManager):
         if not username:
             raise ValueError("A username must be provided.")
         username = self.model.normalize_username(username)
+        username = username.lower()
         user = self.model(username=username, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)

@@ -36,6 +36,26 @@ class FeatureBoardTests(TestCase):
         data.update(kwargs)
         return models.Feature.objects.create(**data)
 
+    def test_create_user_lowercases_username(self) -> None:
+        user = User.objects.create_user(username="MiXeDCaSeUser", password="test-pass")
+        self.assertEqual(user.username, "mixedcaseuser")
+
+    def test_signup_endpoint_lowercases_username(self) -> None:
+        payload = {
+            "username": "NewUser",
+            "password": "strong-pass-1",
+            "password_confirm": "strong-pass-1",
+        }
+        response = self.client.post(
+            "/api/auth/signup",
+            payload,
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 201)
+        data = response.json()
+        self.assertEqual(data["user"]["username"], "newuser")
+        self.assertTrue(User.objects.filter(username="newuser").exists())
+
     def test_feature_list_orders_by_vote_total(self) -> None:
         low = self._submit_feature(title="Low votes")
         top = self._submit_feature(title="Top votes", description="More detail")

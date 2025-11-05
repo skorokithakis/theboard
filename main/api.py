@@ -436,6 +436,7 @@ def auth_signup(
                 )
 
     username = data.username.strip()
+    normalized_username = username.lower()
     password = data.password.strip()
     password_confirm = data.password_confirm.strip()
 
@@ -445,10 +446,13 @@ def auth_signup(
     if password != password_confirm:
         raise HttpError(400, "Passwords do not match")
 
-    if models.User.objects.filter(username=username).exists():
+    if models.User.objects.filter(username=normalized_username).exists():
         raise HttpError(400, "Username already in use")
 
-    user = models.User.objects.create_user(username=username, password=password)
+    user = models.User.objects.create_user(
+        username=normalized_username,
+        password=password,
+    )
     if signup_cache and signup_cache_key:
         try:
             signup_cache.set(

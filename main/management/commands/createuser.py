@@ -26,9 +26,10 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options) -> None:
-        username = (options["username"] or "").strip()
-        if not username:
+        username_input = (options["username"] or "").strip()
+        if not username_input:
             raise CommandError("Username cannot be blank.")
+        username = username_input.lower()
 
         password_option = options.get("password")
         no_password = bool(options.get("no_password"))
@@ -38,7 +39,9 @@ class Command(BaseCommand):
 
         User = get_user_model()
         if User.objects.filter(username=username).exists():
-            raise CommandError(f"Username '{username}' is already taken.")
+            raise CommandError(
+                f"Username '{username_input}' conflicts with an existing account when lowercased."
+            )
 
         password = None
         if password_option:
@@ -76,7 +79,7 @@ class Command(BaseCommand):
     def _validate_password(self, password: str, username: str) -> None:
         """Validate the password using Django's validators."""
         User = get_user_model()
-        temp_user = User(username=username)
+        temp_user = User(username=username.lower())
         try:
             password_validation.validate_password(password, temp_user)
         except ValidationError as exc:

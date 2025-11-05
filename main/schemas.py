@@ -93,6 +93,7 @@ class FeaturesListResponse(Schema):
     implemented_features: list[FeatureSchema]
     can_submit: bool
     user: UserSchema | None
+    next_iteration_at: datetime | None = None
 
 
 class FeatureDetailResponse(Schema):

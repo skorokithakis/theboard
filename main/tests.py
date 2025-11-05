@@ -66,6 +66,8 @@ class FeatureBoardTests(TestCase):
         response = self.client.get("/api/features")
         self.assertEqual(response.status_code, 200)
         data = response.json()
+        self.assertIn("next_iteration_at", data)
+        self.assertIsNotNone(data["next_iteration_at"])
         features = data["features"]
         self.assertEqual(features[0]["title"], "Top votes")
         self.assertEqual(features[0]["vote_total"], 2)

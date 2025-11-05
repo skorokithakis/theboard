@@ -299,6 +299,15 @@ a:hover {
   line-height: 1.6;
 }
 
+.page-countdown {
+  margin: 0.75rem 0 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--brand);
+  font-weight: 600;
+}
+
 .header-actions {
   display: flex;
   align-items: center;

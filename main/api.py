@@ -18,6 +18,7 @@ from ninja.errors import HttpError
 from ninja.security import SessionAuth
 
 from . import models, schemas, turnstile
+from .utils import get_next_iteration_at
 
 FEATURE_DAILY_LIMIT = 3
 SIGNUP_DAILY_LIMIT = 2
@@ -156,6 +157,8 @@ def features_list(request: HttpRequest) -> dict[str, Any]:
         )
     )
 
+    next_iteration = get_next_iteration_at()
+
     return {
         "features": features,
         "implemented_features": implemented_features,
@@ -163,6 +166,7 @@ def features_list(request: HttpRequest) -> dict[str, Any]:
         "user": _serialize_user(request.user)
         if request.user.is_authenticated
         else None,
+        "next_iteration_at": next_iteration,
     }
 
 

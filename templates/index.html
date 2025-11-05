@@ -7,6 +7,11 @@
     <div>
         <h1 class="page-title">{{ request.site.name }}</h1>
         <p class="page-lead"><i>Be careful what you wish for.</i></p>
+        {% if next_iteration_at %}
+        <p class="page-countdown" id="next-iteration-countdown" data-next-iteration="{{ next_iteration_at|date:'c' }}">Next iteration at {{ next_iteration_at|date:'F j, Y H:i \\U\\T\\C' }}</p>
+        {% else %}
+        <p class="page-countdown" id="next-iteration-countdown">Next iteration timing unavailable.</p>
+        {% endif %}
     </div>
 </section>
 

@@ -47,11 +47,16 @@
     showSubmitForm: false,
     submitError: null,
     submitDefaults: null,
+    nextIterationAt: null,
   };
 
   var VOTE_IN_FLIGHT = new Set();
   var DELETE_IN_FLIGHT = new Set();
   var ELEMENTS = {};
+  var countdownTimer = null;
+  var countdownTimeFormatter = null;
+  var lastCountdownTargetMs = null;
+  var cachedLocalTimeLabel = "";
   var fetchPromise = null;
   var authModalOpen = false;
   var detailModalOpen = false;
@@ -84,8 +89,23 @@
     createFeatureDetailModal();
     createImplementedFeaturesModal();
     createAuthModal();
+    ELEMENTS.heroCountdown = document.getElementById("next-iteration-countdown");
+    if (
+      ELEMENTS.heroCountdown &&
+      ELEMENTS.heroCountdown.dataset &&
+      ELEMENTS.heroCountdown.dataset.nextIteration
+    ) {
+      var initialTarget = parseNextIterationDate(
+        ELEMENTS.heroCountdown.dataset.nextIteration
+      );
+      if (initialTarget) {
+        STATE.nextIterationAt = initialTarget;
+      }
+    }
     attachGlobalShortcuts();
     initializeSqueakyCursor();
+    updateCountdownDisplay();
+    ensureCountdownTimer();
     renderHeaderUser();
     renderAuth();
     renderSubmitPanel();
@@ -321,6 +341,8 @@
       ".tb-btn-secondary[disabled] { opacity: 0.5; cursor: not-allowed; }",
       ".tb-main-panel { flex: 1 1 auto; display: flex; flex-direction: column; }",
       ".tb-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 2rem; border-bottom: 1px solid rgba(243, 201, 105, 0.28); background: rgba(14, 38, 48, 0.95); color: #fdf7e3; }",
+      ".tb-controls-info { display: flex; flex-direction: column; gap: 0.35rem; flex: 1 1 auto; min-width: 0; }",
+      ".tb-next-run { font-size: 0.85rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #f3c969; }",
       ".tb-status { font-size: 0.875rem; font-weight: 500; color: #f3c969; flex: 1 1 auto; }",
       ".tb-status-info { color: #2bb3af; }",
       ".tb-status-warning { color: #ea580c; }",
@@ -487,7 +509,10 @@
       '  <aside class="tb-submit-panel" id="tb-submit-panel"></aside>',
       '  <section class="tb-main-panel">',
       '    <div class="tb-controls">',
-      '      <div class="tb-status tb-status-muted" id="tb-status">Loading the board...</div>',
+      '      <div class="tb-controls-info">',
+      '        <div class="tb-next-run" id="tb-next-run"></div>',
+      '        <div class="tb-status tb-status-muted" id="tb-status">Loading the board...</div>',
+      '      </div>',
       '      <div id="tb-controls-actions"></div>',
       "    </div>",
       '    <div class="tb-feature-list" id="tb-feature-list"></div>',
@@ -525,6 +550,7 @@
     ELEMENTS.close = modal.querySelector(".tb-close");
     ELEMENTS.submitPanel = modal.querySelector("#tb-submit-panel");
     ELEMENTS.authSection = modal.querySelector("#tb-auth-section");
+    ELEMENTS.nextRun = modal.querySelector("#tb-next-run");
     ELEMENTS.status = modal.querySelector("#tb-status");
     ELEMENTS.featureList = modal.querySelector("#tb-feature-list");
     ELEMENTS.controlsActions = modal.querySelector("#tb-controls-actions");
@@ -870,6 +896,19 @@
         STATE.user = data.user || null;
         STATE.canSubmit = Boolean(data.can_submit);
         STATE.authError = null;
+        STATE.nextIterationAt = parseNextIterationDate(
+          data.next_iteration_at
+        );
+        if (ELEMENTS.heroCountdown) {
+          if (data.next_iteration_at) {
+            ELEMENTS.heroCountdown.dataset.nextIteration =
+              data.next_iteration_at;
+          } else {
+            delete ELEMENTS.heroCountdown.dataset.nextIteration;
+          }
+        }
+        lastCountdownTargetMs = null;
+        updateCountdownDisplay();
         if (STATE.user) {
           STATE.authView = "profile";
         } else if (STATE.authView === "profile") {
@@ -985,6 +1024,138 @@
     status.textContent = STATE.user
       ? ""
       : "Sign in to vote and help shape what ships next.";
+  }
+
+  function ensureCountdownTimer() {
+    if (countdownTimer) {
+      return;
+    }
+    countdownTimer = window.setInterval(updateCountdownDisplay, 1000);
+  }
+
+  function updateCountdownDisplay() {
+    var target = getCountdownTarget();
+    if (!target) {
+      setCountdownMessage(ELEMENTS.nextRun, "");
+      setCountdownMessage(ELEMENTS.heroCountdown, "");
+      return;
+    }
+    var nowMs = Date.now();
+    var targetMs = target.getTime();
+    var diff = targetMs - nowMs;
+    if (diff <= 0) {
+      target = computeNextLocalIteration(new Date(nowMs));
+      targetMs = target.getTime();
+      diff = targetMs - nowMs;
+    }
+    if (diff < 0) {
+      diff = 0;
+    }
+    if (lastCountdownTargetMs !== targetMs) {
+      cachedLocalTimeLabel = formatLocalTime(target);
+      lastCountdownTargetMs = targetMs;
+    }
+    var countdownText = formatCountdown(diff);
+    var utcLabel = formatUtcTime(target);
+    var message =
+      "Next iteration in " +
+      countdownText +
+      " (" +
+      utcLabel +
+      " UTC / " +
+      cachedLocalTimeLabel +
+      " your time)";
+    setCountdownMessage(ELEMENTS.nextRun, message);
+    setCountdownMessage(ELEMENTS.heroCountdown, message);
+  }
+
+  function setCountdownMessage(element, message) {
+    if (!element) {
+      return;
+    }
+    if (element.textContent !== message) {
+      element.textContent = message;
+    }
+  }
+
+  function getCountdownTarget() {
+    var target = STATE.nextIterationAt;
+    if (target && !(target instanceof Date)) {
+      target = parseNextIterationDate(target);
+      STATE.nextIterationAt = target;
+    }
+    if (target instanceof Date && !Number.isNaN(target.getTime())) {
+      if (target.getTime() - Date.now() > 1000) {
+        return target;
+      }
+    }
+    return computeNextLocalIteration();
+  }
+
+  function computeNextLocalIteration(reference) {
+    var now = reference instanceof Date ? reference : new Date();
+    var targetMs = Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate() + 1,
+      0,
+      0,
+      0,
+      0
+    );
+    return new Date(targetMs);
+  }
+
+  function parseNextIterationDate(value) {
+    if (!value) {
+      return null;
+    }
+    var date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return null;
+    }
+    return date;
+  }
+
+  function formatCountdown(diffMs) {
+    var totalSeconds = Math.max(0, Math.floor(diffMs / 1000));
+    var days = Math.floor(totalSeconds / 86400);
+    var hours = Math.floor((totalSeconds % 86400) / 3600);
+    var minutes = Math.floor((totalSeconds % 3600) / 60);
+    var seconds = totalSeconds % 60;
+    var parts = [];
+    if (days) {
+      parts.push(days + "d");
+    }
+    parts.push(String(hours).padStart(2, "0") + "h");
+    parts.push(String(minutes).padStart(2, "0") + "m");
+    parts.push(String(seconds).padStart(2, "0") + "s");
+    return parts.join(" ");
+  }
+
+  function formatUtcTime(date) {
+    var hours = String(date.getUTCHours()).padStart(2, "0");
+    var minutes = String(date.getUTCMinutes()).padStart(2, "0");
+    return hours + ":" + minutes;
+  }
+
+  function formatLocalTime(date) {
+    if (typeof Intl !== "undefined" && Intl.DateTimeFormat) {
+      try {
+        if (!countdownTimeFormatter) {
+          countdownTimeFormatter = new Intl.DateTimeFormat(undefined, {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        }
+        return countdownTimeFormatter.format(date);
+      } catch (error) {
+        // Ignore and fallback to toLocaleString
+      }
+    }
+    return date.toLocaleString();
   }
 
   function renderHeaderUser() {

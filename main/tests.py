@@ -73,6 +73,7 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(features[0]["vote_total"], 2)
         self.assertTrue(all(item["implemented_at"] is None for item in features))
         self.assertEqual(data["implemented_features"], [])
+        self.assertEqual(data["graveyard_features"], [])
 
     def test_feature_list_excludes_implemented_features(self) -> None:
         visible = self._submit_feature(title="Visible")
@@ -89,6 +90,7 @@ class FeatureBoardTests(TestCase):
         self.assertNotIn(hidden.title, titles)
         implemented_titles = [item["title"] for item in data["implemented_features"]]
         self.assertIn(hidden.title, implemented_titles)
+        self.assertEqual(data["graveyard_features"], [])
 
     def test_feature_list_returns_implemented_chronologically(self) -> None:
         first = self._submit_feature(title="First done")
@@ -106,6 +108,24 @@ class FeatureBoardTests(TestCase):
         data = response.json()
         implemented_titles = [item["title"] for item in data["implemented_features"]]
         self.assertEqual(implemented_titles, ["Later done", "First done"])
+        self.assertEqual(data["graveyard_features"], [])
+
+    def test_feature_list_moves_stale_features_to_graveyard(self) -> None:
+        stale = self._submit_feature(title="Forgotten request")
+        models.Feature.objects.filter(pk=stale.pk).update(
+            created_at=timezone.now() - timedelta(days=8)
+        )
+
+        response = self.client.get("/api/features")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        self.assertEqual(data["features"], [])
+        graveyard_titles = [item["title"] for item in data["graveyard_features"]]
+        self.assertIn("Forgotten request", graveyard_titles)
+
+        stale.refresh_from_db()
+        self.assertIsNotNone(stale.expired_at)
 
     def test_feature_detail_includes_implemented_feature(self) -> None:
         feature = self._submit_feature(title="Already shipped")
@@ -120,6 +140,21 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIsNotNone(data["feature"]["implemented_at"])
+        self.assertFalse(data["can_submit_variation"])
+
+    def test_feature_detail_marks_expired_feature(self) -> None:
+        feature = self._submit_feature(title="Expired idea")
+        models.Feature.objects.filter(pk=feature.pk).update(
+            created_at=timezone.now() - timedelta(days=10)
+        )
+
+        self.client.login(username=self.owner.username, password="test-pass-1")
+        response = self.client.get(f"/api/features/{feature.pk}")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        self.assertIsNone(data["feature"]["implemented_at"])
+        self.assertIsNotNone(data["feature"]["expired_at"])
         self.assertFalse(data["can_submit_variation"])
 
     @override_settings(TURNSTILE_ENABLED=True)
@@ -205,6 +240,26 @@ class FeatureBoardTests(TestCase):
         self.assertTrue(
             models.Vote.objects.filter(user=self.owner, feature=feature).exists()
         )
+
+    def test_vote_toggle_rejects_expired_feature(self) -> None:
+        feature = self._submit_feature()
+        models.Feature.objects.filter(pk=feature.pk).update(
+            created_at=timezone.now() - timedelta(days=8)
+        )
+        self.client.login(username=self.owner.username, password="test-pass-1")
+
+        vote_url = f"/api/features/{feature.pk}/vote"
+        response = self.client.post(
+            vote_url,
+            {},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertIn("retired", data["error"].lower())
+        feature.refresh_from_db()
+        self.assertIsNotNone(feature.expired_at)
 
     def test_daily_limit_blocks_fourth_submission(self) -> None:
         self.client.login(username=self.owner.username, password="test-pass-1")
@@ -349,6 +404,29 @@ class FeatureBoardTests(TestCase):
         self.assertIn("implemented", data["error"].lower())
         self.assertFalse(models.Feature.objects.filter(parent=parent).exists())
 
+    def test_variation_creation_blocked_when_parent_expired(self) -> None:
+        parent = self._submit_feature(creator=self.other)
+        models.Feature.objects.filter(pk=parent.pk).update(
+            created_at=timezone.now() - timedelta(days=9)
+        )
+        self.client.login(username=self.owner.username, password="test-pass-1")
+
+        response = self.client.post(
+            "/api/features/create",
+            {
+                "title": "Expired variation attempt",
+                "description": "Should be blocked",
+                "parent_id": parent.pk,
+            },
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertIn("expired", data["error"].lower())
+        parent.refresh_from_db()
+        self.assertIsNotNone(parent.expired_at)
+
     def test_delete_feature_clears_parent_for_children(self) -> None:
         parent = self._submit_feature()
         child = self._submit_feature(title="Variation", parent=parent)
@@ -401,6 +479,24 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(payload["feature"]["vote_total"], 2)
         self.assertEqual(payload["feature"]["variation_count"], 1)
         self.assertEqual(payload["variations"][0]["id"], variation.pk)
+
+    def test_api_top_skips_expired_features(self) -> None:
+        active = self._submit_feature(title="Fresh idea")
+        stale = self._submit_feature(title="Past its prime")
+        models.Vote.objects.create(user=self.owner, feature=active)
+        models.Vote.objects.create(user=self.owner, feature=stale)
+        models.Vote.objects.create(user=self.other, feature=stale)
+        models.Feature.objects.filter(pk=stale.pk).update(
+            created_at=timezone.now() - timedelta(days=9)
+        )
+
+        response = self.client.get("/api/top")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["feature"]["id"], active.pk)
+
+        stale.refresh_from_db()
+        self.assertIsNotNone(stale.expired_at)
 
     def test_healthz_endpoint_reports_ok(self) -> None:
         response = self.client.get("/healthz/")

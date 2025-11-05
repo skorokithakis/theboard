@@ -664,6 +664,30 @@ a:hover {
   line-height: 1.8;
 }
 
+.graveyard-callout {
+  background: linear-gradient(135deg, rgba(44, 20, 58, 0.92), rgba(16, 18, 36, 0.95));
+  border-color: rgba(147, 112, 219, 0.45);
+  box-shadow: 0 28px 52px -30px rgba(76, 29, 149, 0.6);
+}
+
+.graveyard-callout::before {
+  border-color: rgba(147, 112, 219, 0.35);
+  box-shadow: 0 0 24px rgba(147, 112, 219, 0.18);
+}
+
+.graveyard-callout h2 {
+  color: #d6bbff;
+}
+
+.graveyard-callout p {
+  color: rgba(234, 223, 255, 0.9);
+}
+
+.graveyard-reminder {
+  font-style: italic;
+  color: rgba(248, 113, 113, 0.85);
+}
+
 .site-footer {
   border-top: 2px solid rgba(243, 201, 105, 0.45);
   background: linear-gradient(180deg, rgba(8, 25, 32, 0.95), rgba(7, 18, 24, 0.98));

@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+from django.db.models import Count
 from django.utils import timezone
 
 
@@ -102,16 +103,22 @@ class FeatureQuerySet(models.QuerySet):
         return self.with_vote_totals().order_by("-total_votes", "-created_at")
 
     def pending(self) -> "FeatureQuerySet":
-        """Return features that have not been implemented yet."""
-        return self.filter(implemented_at__isnull=True)
+        """Return features that have not been implemented or expired."""
+        return self.filter(implemented_at__isnull=True, expired_at__isnull=True)
 
     def implemented(self) -> "FeatureQuerySet":
         """Return features that have been marked as implemented."""
         return self.filter(implemented_at__isnull=False)
 
+    def expired(self) -> "FeatureQuerySet":
+        """Return features that have expired without being implemented."""
+        return self.filter(expired_at__isnull=False)
+
 
 class Feature(models.Model):
     """A feature request or variation proposed by the community."""
+
+    EXPIRATION_AGE = timedelta(days=7)
 
     title = models.CharField(max_length=200)
     description = models.TextField()
@@ -134,12 +141,17 @@ class Feature(models.Model):
         blank=True,
         help_text="Timestamp for when the feature was implemented.",
     )
+    expired_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp for when the feature was retired without being implemented.",
+    )
     votes = models.IntegerField(
         null=True,
         blank=True,
         help_text=(
-            "Historical vote count captured at implementation time. "
-            "Only used once the feature is implemented to keep showing votes after nightly cleanup."
+            "Historical vote count captured when the feature shipped or was retired. "
+            "Only used once the feature is implemented or expired to keep showing votes after nightly cleanup."
         ),
     )
 
@@ -162,7 +174,7 @@ class Feature(models.Model):
     @property
     def vote_total(self) -> int:
         """Return pre-annotated vote totals or compute on demand."""
-        if self.is_implemented and self.votes is not None:
+        if (self.is_implemented or self.is_expired) and self.votes is not None:
             return self.votes
         return self.live_vote_total
 
@@ -171,13 +183,55 @@ class Feature(models.Model):
         """Return True when the feature has been marked as implemented."""
         return self.implemented_at is not None
 
+    @property
+    def is_expired(self) -> bool:
+        """Return True when the feature has been retired without implementation."""
+        return self.expired_at is not None
+
+    @property
+    def expires_at(self) -> datetime | None:
+        """Return the scheduled expiration timestamp (created_at + 7 days)."""
+        if self.is_implemented or self.is_expired:
+            return None
+        return self.created_at + self.EXPIRATION_AGE
+
     def implement(self, when: datetime | None = None) -> None:
         """Mark the feature as implemented and snapshot its vote total."""
         timestamp = when or timezone.now()
         snapshot = self.live_vote_total
         self.implemented_at = timestamp
+        self.expired_at = None
         self.votes = snapshot
-        self.save(update_fields=["implemented_at", "votes"])
+        self.save(update_fields=["implemented_at", "expired_at", "votes"])
+
+    def expire(
+        self,
+        when: datetime | None = None,
+        snapshot: int | None = None,
+    ) -> None:
+        """Retire the feature without implementation and snapshot its vote total."""
+        timestamp = when or timezone.now()
+        final_votes = snapshot if snapshot is not None else self.live_vote_total
+        self.expired_at = timestamp
+        self.votes = final_votes
+        self.save(update_fields=["expired_at", "votes"])
+
+    @classmethod
+    def expire_stale(cls, reference: datetime | None = None) -> list[int]:
+        """Expire features that have been pending for longer than the grace period."""
+        now = reference or timezone.now()
+        threshold = now - cls.EXPIRATION_AGE
+        stale_features = (
+            cls.objects.pending()
+            .filter(created_at__lt=threshold)
+            .annotate(total_votes=Count("vote_records", distinct=True))
+        )
+        expired_ids: list[int] = []
+        for feature in stale_features:
+            snapshot = getattr(feature, "total_votes", None)
+            feature.expire(when=now, snapshot=snapshot)
+            expired_ids.append(feature.pk)
+        return expired_ids
 
     @classmethod
     def submissions_in_utc_day(cls, user: User, when: datetime | None = None) -> int:

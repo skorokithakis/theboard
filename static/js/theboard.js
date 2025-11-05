@@ -38,6 +38,7 @@
   var STATE = {
     features: [],
     implementedFeatures: [],
+    graveyardFeatures: [],
     user: null,
     canSubmit: false,
     loading: false,
@@ -64,6 +65,8 @@
   var lastDetailTrigger = null;
   var implementedModalOpen = false;
   var lastImplementedTrigger = null;
+  var graveyardModalOpen = false;
+  var lastGraveyardTrigger = null;
   var SQUEAK_LISTENER_OPTIONS = { capture: true };
   var squeakState = {
     context: null,
@@ -88,6 +91,7 @@
     createModal();
     createFeatureDetailModal();
     createImplementedFeaturesModal();
+    createGraveyardModal();
     createAuthModal();
     ELEMENTS.heroCountdown = document.getElementById("next-iteration-countdown");
     if (
@@ -112,6 +116,7 @@
     renderControlsActions();
     renderStatus();
     renderFeatures();
+    renderGraveyardFeatures();
   }
 
   function initializeTurnstileAutoRender() {
@@ -312,6 +317,38 @@
       ".tb-implemented-body { flex: 1; overflow-y: auto; padding: 0; background: #0d1f29; color: #fdf7e3; }",
       ".tb-implemented-body::-webkit-scrollbar { width: 8px; }",
       ".tb-implemented-body::-webkit-scrollbar-thumb { background: #143b47; border-radius: 4px; }",
+      ".tb-graveyard-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 2rem; background: rgba(6, 0, 21, 0.82); backdrop-filter: blur(8px); z-index: 2147483634; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.3s ease; }",
+      ".tb-graveyard-overlay.tb-open { opacity: 1; visibility: visible; pointer-events: auto; }",
+      ".tb-graveyard-modal { position: relative; width: min(860px, 95vw); max-height: 85vh; background: radial-gradient(circle at top, rgba(58, 35, 84, 0.75), rgba(12, 16, 29, 0.95) 60%); border-radius: 24px; border: 1px solid rgba(147, 112, 219, 0.45); box-shadow: 0 32px 60px -40px rgba(0, 0, 0, 0.9); color: #f8eaff; overflow: hidden; display: flex; flex-direction: column; }",
+      ".tb-graveyard-header { background: linear-gradient(180deg, rgba(36, 17, 52, 0.92), rgba(18, 11, 32, 0.92)); border-bottom-color: rgba(147, 112, 219, 0.35); }",
+      ".tb-graveyard-body { position: relative; display: flex; flex-direction: column; gap: 1.5rem; padding: 1.75rem 2rem 2rem; background: rgba(12, 16, 29, 0.92); }",
+      ".tb-graveyard-scenery { position: relative; height: 160px; border-radius: 18px; background: linear-gradient(180deg, rgba(41, 19, 60, 0.85), rgba(8, 11, 24, 0.95)); overflow: hidden; border: 1px solid rgba(147, 112, 219, 0.25); box-shadow: inset 0 0 32px rgba(0, 0, 0, 0.35); }",
+      ".tb-graveyard-moon { position: absolute; top: 18px; right: 28px; width: 84px; height: 84px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #ffe6b3, #d69e2e 55%, rgba(0, 0, 0, 0) 72%); box-shadow: 0 0 22px rgba(255, 230, 179, 0.4); }",
+      ".tb-graveyard-hill { position: absolute; left: -40px; right: -40px; bottom: -20px; height: 120px; background: radial-gradient(circle at 50% 0, rgba(31, 41, 55, 0.8), rgba(15, 23, 42, 0.96)); border-top-left-radius: 50% 100%; border-top-right-radius: 50% 100%; }",
+      ".tb-graveyard-ghost { position: absolute; width: 72px; height: 90px; border-radius: 36px 36px 28px 28px; background: rgba(255, 255, 255, 0.88); box-shadow: 0 18px 24px -12px rgba(255, 255, 255, 0.45); animation: tb-ghost-float 4s ease-in-out infinite; }",
+      ".tb-graveyard-ghost::before { content: \"\"; position: absolute; top: 26px; left: 18px; width: 14px; height: 14px; border-radius: 50%; background: rgba(30, 41, 59, 0.9); box-shadow: 22px 0 0 rgba(30, 41, 59, 0.9); }",
+      ".tb-graveyard-ghost::after { content: \"\"; position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); width: 56px; height: 26px; border-radius: 50%; background: rgba(255, 255, 255, 0.85); box-shadow: 0 -8px 0 rgba(12, 16, 29, 0.92); }",
+      ".tb-graveyard-ghost-left { left: 18%; top: 38px; animation-delay: 0s; }",
+      ".tb-graveyard-ghost-right { left: 48%; top: 26px; animation-delay: 1.5s; }",
+      ".tb-graveyard-shadows { position: absolute; bottom: 16px; left: 20%; width: 60%; height: 12px; background: radial-gradient(circle, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0)); filter: blur(6px); opacity: 0.65; }",
+      ".tb-graveyard-list { display: flex; flex-direction: column; gap: 1rem; max-height: 38vh; overflow-y: auto; padding-right: 0.5rem; }",
+      ".tb-graveyard-list::-webkit-scrollbar { width: 8px; }",
+      ".tb-graveyard-list::-webkit-scrollbar-thumb { background: rgba(147, 112, 219, 0.45); border-radius: 999px; }",
+      ".tb-graveyard-status { padding: 1.5rem; text-align: center; border-radius: 14px; font-weight: 600; }",
+      ".tb-graveyard-status-loading { background: rgba(39, 21, 57, 0.85); color: #d6bbff; }",
+      ".tb-graveyard-status-error { background: rgba(75, 0, 70, 0.82); color: #fbcfe8; }",
+      ".tb-graveyard-status-empty { background: rgba(24, 18, 41, 0.85); color: rgba(216, 191, 255, 0.82); }",
+      ".tb-graveyard-card { position: relative; display: flex; align-items: center; gap: 1.25rem; padding: 1.25rem 1.5rem; border-radius: 16px; background: rgba(24, 19, 42, 0.92); border: 1px solid rgba(147, 112, 219, 0.35); box-shadow: 0 18px 28px -30px rgba(0, 0, 0, 0.9); overflow: hidden; }",
+      ".tb-graveyard-card::before { content: \"\"; position: absolute; inset: 0; background: radial-gradient(circle at top left, rgba(147, 112, 219, 0.18), transparent 70%); pointer-events: none; }",
+      ".tb-graveyard-emblem { font-size: 2rem; line-height: 1; color: #c4b5fd; filter: drop-shadow(0 6px 14px rgba(147, 112, 219, 0.45)); }",
+      ".tb-graveyard-content { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 0.5rem; }",
+      ".tb-graveyard-title { margin: 0; font-size: 1.2rem; letter-spacing: 0.08em; text-transform: uppercase; color: #f5f3ff; }",
+      ".tb-graveyard-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: rgba(216, 191, 255, 0.75); }",
+      ".tb-graveyard-dot { color: rgba(216, 191, 255, 0.4); }",
+      ".tb-graveyard-author { font-style: italic; }",
+      ".tb-graveyard-expired { color: #f9a8d4; font-weight: 600; }",
+      ".tb-graveyard-votes { color: #c4b5fd; font-weight: 600; }",
+      ".tb-graveyard-epitaph { margin: 0; font-size: 0.9rem; color: rgba(234, 219, 255, 0.85); line-height: 1.5; }",
       ".tb-detail-body { flex: 1; overflow-y: auto; padding: 1.5rem 2rem 2rem; background: #0d1f29; color: #fdf7e3; }",
       ".tb-detail-body::-webkit-scrollbar { width: 8px; }",
       ".tb-detail-body::-webkit-scrollbar-thumb { background: #143b47; border-radius: 4px; }",
@@ -339,6 +376,9 @@
       ".tb-btn-secondary { border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; background: rgba(14, 49, 63, 0.7); color: #fdf7e3; border: 2px solid rgba(243, 201, 105, 0.26); cursor: pointer; transition: all 0.2s ease; min-height: 46px; font-family: inherit; }",
       ".tb-btn-secondary:hover { background: rgba(43, 179, 175, 0.24); border-color: rgba(43, 179, 175, 0.45); }",
       ".tb-btn-secondary[disabled] { opacity: 0.5; cursor: not-allowed; }",
+      ".tb-btn-spooky { border-radius: 8px; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 600; background: linear-gradient(135deg, rgba(147, 112, 219, 0.85), rgba(59, 7, 100, 0.9)); color: #f8eaff; border: 2px solid rgba(147, 112, 219, 0.5); cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease; min-height: 46px; font-family: inherit; letter-spacing: 0.05em; text-transform: uppercase; }",
+      ".tb-btn-spooky:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(147, 112, 219, 0.35); }",
+      ".tb-btn-spooky[disabled] { opacity: 0.55; cursor: not-allowed; background: linear-gradient(135deg, rgba(66, 45, 94, 0.9), rgba(32, 24, 54, 0.9)); border-color: rgba(147, 112, 219, 0.25); }",
       ".tb-main-panel { flex: 1 1 auto; display: flex; flex-direction: column; }",
       ".tb-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 2rem; border-bottom: 1px solid rgba(243, 201, 105, 0.28); background: rgba(14, 38, 48, 0.95); color: #fdf7e3; }",
       ".tb-controls-info { display: flex; flex-direction: column; gap: 0.35rem; flex: 1 1 auto; min-width: 0; }",
@@ -355,6 +395,9 @@
       ".tb-feature-list { flex: 1 1 auto; display: flex; flex-direction: column; }",
       ".tb-feature { display: flex; gap: 1rem; padding: 1.5rem 2rem; background: rgba(14, 40, 52, 0.94); border-bottom: 1px solid rgba(243, 201, 105, 0.24); color: #fdf7e3; transition: all 0.2s ease; }",
       ".tb-feature:hover { background: rgba(17, 52, 66, 0.94); border-color: rgba(43, 179, 175, 0.4); box-shadow: 0 10px 22px rgba(0, 0, 0, 0.55); }",
+      ".tb-feature-expiring { position: relative; background: rgba(64, 20, 36, 0.82); border-color: rgba(248, 113, 113, 0.45); box-shadow: 0 16px 32px -24px rgba(248, 113, 113, 0.35); }",
+      ".tb-feature-expiring::before { content: \"\"; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(248, 113, 113, 0.18), transparent 65%); pointer-events: none; }",
+      ".tb-feature-expiring:hover { background: rgba(78, 23, 42, 0.85); border-color: rgba(248, 113, 113, 0.6); box-shadow: 0 20px 38px -24px rgba(248, 113, 113, 0.45); }",
       ".tb-feature:last-child { border-bottom: 0; }",
       ".tb-feature-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.5rem; }",
       ".tb-feature-title { font-size: 1.125rem; font-weight: 600; color: #ffe6b3; line-height: 1.3; margin: 0; }",
@@ -391,6 +434,7 @@
       ".tb-meta-item { color: inherit; }",
       ".tb-meta-dot { color: #94a3b8; }",
       ".tb-meta-dot:first-child, .tb-meta-dot:last-child { display: none; }",
+      ".tb-meta-expiration { color: #fca5a5; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }",
       ".tb-vote { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-width: 56px; height: 56px; padding: 0.5rem 1rem; background: rgba(15, 23, 42, 0.35); border: 2px solid rgba(148, 163, 184, 0.35); border-radius: 8px; color: #cbd5f5; font-weight: 600; cursor: pointer; flex-shrink: 0; transition: all 0.2s ease; }",
       ".tb-vote:hover { border-color: rgba(96, 165, 250, 0.65); background: #2563eb; color: #ffffff; transform: translateY(-2px); }",
       ".tb-vote[data-voted=\"true\"] { border-color: #16a34a; background: #16a34a; color: #ffffff; }",
@@ -449,6 +493,7 @@
       "@keyframes tb-toast-in { to { opacity: 1; transform: translateY(0); } }",
       "@keyframes tb-toast-out { to { opacity: 0; transform: translateY(-8px); } }",
       "@keyframes tb-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }",
+      "@keyframes tb-ghost-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }",
       "@media (max-width: 900px) { .tb-header { padding: 1.25rem 1.5rem; } .tb-body { padding: 0; } .tb-auth-panel { padding: 1.5rem; } .tb-controls { padding: 1rem 1.5rem; } .tb-feature { padding: 1.5rem; } .tb-footer { padding: 1rem 1.5rem; flex-direction: column; gap: 0.5rem; } .tb-close { width: 2rem; height: 2rem; font-size: 1.25rem; } }",
       "@media (max-width: 700px) { .tb-modal { border-radius: 0; max-height: 100vh; width: 100vw; } .tb-feature { flex-direction: column; } .tb-vote { width: fit-content; flex-direction: row; height: auto; padding: 0.5rem 1rem; } }",
     ];
@@ -770,11 +815,115 @@
     lastImplementedTrigger = null;
   }
 
+  function createGraveyardModal() {
+    if (!document.body || ELEMENTS.graveyardOverlay) {
+      return;
+    }
+
+    var overlay = document.createElement("div");
+    overlay.className = "tb-graveyard-overlay";
+    overlay.setAttribute("aria-hidden", "true");
+
+    var modal = document.createElement("div");
+    modal.className = "tb-graveyard-modal";
+    modal.setAttribute("role", "dialog");
+    modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-labelledby", "tb-graveyard-title");
+    modal.tabIndex = -1;
+
+    modal.innerHTML = [
+      '<header class="tb-header tb-graveyard-header">',
+      '  <div class="tb-brand">',
+      '    <span class="tb-logo" id="tb-graveyard-title">THE BOARD</span>',
+      '    <span class="tb-subtitle">Feature graveyard</span>',
+      "  </div>",
+      '  <button type="button" class="tb-close" aria-label="Close feature graveyard">&times;</button>',
+      "</header>",
+      '<div class="tb-graveyard-body">',
+      '  <div class="tb-graveyard-scenery" aria-hidden="true">',
+      '    <div class="tb-graveyard-moon"></div>',
+      '    <div class="tb-graveyard-hill"></div>',
+      '    <div class="tb-graveyard-ghost tb-graveyard-ghost-left"></div>',
+      '    <div class="tb-graveyard-ghost tb-graveyard-ghost-right"></div>',
+      '    <div class="tb-graveyard-shadows"></div>',
+      "  </div>",
+      '  <div class="tb-graveyard-list" id="tb-graveyard-feature-list"></div>',
+      "</div>",
+    ].join("");
+
+    overlay.appendChild(modal);
+
+    overlay.addEventListener("click", function (event) {
+      if (event.target === overlay) {
+        closeGraveyardModal();
+      }
+    });
+
+    document.body.appendChild(overlay);
+
+    ELEMENTS.graveyardOverlay = overlay;
+    ELEMENTS.graveyardModal = modal;
+    ELEMENTS.graveyardList = modal.querySelector("#tb-graveyard-feature-list");
+    ELEMENTS.graveyardClose = modal.querySelector(".tb-close");
+
+    if (ELEMENTS.graveyardClose) {
+      ELEMENTS.graveyardClose.addEventListener("click", closeGraveyardModal);
+    }
+  }
+
+  function openGraveyardModal(trigger) {
+    if (!ELEMENTS.graveyardOverlay || !ELEMENTS.graveyardModal) {
+      return;
+    }
+    lastGraveyardTrigger = trigger || null;
+    renderGraveyardFeatures();
+    ELEMENTS.graveyardOverlay.classList.add("tb-open");
+    ELEMENTS.graveyardOverlay.setAttribute("aria-hidden", "false");
+    graveyardModalOpen = true;
+    document.body.classList.add("tb-modal-open");
+    setTimeout(function () {
+      if (ELEMENTS.graveyardModal) {
+        ELEMENTS.graveyardModal.focus();
+      }
+    }, 0);
+  }
+
+  function closeGraveyardModal() {
+    if (!ELEMENTS.graveyardOverlay) {
+      return;
+    }
+    if (detailModalOpen) {
+      closeFeatureDetail();
+    }
+    ELEMENTS.graveyardOverlay.classList.remove("tb-open");
+    ELEMENTS.graveyardOverlay.setAttribute("aria-hidden", "true");
+    graveyardModalOpen = false;
+    if (
+      !detailModalOpen &&
+      !authModalOpen &&
+      !isOpen() &&
+      !implementedModalOpen &&
+      document.body.classList.contains("tb-modal-open")
+    ) {
+      document.body.classList.remove("tb-modal-open");
+    }
+    if (lastGraveyardTrigger && typeof lastGraveyardTrigger.focus === "function") {
+      try {
+        lastGraveyardTrigger.focus();
+      } catch (error) {
+        // Ignore focus errors
+      }
+    }
+    lastGraveyardTrigger = null;
+  }
+
   function attachGlobalShortcuts() {
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
         if (detailModalOpen) {
           closeFeatureDetail();
+        } else if (graveyardModalOpen) {
+          closeGraveyardModal();
         } else if (implementedModalOpen) {
           closeImplementedFeaturesModal();
         } else if (authModalOpen) {
@@ -817,6 +966,7 @@
     }
     closeFeatureDetail();
     closeImplementedFeaturesModal();
+    closeGraveyardModal();
     ELEMENTS.overlay.classList.remove("tb-open");
     ELEMENTS.overlay.setAttribute("aria-hidden", "true");
     document.body.classList.remove("tb-modal-open");
@@ -889,10 +1039,14 @@
         var implemented = Array.isArray(data.implemented_features)
           ? data.implemented_features
           : [];
+        var graveyard = Array.isArray(data.graveyard_features)
+          ? data.graveyard_features
+          : [];
         STATE.features = features.filter(function (feature) {
-          return !feature.implemented_at;
+          return !feature.implemented_at && !feature.expired_at;
         });
         STATE.implementedFeatures = implemented;
+        STATE.graveyardFeatures = graveyard;
         STATE.user = data.user || null;
         STATE.canSubmit = Boolean(data.can_submit);
         STATE.authError = null;
@@ -927,6 +1081,7 @@
         renderStatus();
         renderFeatures();
         renderImplementedFeatures();
+        renderGraveyardFeatures();
         if (force) {
           if (STATE.error) {
             showToast(STATE.error, "error");
@@ -984,6 +1139,23 @@
       });
     }
     buttonGroup.appendChild(implementedButton);
+
+    var graveyardButton = document.createElement("button");
+    graveyardButton.type = "button";
+    graveyardButton.className = "tb-btn-spooky";
+    graveyardButton.textContent = "Visit graveyard";
+    graveyardButton.disabled = STATE.graveyardFeatures.length === 0;
+    if (graveyardButton.disabled) {
+      graveyardButton.setAttribute("aria-disabled", "true");
+      graveyardButton.title = "No expired features yet.";
+    } else {
+      graveyardButton.removeAttribute("aria-disabled");
+      graveyardButton.title = "Pay respects to retired ideas.";
+      graveyardButton.addEventListener("click", function (event) {
+        openGraveyardModal(event.currentTarget);
+      });
+    }
+    buttonGroup.appendChild(graveyardButton);
 
     var refreshButton = document.createElement("button");
     refreshButton.type = "button";
@@ -1664,11 +1836,141 @@
     refreshOpenFeatureDetail();
   }
 
+  function renderGraveyardFeatures() {
+    var list = ELEMENTS.graveyardList;
+    if (!list) {
+      return;
+    }
+
+    list.innerHTML = "";
+
+    if (STATE.loading && !STATE.graveyardFeatures.length) {
+      var loading = document.createElement("div");
+      loading.className = "tb-graveyard-status tb-graveyard-status-loading";
+      loading.textContent = "Summoning retired spirits...";
+      list.appendChild(loading);
+      return;
+    }
+
+    if (STATE.error) {
+      var error = document.createElement("div");
+      error.className = "tb-graveyard-status tb-graveyard-status-error";
+      error.textContent = STATE.error;
+      list.appendChild(error);
+      return;
+    }
+
+    if (!STATE.graveyardFeatures.length) {
+      var empty = document.createElement("div");
+      empty.className = "tb-graveyard-status tb-graveyard-status-empty";
+      empty.textContent = "No spirits linger here... yet.";
+      list.appendChild(empty);
+      return;
+    }
+
+    var fragment = document.createDocumentFragment();
+    var ordered = STATE.graveyardFeatures.slice().sort(function (a, b) {
+      var aExpired = a && a.expired_at ? new Date(a.expired_at).getTime() : 0;
+      var bExpired = b && b.expired_at ? new Date(b.expired_at).getTime() : 0;
+      if (aExpired === bExpired) {
+        var aVotes = typeof (a && a.vote_total) === "number" ? a.vote_total : 0;
+        var bVotes = typeof (b && b.vote_total) === "number" ? b.vote_total : 0;
+        return bVotes - aVotes;
+      }
+      return bExpired - aExpired;
+    });
+    ordered.forEach(function (feature) {
+      fragment.appendChild(createGraveyardFeatureCard(feature));
+    });
+    list.appendChild(fragment);
+  }
+
+  function createGraveyardFeatureCard(feature) {
+    var card = document.createElement("article");
+    card.className = "tb-graveyard-card";
+
+    var emblem = document.createElement("div");
+    emblem.className = "tb-graveyard-emblem";
+    emblem.setAttribute("aria-hidden", "true");
+    emblem.textContent = "☠";
+    card.appendChild(emblem);
+
+    var content = document.createElement("div");
+    content.className = "tb-graveyard-content";
+
+    var title = document.createElement("h3");
+    title.className = "tb-graveyard-title";
+    title.textContent = feature.title || "Untitled idea";
+    content.appendChild(title);
+
+    var meta = document.createElement("div");
+    meta.className = "tb-graveyard-meta";
+
+    if (feature.creator && feature.creator.display_name) {
+      var author = document.createElement("span");
+      author.className = "tb-graveyard-author";
+      author.textContent = "by " + feature.creator.display_name;
+      meta.appendChild(author);
+    }
+
+    if (feature.expired_at) {
+      var expired = document.createElement("span");
+      expired.className = "tb-graveyard-expired";
+      expired.textContent = "Expired " + formatLocalTime(new Date(feature.expired_at));
+      if (meta.childNodes.length) {
+        appendGraveyardSeparator(meta);
+      }
+      meta.appendChild(expired);
+    }
+
+    var votes = document.createElement("span");
+    votes.className = "tb-graveyard-votes";
+    votes.textContent = formatNumber(feature.vote_total || 0) + " votes";
+    if (meta.childNodes.length) {
+      appendGraveyardSeparator(meta);
+    }
+    meta.appendChild(votes);
+
+    content.appendChild(meta);
+
+    var description = getFeaturePreviewText(feature.description, feature.title);
+    if (description) {
+      var epitaph = document.createElement("p");
+      epitaph.className = "tb-graveyard-epitaph";
+      epitaph.textContent = description;
+      content.appendChild(epitaph);
+    }
+
+    card.appendChild(content);
+
+    return card;
+  }
+
+  function appendGraveyardSeparator(container) {
+    if (!container) {
+      return;
+    }
+    var dot = document.createElement("span");
+    dot.className = "tb-graveyard-dot";
+    dot.textContent = "•";
+    container.appendChild(dot);
+  }
+
   function createFeatureCard(feature) {
     var card = document.createElement("article");
     card.className = "tb-feature";
 
     var isImplemented = Boolean(feature.implemented_at);
+    var isExpired = Boolean(feature.expired_at);
+    var expiresAt = feature.expires_at ? new Date(feature.expires_at) : null;
+    var isExpiringSoon =
+      !isImplemented && !isExpired && expiresAt && !Number.isNaN(expiresAt.getTime())
+        ? expiresAt.getTime() - Date.now() <= 48 * 60 * 60 * 1000
+        : false;
+
+    if (isExpiringSoon) {
+      card.classList.add("tb-feature-expiring");
+    }
 
     var vote = document.createElement("button");
     vote.type = "button";
@@ -1677,7 +1979,7 @@
     if (VOTE_IN_FLIGHT.has(feature.id)) {
       vote.classList.add("tb-vote-loading");
     }
-    if (isImplemented) {
+    if (isImplemented || isExpired) {
       vote.classList.add("tb-vote-disabled");
       vote.disabled = true;
       vote.setAttribute("aria-disabled", "true");
@@ -1693,7 +1995,7 @@
     count.textContent = formatNumber(feature.vote_total);
     vote.appendChild(count);
 
-    if (!isImplemented) {
+    if (!isImplemented && !isExpired) {
       vote.addEventListener("click", function (event) {
         event.preventDefault();
         event.stopPropagation();
@@ -1747,6 +2049,14 @@
     time.textContent = timeline;
     meta.appendChild(time);
 
+    if (expiresAt && !Number.isNaN(expiresAt.getTime())) {
+      meta.appendChild(createMetaDot());
+      var expiration = document.createElement("span");
+      expiration.className = "tb-meta-item tb-meta-expiration";
+      expiration.textContent = formatTimeUntil(expiresAt);
+      meta.appendChild(expiration);
+    }
+
     if (
       typeof feature.variation_count === "number" &&
       feature.variation_count > 0
@@ -1791,7 +2101,7 @@
   }
 
   function canDeleteFeature(feature) {
-    if (!STATE.user || !feature || feature.implemented_at) {
+    if (!STATE.user || !feature || feature.implemented_at || feature.expired_at) {
       return false;
     }
     if (STATE.user.is_superuser) {
@@ -1804,7 +2114,7 @@
   }
 
   function createVariationButton(feature) {
-    if (!feature || feature.implemented_at) {
+    if (!feature || feature.implemented_at || feature.expired_at) {
       return null;
     }
     var variationButton = document.createElement("button");
@@ -2822,6 +3132,30 @@
       return days + " day" + (days === 1 ? "" : "s") + " ago";
     }
     return date.toLocaleDateString();
+  }
+
+  function formatTimeUntil(value) {
+    var target = new Date(value);
+    if (Number.isNaN(target.getTime())) {
+      return "";
+    }
+    var diff = target.getTime() - Date.now();
+    var minute = 60000;
+    var hour = 60 * minute;
+    var day = 24 * hour;
+    if (diff <= 0) {
+      return "Expires soon";
+    }
+    if (diff < hour) {
+      var mins = Math.ceil(diff / minute);
+      return "Expires in " + mins + " minute" + (mins === 1 ? "" : "s");
+    }
+    if (diff < day) {
+      var hours = Math.ceil(diff / hour);
+      return "Expires in " + hours + " hour" + (hours === 1 ? "" : "s");
+    }
+    var days = Math.ceil(diff / day);
+    return "Expires in " + days + " day" + (days === 1 ? "" : "s");
   }
 
   function formatNumber(value) {

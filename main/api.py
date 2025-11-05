@@ -26,6 +26,11 @@ SIGNUP_RATE_LIMIT_TTL_SECONDS = 60 * 60 * 24
 
 logger = logging.getLogger(__name__)
 
+PENDING_VARIATION_FILTER = Q(
+    variations__implemented_at__isnull=True,
+    variations__expired_at__isnull=True,
+)
+
 
 def custom_exception_handler(request: HttpRequest, exc: Exception):
     """Custom exception handler to format errors with 'error' key instead of 'detail'."""
@@ -83,6 +88,8 @@ def _serialize_feature(
         "vote_total": feature.vote_total,
         "user_has_voted": user_has_voted,
         "last_upvote_at": last_vote.created_at if last_vote else None,
+        "expired_at": feature.expired_at,
+        "expires_at": feature.expires_at,
     }
 
     if hasattr(feature, "variation_count"):
@@ -114,6 +121,8 @@ def _client_ip(request: HttpRequest) -> str | None:
 )
 def features_list(request: HttpRequest) -> dict[str, Any]:
     """List pending features ordered by popularity and implemented features chronologically."""
+    models.Feature.expire_stale()
+
     pending_qs = (
         models.Feature.objects.pending()
         .ordered_by_popularity()
@@ -121,7 +130,7 @@ def features_list(request: HttpRequest) -> dict[str, Any]:
         .annotate(
             variation_count=Count(
                 "variations",
-                filter=Q(variations__implemented_at__isnull=True),
+                filter=PENDING_VARIATION_FILTER,
                 distinct=True,
             )
         )
@@ -134,11 +143,25 @@ def features_list(request: HttpRequest) -> dict[str, Any]:
         .annotate(
             variation_count=Count(
                 "variations",
-                filter=Q(variations__implemented_at__isnull=True),
+                filter=PENDING_VARIATION_FILTER,
                 distinct=True,
             )
         )
         .order_by("-implemented_at", "-created_at")
+    )
+
+    graveyard_qs = (
+        models.Feature.objects.expired()
+        .with_vote_totals()
+        .select_related("creator", "parent")
+        .annotate(
+            variation_count=Count(
+                "variations",
+                filter=PENDING_VARIATION_FILTER,
+                distinct=True,
+            )
+        )
+        .order_by("-expired_at", "-created_at")
     )
 
     vote_ids = _user_vote_ids(request.user)
@@ -148,6 +171,9 @@ def features_list(request: HttpRequest) -> dict[str, Any]:
     implemented_features = [
         _serialize_feature(feature, feature.id in vote_ids)
         for feature in implemented_qs
+    ]
+    graveyard_features = [
+        _serialize_feature(feature, feature.id in vote_ids) for feature in graveyard_qs
     ]
 
     can_submit = (
@@ -162,6 +188,7 @@ def features_list(request: HttpRequest) -> dict[str, Any]:
     return {
         "features": features,
         "implemented_features": implemented_features,
+        "graveyard_features": graveyard_features,
         "can_submit": can_submit,
         "user": _serialize_user(request.user)
         if request.user.is_authenticated
@@ -180,6 +207,8 @@ def feature_create(
     request: HttpRequest, data: schemas.FeatureCreateInput
 ) -> tuple[int, dict[str, Any]]:
     """Create a new feature or variation."""
+    models.Feature.expire_stale()
+
     if models.Feature.user_has_reached_daily_limit(
         request.user, limit=FEATURE_DAILY_LIMIT
     ):
@@ -217,6 +246,8 @@ def feature_create(
             raise HttpError(404, "Parent feature not found") from exc
         if parent_feature.is_implemented:
             raise HttpError(400, "Cannot add variations to an implemented feature")
+        if parent_feature.is_expired:
+            raise HttpError(400, "Cannot add variations to an expired feature")
 
     feature = models.Feature.objects.create(
         title=title,
@@ -241,6 +272,8 @@ def feature_create(
 )
 def feature_detail(request: HttpRequest, pk: int) -> dict[str, Any]:
     """Get a single feature with its variations."""
+    models.Feature.expire_stale()
+
     variations_qs = (
         models.Feature.objects.pending()
         .ordered_by_popularity()
@@ -248,7 +281,7 @@ def feature_detail(request: HttpRequest, pk: int) -> dict[str, Any]:
         .annotate(
             variation_count=Count(
                 "variations",
-                filter=Q(variations__implemented_at__isnull=True),
+                filter=PENDING_VARIATION_FILTER,
                 distinct=True,
             )
         )
@@ -262,7 +295,7 @@ def feature_detail(request: HttpRequest, pk: int) -> dict[str, Any]:
             .annotate(
                 variation_count=Count(
                     "variations",
-                    filter=Q(variations__implemented_at__isnull=True),
+                    filter=PENDING_VARIATION_FILTER,
                     distinct=True,
                 )
             )
@@ -279,6 +312,7 @@ def feature_detail(request: HttpRequest, pk: int) -> dict[str, Any]:
 
     can_submit_variation = (
         not feature.is_implemented
+        and not feature.is_expired
         and request.user.is_authenticated
         and not models.Feature.user_has_reached_daily_limit(
             request.user, limit=FEATURE_DAILY_LIMIT
@@ -325,6 +359,8 @@ def vote_toggle(
     request: HttpRequest, pk: int, data: schemas.VoteToggleInput
 ) -> dict[str, Any]:
     """Toggle a vote on a feature (requires Turnstile verification in production)."""
+    models.Feature.expire_stale()
+
     try:
         feature = (
             models.Feature.objects.select_related("creator")
@@ -336,6 +372,8 @@ def vote_toggle(
 
     if feature.is_implemented:
         raise HttpError(400, "Feature has already been implemented")
+    if feature.is_expired:
+        raise HttpError(400, "Feature has already been retired")
 
     if turnstile.is_enabled():
         verification_token = data.turnstile_token or ""
@@ -498,6 +536,8 @@ def current_user(request: HttpRequest) -> dict[str, Any]:
 @api.get("/top", response=schemas.FeatureDetailResponse, operation_id="api_top")
 def top_feature(request: HttpRequest) -> dict[str, Any]:
     """Return the highest-rated feature as JSON."""
+    models.Feature.expire_stale()
+
     variations_qs = (
         models.Feature.objects.pending()
         .ordered_by_popularity()
@@ -505,7 +545,7 @@ def top_feature(request: HttpRequest) -> dict[str, Any]:
         .annotate(
             variation_count=Count(
                 "variations",
-                filter=Q(variations__implemented_at__isnull=True),
+                filter=PENDING_VARIATION_FILTER,
                 distinct=True,
             )
         )
@@ -519,7 +559,7 @@ def top_feature(request: HttpRequest) -> dict[str, Any]:
         .annotate(
             variation_count=Count(
                 "variations",
-                filter=Q(variations__implemented_at__isnull=True),
+                filter=PENDING_VARIATION_FILTER,
                 distinct=True,
             )
         )

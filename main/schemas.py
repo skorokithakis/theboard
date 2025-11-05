@@ -37,6 +37,8 @@ class FeatureSchema(Schema):
     parent: ParentFeatureSchema | None = None
     variation_count: int | None = None
     last_upvote_at: datetime | None = None
+    expired_at: datetime | None = None
+    expires_at: datetime | None = None
 
 
 class FeatureDetailSchema(Schema):
@@ -54,6 +56,8 @@ class FeatureDetailSchema(Schema):
     variation_count: int | None = None
     last_upvote_at: datetime | None = None
     variations: list[FeatureSchema] | None = None
+    expired_at: datetime | None = None
+    expires_at: datetime | None = None
 
 
 class FeatureCreateInput(Schema):
@@ -91,6 +95,7 @@ class FeaturesListResponse(Schema):
 
     features: list[FeatureSchema]
     implemented_features: list[FeatureSchema]
+    graveyard_features: list[FeatureSchema]
     can_submit: bool
     user: UserSchema | None
     next_iteration_at: datetime | None = None

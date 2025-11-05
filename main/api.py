@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.core.cache import caches
 from django.core.cache.backends.base import InvalidCacheBackendError
@@ -19,6 +20,9 @@ from ninja.security import SessionAuth
 from . import models, schemas, turnstile
 
 FEATURE_DAILY_LIMIT = 3
+SIGNUP_DAILY_LIMIT = 2
+SIGNUP_RATE_LIMIT_TTL_SECONDS = 60 * 60 * 24
+
 logger = logging.getLogger(__name__)
 
 
@@ -406,6 +410,31 @@ def auth_signup(
     if request.user.is_authenticated:
         raise HttpError(400, "Already authenticated")
 
+    signup_cache = None
+    signup_cache_key: str | None = None
+    signup_count = 0
+    if settings.ENVIRONMENT.lower() == "production":
+        client_ip = _client_ip(request) or "unknown"
+        signup_cache_key = f"signup-rate-limit:{client_ip}"
+        try:
+            signup_cache = caches["default"]
+            signup_count = signup_cache.get(signup_cache_key, 0)
+        except InvalidCacheBackendError:
+            signup_cache = None
+            logger.warning("Signup rate limiting skipped: default cache unavailable.")
+        except Exception:
+            signup_cache = None
+            logger.exception(
+                "Signup rate limiting skipped due to cache read failure for IP %s",
+                client_ip,
+            )
+        else:
+            if signup_count >= SIGNUP_DAILY_LIMIT:
+                raise HttpError(
+                    429,
+                    "Too many accounts created from this IP today. Please try again later.",
+                )
+
     username = data.username.strip()
     password = data.password.strip()
     password_confirm = data.password_confirm.strip()
@@ -420,6 +449,19 @@ def auth_signup(
         raise HttpError(400, "Username already in use")
 
     user = models.User.objects.create_user(username=username, password=password)
+    if signup_cache and signup_cache_key:
+        try:
+            signup_cache.set(
+                signup_cache_key,
+                signup_count + 1,
+                SIGNUP_RATE_LIMIT_TTL_SECONDS,
+            )
+        except Exception:
+            logger.exception(
+                "Failed to update signup rate limit counter for key %s",
+                signup_cache_key,
+            )
+
     login(request, user)
     return 201, {
         "message": "Account created successfully",

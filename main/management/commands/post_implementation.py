@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand
 from django.core.management.base import CommandError
 from django.utils import timezone
 
-from main.models import Feature
+from main.models import Feature, Vote
 
 
 class Command(BaseCommand):
@@ -41,8 +41,17 @@ class Command(BaseCommand):
         now = timezone.now()
         feature.implement(when=now)
 
+        # Reset all votes for the next iteration
+        deleted_count, _ = Vote.objects.all().delete()
+
         self.stdout.write(
             self.style.SUCCESS(
                 f'Successfully marked feature "{feature_title}" (ID: {feature_id}) as implemented at {now.isoformat()}'
             )
         )
+        if deleted_count > 0:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f'Reset all votes: deleted {deleted_count} vote(s)'
+                )
+            )

@@ -495,7 +495,7 @@
       "@keyframes tb-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }",
       "@keyframes tb-ghost-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }",
       "@media (max-width: 900px) { .tb-header { padding: 1.25rem 1.5rem; } .tb-body { padding: 0; } .tb-auth-panel { padding: 1.5rem; } .tb-controls { padding: 1rem 1.5rem; } .tb-feature { padding: 1.5rem; } .tb-footer { padding: 1rem 1.5rem; flex-direction: column; gap: 0.5rem; } .tb-close { width: 2rem; height: 2rem; font-size: 1.25rem; } }",
-      "@media (max-width: 700px) { .tb-modal { border-radius: 0; max-height: 100vh; width: 100vw; } .tb-implemented-overlay, .tb-detail-overlay, .tb-graveyard-overlay { padding: 0.5rem; } .tb-implemented-modal, .tb-detail-modal, .tb-graveyard-modal { max-height: 90vh; } .tb-feature { flex-direction: column; } .tb-vote { width: fit-content; flex-direction: row; height: auto; padding: 0.5rem 1rem; } }",
+      "@media (max-width: 700px) { .tb-modal { border-radius: 0; max-height: 85vh; width: 100vw; } .tb-implemented-overlay, .tb-detail-overlay, .tb-graveyard-overlay { padding: 0.5rem; } .tb-implemented-modal, .tb-detail-modal, .tb-graveyard-modal { max-height: 80vh; } .tb-feature { flex-direction: column; } .tb-vote { width: fit-content; flex-direction: row; height: auto; padding: 0.5rem 1rem; } }",
     ];
     style.textContent = css.join("\n");
     document.head.appendChild(style);

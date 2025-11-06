@@ -330,7 +330,7 @@ class FeatureBoardTests(TestCase):
             models.Vote.objects.filter(user=self.owner, feature=feature).exists()
         )
 
-    def test_post_implementation_command_marks_timestamp_and_clears_votes(self) -> None:
+    def test_post_implementation_command_marks_timestamp_and_clears_all_votes(self) -> None:
         feature = self._submit_feature()
         other_feature = self._submit_feature(title="Second feature", creator=self.other)
         models.Vote.objects.create(user=self.owner, feature=feature)
@@ -342,14 +342,14 @@ class FeatureBoardTests(TestCase):
         self.assertIsNotNone(feature.implemented_at)
         self.assertEqual(feature.votes, 1)
         self.assertEqual(feature.vote_total, 1)
-        # Votes for implemented feature should be deleted
+        # ALL votes should be deleted (including for pending features)
         self.assertFalse(
             models.Vote.objects.filter(user=self.owner, feature=feature).exists()
         )
-        # Votes for pending features should be kept
-        self.assertTrue(
+        self.assertFalse(
             models.Vote.objects.filter(user=self.other, feature=other_feature).exists()
         )
+        self.assertEqual(models.Vote.objects.count(), 0)
 
     def test_vote_total_uses_snapshot_after_votes_cleared(self) -> None:
         feature = self._submit_feature()

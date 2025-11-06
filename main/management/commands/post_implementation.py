@@ -41,17 +41,8 @@ class Command(BaseCommand):
         now = timezone.now()
         feature.implement(when=now)
 
-        # Clean up votes for all implemented and expired features
-        implemented_feature_ids = Feature.objects.filter(
-            implemented_at__isnull=False
-        ).values_list("id", flat=True)
-        expired_feature_ids = Feature.objects.filter(
-            expired_at__isnull=False
-        ).values_list("id", flat=True)
-
-        deleted_count, _ = Vote.objects.filter(
-            feature_id__in=list(implemented_feature_ids) + list(expired_feature_ids)
-        ).delete()
+        # Reset all votes for the next iteration
+        deleted_count, _ = Vote.objects.all().delete()
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -61,6 +52,6 @@ class Command(BaseCommand):
         if deleted_count > 0:
             self.stdout.write(
                 self.style.SUCCESS(
-                    f'Cleaned up {deleted_count} vote(s) from implemented and expired features'
+                    f'Reset all votes: deleted {deleted_count} vote(s)'
                 )
             )

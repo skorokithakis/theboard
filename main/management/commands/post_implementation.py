@@ -51,7 +51,5 @@ class Command(BaseCommand):
         )
         if deleted_count > 0:
             self.stdout.write(
-                self.style.SUCCESS(
-                    f'Reset all votes: deleted {deleted_count} vote(s)'
-                )
+                self.style.SUCCESS(f"Reset all votes: deleted {deleted_count} vote(s)")
             )

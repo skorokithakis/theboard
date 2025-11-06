@@ -73,6 +73,8 @@
     enabled: true,
     lastPlayedAt: 0,
   };
+  var WINTER_MONTHS = { 0: true, 10: true, 11: true };
+  var SNOWFLAKE_LAYER_CLASS = "snowfall-layer";
 
   ready(initialize);
   ready(initializeTurnstileAutoRender);
@@ -93,6 +95,7 @@
     createImplementedFeaturesModal();
     createGraveyardModal();
     createAuthModal();
+    initializeSnowfall();
     ELEMENTS.heroCountdown = document.getElementById("next-iteration-countdown");
     if (
       ELEMENTS.heroCountdown &&
@@ -160,6 +163,76 @@
     }
 
     queueRender(document);
+  }
+
+  function initializeSnowfall() {
+    if (!WINTER_MONTHS[new Date().getMonth()]) {
+      return;
+    }
+    if (!document.body || document.querySelector("." + SNOWFLAKE_LAYER_CLASS)) {
+      return;
+    }
+    var flakeCount = determineSnowflakeCount();
+    var snowLayer = document.createElement("div");
+    snowLayer.className = SNOWFLAKE_LAYER_CLASS;
+    var usedSlots = {};
+    for (var i = 0; i < flakeCount; i += 1) {
+      snowLayer.appendChild(createSnowflakeElement(i, usedSlots));
+    }
+    if (document.body.firstChild) {
+      document.body.insertBefore(snowLayer, document.body.firstChild);
+    } else {
+      document.body.appendChild(snowLayer);
+    }
+  }
+
+  function determineSnowflakeCount() {
+    var perWidth = Math.round(window.innerWidth / 22);
+    return Math.max(32, Math.min(90, perWidth));
+  }
+
+  function createSnowflakeElement(index, usedSlots) {
+    // Randomize every attribute so each snowflake feels unique.
+    var flake = document.createElement("span");
+    flake.className = "snowflake";
+    var horizontalSlot = pickSnowflakeHorizontalSlot(usedSlots);
+    flake.style.left = horizontalSlot + "%";
+    var scale = randomBetween(0.55, 1.4);
+    var blur = randomBetween(0, 2.4);
+    var opacity = randomBetween(0.35, 0.95);
+    var duration = randomBetween(12, 26);
+    var delay = randomBetween(-26, 4);
+    var drift = randomBetween(-60, 60);
+    var rotationStart = randomBetween(0, 360);
+    var rotationEnd = rotationStart + randomBetween(180, 720);
+    flake.style.setProperty("--snow-scale", scale.toFixed(2));
+    flake.style.setProperty("--snow-blur", blur.toFixed(2) + "px");
+    flake.style.setProperty("--snow-opacity", opacity.toFixed(2));
+    flake.style.setProperty("--snow-duration", duration.toFixed(2) + "s");
+    flake.style.setProperty("--snow-delay", delay.toFixed(2) + "s");
+    flake.style.setProperty("--snow-drift", drift.toFixed(2) + "px");
+    flake.style.setProperty("--snow-rotation-start", rotationStart.toFixed(2) + "deg");
+    flake.style.setProperty("--snow-rotation-end", rotationEnd.toFixed(2) + "deg");
+    flake.dataset.snowflakeId =
+      "flake-" + index + "-" + horizontalSlot + "-" + rotationStart.toFixed(2);
+    return flake;
+  }
+
+  function pickSnowflakeHorizontalSlot(cache) {
+    var slot = Math.round(randomBetween(0, 1000)) / 10;
+    var key = slot.toFixed(1);
+    var guard = 0;
+    while (cache[key] && guard < 8) {
+      slot = Math.round(randomBetween(0, 1000)) / 10;
+      key = slot.toFixed(1);
+      guard += 1;
+    }
+    cache[key] = true;
+    return slot;
+  }
+
+  function randomBetween(min, max) {
+    return Math.random() * (max - min) + min;
   }
 
   function initializeSqueakyCursor() {

@@ -30,6 +30,9 @@
     deleteFeature: function (id) {
       return API_BASE + "/features/" + id + "/delete";
     },
+    featureDetail: function (id) {
+      return API_BASE + "/features/" + id;
+    },
     login: API_BASE + "/auth/login",
     logout: API_BASE + "/auth/logout",
     signup: API_BASE + "/auth/signup",
@@ -67,6 +70,8 @@
   var lastImplementedTrigger = null;
   var graveyardModalOpen = false;
   var lastGraveyardTrigger = null;
+  var DETAIL_VARIATIONS_CACHE = Object.create(null);
+  var DETAIL_VARIATIONS_REQUESTS = Object.create(null);
   var SQUEAK_LISTENER_OPTIONS = { capture: true };
   var squeakState = {
     context: null,
@@ -431,6 +436,18 @@
       ".tb-detail-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 2rem; border-top: 1px solid rgba(243, 201, 105, 0.28); background: rgba(12, 32, 41, 0.95); }",
       ".tb-detail-actions { display: inline-flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 0.9rem; }",
       ".tb-detail-actions .tb-meta-dot { color: #d8cbb3; }",
+      ".tb-detail-variations { display: none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(148, 163, 184, 0.3); }",
+      ".tb-detail-variations.tb-detail-variations-visible { display: block; }",
+      ".tb-detail-subtitle { margin: 0 0 0.5rem; font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase; color: #94a3b8; font-weight: 600; }",
+      ".tb-variation-header { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.5rem; }",
+      ".tb-variation-count { font-size: 0.85rem; color: #cbd5f5; }",
+      ".tb-variation-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }",
+      ".tb-variation-item { margin: 0; }",
+      ".tb-variation-link { border: none; background: rgba(59, 130, 246, 0.08); color: #bfdbfe; border-radius: 999px; padding: 0.35rem 0.95rem; font-size: 0.92rem; font-weight: 500; cursor: pointer; text-align: left; transition: background 0.2s ease, color 0.2s ease; }",
+      ".tb-variation-link:hover { background: rgba(59, 130, 246, 0.18); color: #e0f2fe; }",
+      ".tb-variation-link:focus-visible { outline: 2px solid rgba(59, 130, 246, 0.9); outline-offset: 2px; }",
+      ".tb-variation-status { font-size: 0.9rem; color: #94a3b8; }",
+      ".tb-variation-status-error { color: #fecaca; }",
       ".tb-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.5rem 2rem; border-bottom: 2px solid rgba(243, 201, 105, 0.28); flex-shrink: 0; background: rgba(14, 38, 48, 0.95); color: #fdf7e3; }",
       ".tb-brand { display: flex; flex-direction: column; gap: 0.4rem; }",
       ".tb-logo { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; background: linear-gradient(135deg, #f3c969, #dba53c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }",
@@ -755,6 +772,7 @@
       '  <article class="tb-detail-content">',
       '    <h2 class="tb-detail-feature-title" id="tb-detail-feature-title"></h2>',
       '    <div class="tb-feature-description" id="tb-detail-description"></div>',
+      '    <div class="tb-detail-variations" id="tb-detail-variations" aria-live="polite"></div>',
       "  </article>",
       "</div>",
       '<footer class="tb-detail-footer">',
@@ -782,6 +800,7 @@
     ELEMENTS.detailMeta = modal.querySelector("#tb-detail-meta");
     ELEMENTS.detailActions = modal.querySelector("#tb-detail-actions");
     ELEMENTS.detailDescription = modal.querySelector("#tb-detail-description");
+    ELEMENTS.detailVariations = modal.querySelector("#tb-detail-variations");
 
     if (ELEMENTS.detailClose) {
       ELEMENTS.detailClose.addEventListener("click", closeFeatureDetail);
@@ -1141,6 +1160,7 @@
         } else if (STATE.authView === "profile") {
           STATE.authView = "login";
         }
+        DETAIL_VARIATIONS_CACHE = Object.create(null);
       })
       .catch(function (error) {
         STATE.error = error.message || "Unable to load features.";
@@ -1169,6 +1189,29 @@
 
   function setLoading(isLoading) {
     STATE.loading = Boolean(isLoading);
+  }
+
+  function fetchFeatureDetail(featureId) {
+    var id = String(featureId);
+    if (!DETAIL_VARIATIONS_REQUESTS[id]) {
+      DETAIL_VARIATIONS_REQUESTS[id] = fetch(ENDPOINTS.featureDetail(id), {
+        credentials: "include",
+      })
+        .then(function (response) {
+          if (!response.ok) {
+            return extractError(response, "Unable to load feature details.").then(
+              function (message) {
+                throw new Error(message);
+              }
+            );
+          }
+          return response.json();
+        })
+        .finally(function () {
+          delete DETAIL_VARIATIONS_REQUESTS[id];
+        });
+    }
+    return DETAIL_VARIATIONS_REQUESTS[id];
   }
 
   function renderControlsActions() {
@@ -2283,6 +2326,7 @@
     }
 
     renderDetailActions(feature);
+    renderDetailVariations(feature);
   }
 
   function renderDetailActions(feature) {
@@ -2313,6 +2357,179 @@
     }
 
     container.appendChild(fragment);
+  }
+
+  function renderDetailVariations(feature) {
+    var container = ELEMENTS.detailVariations;
+    if (!container) {
+      return;
+    }
+
+    resetDetailVariationsContainer(container);
+    if (!feature || typeof feature.id === "undefined") {
+      return;
+    }
+
+    var variationCount =
+      typeof feature.variation_count === "number" ? feature.variation_count : null;
+    if (variationCount === 0) {
+      return;
+    }
+
+    var featureId = String(feature.id);
+    container.dataset.featureId = featureId;
+    container.classList.add("tb-detail-variations-visible");
+    container.appendChild(createDetailVariationsHeader(variationCount));
+
+    var cached = DETAIL_VARIATIONS_CACHE[featureId];
+    if (Array.isArray(cached)) {
+      if (!cached.length || !appendDetailVariationsList(container, cached)) {
+        resetDetailVariationsContainer(container);
+      }
+      return;
+    }
+
+    container.appendChild(createDetailVariationsStatus("Loading variations…"));
+
+    fetchFeatureDetail(featureId)
+      .then(function (detail) {
+        if (container.dataset.featureId !== featureId) {
+          return;
+        }
+        var variations = Array.isArray(detail && detail.variations)
+          ? detail.variations
+          : [];
+        DETAIL_VARIATIONS_CACHE[featureId] = variations;
+        if (!variations.length) {
+          resetDetailVariationsContainer(container);
+          return;
+        }
+        var updatedCount =
+          detail &&
+          detail.feature &&
+          typeof detail.feature.variation_count === "number"
+            ? detail.feature.variation_count
+            : variationCount;
+        container.innerHTML = "";
+        container.dataset.featureId = featureId;
+        container.classList.add("tb-detail-variations-visible");
+        container.appendChild(createDetailVariationsHeader(updatedCount));
+        if (!appendDetailVariationsList(container, variations)) {
+          resetDetailVariationsContainer(container);
+        }
+      })
+      .catch(function (error) {
+        if (container.dataset.featureId !== featureId) {
+          return;
+        }
+        container.innerHTML = "";
+        container.dataset.featureId = featureId;
+        container.classList.add("tb-detail-variations-visible");
+        container.appendChild(createDetailVariationsHeader(variationCount));
+        container.appendChild(
+          createDetailVariationsStatus(
+            error && error.message
+              ? error.message
+              : "Unable to load variations.",
+            true
+          )
+        );
+      });
+  }
+
+  function resetDetailVariationsContainer(container) {
+    container.innerHTML = "";
+    container.classList.remove("tb-detail-variations-visible");
+    delete container.dataset.featureId;
+  }
+
+  function createDetailVariationsHeader(count) {
+    var header = document.createElement("div");
+    header.className = "tb-variation-header";
+    var title = document.createElement("h3");
+    title.className = "tb-detail-subtitle";
+    title.textContent = "Variations";
+    header.appendChild(title);
+    if (typeof count === "number" && count > 0) {
+      var label = document.createElement("span");
+      label.className = "tb-variation-count";
+      label.textContent = count === 1 ? "1 idea" : count + " ideas";
+      header.appendChild(label);
+    }
+    return header;
+  }
+
+  function createDetailVariationsStatus(message, isError) {
+    var className = "tb-variation-status";
+    if (isError) {
+      className += " tb-variation-status-error";
+    }
+    var status = document.createElement("div");
+    status.className = className;
+    status.textContent = message;
+    return status;
+  }
+
+  function appendDetailVariationsList(container, variations) {
+    var list = createDetailVariationsList(variations);
+    if (!list.childNodes.length) {
+      return false;
+    }
+    container.appendChild(list);
+    return true;
+  }
+
+  function createDetailVariationsList(variations) {
+    var list = document.createElement("ul");
+    list.className = "tb-variation-list";
+    variations.forEach(function (variation) {
+      if (!variation || typeof variation.id === "undefined") {
+        return;
+      }
+      var item = document.createElement("li");
+      item.className = "tb-variation-item";
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "tb-variation-link";
+      button.textContent = variation.title || "Untitled variation";
+      button.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        handleDetailVariationSelect(variation.id, button);
+      });
+      item.appendChild(button);
+      list.appendChild(item);
+    });
+    return list;
+  }
+
+  function handleDetailVariationSelect(variationId, triggerElement) {
+    if (variationId == null) {
+      return;
+    }
+    var feature = getFeatureById(variationId);
+    if (feature) {
+      var descriptionHtml = renderMarkdown(feature.description || "");
+      openFeatureDetail(feature, descriptionHtml, triggerElement);
+      return;
+    }
+    fetchFeatureDetail(variationId)
+      .then(function (detail) {
+        if (!detail || !detail.feature) {
+          throw new Error("Unable to load variation.");
+        }
+        var html = renderMarkdown(detail.feature.description || "");
+        if (Array.isArray(detail.variations)) {
+          DETAIL_VARIATIONS_CACHE[String(detail.feature.id)] = detail.variations;
+        }
+        openFeatureDetail(detail.feature, html, triggerElement);
+      })
+      .catch(function (error) {
+        showToast(
+          (error && error.message) || "Unable to open variation.",
+          "error"
+        );
+      });
   }
 
   function refreshOpenFeatureDetail() {

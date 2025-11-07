@@ -365,6 +365,24 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(feature.votes, 2)
         self.assertEqual(feature.vote_total, 2)
 
+    def test_implement_deletes_variations_cascadingly(self) -> None:
+        parent = self._submit_feature()
+        child = self._submit_feature(title="Child variation", parent=parent)
+        grandchild = self._submit_feature(
+            title="Grandchild variation", parent=child, creator=self.other
+        )
+        models.Vote.objects.create(user=self.owner, feature=child)
+        models.Vote.objects.create(user=self.other, feature=grandchild)
+
+        parent.implement()
+
+        self.assertFalse(
+            models.Feature.objects.filter(pk__in=[child.pk, grandchild.pk]).exists()
+        )
+        self.assertFalse(
+            models.Vote.objects.filter(feature__in=[child, grandchild]).exists()
+        )
+
     def test_vote_toggle_rejects_implemented_feature(self) -> None:
         feature = self._submit_feature()
         models.Feature.objects.filter(pk=feature.pk).update(

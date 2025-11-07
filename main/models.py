@@ -203,6 +203,28 @@ class Feature(models.Model):
         self.expired_at = None
         self.votes = snapshot
         self.save(update_fields=["implemented_at", "expired_at", "votes"])
+        self._delete_descendant_variations()
+
+    def _delete_descendant_variations(self) -> None:
+        """Delete every variation branching from this feature."""
+        model = type(self)
+        pending_ids = list(
+            model.objects.filter(parent_id=self.pk).values_list("id", flat=True)
+        )
+        if not pending_ids:
+            return
+
+        descendant_ids: set[int] = set()
+        while pending_ids:
+            descendant_ids.update(pending_ids)
+            pending_ids = list(
+                model.objects.filter(parent_id__in=pending_ids).values_list(
+                    "id", flat=True
+                )
+            )
+
+        if descendant_ids:
+            model.objects.filter(id__in=descendant_ids).delete()
 
     def expire(
         self,

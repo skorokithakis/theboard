@@ -31,6 +31,7 @@ class FeatureSchema(Schema):
     description: str
     created_at: datetime
     implemented_at: datetime | None = None
+    implemented_state: str | None = None
     creator: UserSchema
     vote_total: int
     user_has_voted: bool
@@ -49,6 +50,7 @@ class FeatureDetailSchema(Schema):
     description: str
     created_at: datetime
     implemented_at: datetime | None = None
+    implemented_state: str | None = None
     creator: UserSchema
     vote_total: int
     user_has_voted: bool

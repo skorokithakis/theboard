@@ -120,6 +120,10 @@ class Feature(models.Model):
 
     EXPIRATION_AGE = timedelta(days=7)
 
+    class ImplementationState(models.TextChoices):
+        SUCCESSFUL = "successful", "Successful"
+        UNSUCCESSFUL = "unsuccessful", "Unsuccessful"
+
     title = models.CharField(max_length=200)
     description = models.TextField()
     creator = models.ForeignKey(
@@ -140,6 +144,13 @@ class Feature(models.Model):
         null=True,
         blank=True,
         help_text="Timestamp for when the feature was implemented.",
+    )
+    implemented_state = models.CharField(
+        max_length=32,
+        choices=ImplementationState.choices,
+        null=True,
+        blank=True,
+        help_text="Outcome of the implementation run so we can distinguish successful vs. unsuccessful launches.",
     )
     expired_at = models.DateTimeField(
         null=True,
@@ -202,7 +213,11 @@ class Feature(models.Model):
         self.implemented_at = timestamp
         self.expired_at = None
         self.votes = snapshot
-        self.save(update_fields=["implemented_at", "expired_at", "votes"])
+        if not self.implemented_state:
+            self.implemented_state = self.ImplementationState.SUCCESSFUL
+        self.save(
+            update_fields=["implemented_at", "expired_at", "votes", "implemented_state"]
+        )
         self._delete_descendant_variations()
 
     def _delete_descendant_variations(self) -> None:
@@ -236,7 +251,8 @@ class Feature(models.Model):
         final_votes = snapshot if snapshot is not None else self.live_vote_total
         self.expired_at = timestamp
         self.votes = final_votes
-        self.save(update_fields=["expired_at", "votes"])
+        self.implemented_state = None
+        self.save(update_fields=["expired_at", "votes", "implemented_state"])
 
     @classmethod
     def expire_stale(cls, reference: datetime | None = None) -> list[int]:

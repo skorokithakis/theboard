@@ -78,10 +78,11 @@ class FeatureAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
         "creator",
         "created_at",
         "implemented_at",
+        "implemented_state",
         "parent",
         "display_vote_total",
     )
-    list_filter = ("created_at", "implemented_at", "parent")
+    list_filter = ("created_at", "implemented_at", "implemented_state", "parent")
     search_fields = ("title", "description", "creator__username")
     autocomplete_fields = ("creator", "parent")
     ordering = ("-created_at",)

@@ -84,6 +84,9 @@ def _serialize_feature(
         "description": feature.description,
         "created_at": feature.created_at,
         "implemented_at": feature.implemented_at,
+        "implemented_state": (
+            feature.implemented_state if feature.is_implemented else None
+        ),
         "creator": _serialize_user(feature.creator),
         "vote_total": feature.vote_total,
         "user_has_voted": user_has_voted,

@@ -488,6 +488,9 @@
       ".tb-feature-expiring { position: relative; background: rgba(64, 20, 36, 0.82); border-color: rgba(248, 113, 113, 0.45); box-shadow: 0 16px 32px -24px rgba(248, 113, 113, 0.35); }",
       ".tb-feature-expiring::before { content: \"\"; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(248, 113, 113, 0.18), transparent 65%); pointer-events: none; }",
       ".tb-feature-expiring:hover { background: rgba(78, 23, 42, 0.85); border-color: rgba(248, 113, 113, 0.6); box-shadow: 0 20px 38px -24px rgba(248, 113, 113, 0.45); }",
+      ".tb-feature-implemented-failed { background: rgba(58, 11, 18, 0.9); border-color: rgba(239, 68, 68, 0.65); box-shadow: 0 20px 40px -24px rgba(239, 68, 68, 0.55); }",
+      ".tb-feature-implemented-failed:hover { background: rgba(74, 12, 22, 0.92); border-color: rgba(248, 113, 113, 0.8); box-shadow: 0 24px 48px -24px rgba(248, 113, 113, 0.65); }",
+      ".tb-feature-implemented-failed .tb-feature-title { color: #ffe4e6; }",
       ".tb-feature:last-child { border-bottom: 0; }",
       ".tb-feature-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.5rem; }",
       ".tb-feature-title { font-size: 1.125rem; font-weight: 600; color: #ffe6b3; line-height: 1.3; margin: 0; }",
@@ -514,6 +517,9 @@
       '.tb-feature-description code { font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.85em; background: rgba(96, 165, 250, 0.2); color: #dbeafe; padding: 0.1em 0.3em; border-radius: 6px; }',
       ".tb-feature-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #94a3b8; }",
       ".tb-feature-meta span, .tb-feature-meta time { color: #94a3b8; }",
+      ".tb-meta-implementation-state { text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.08em; font-weight: 600; }",
+      ".tb-meta-implementation-failed { color: #fca5a5; }",
+      ".tb-meta-implementation-success { color: #86efac; }",
       ".tb-meta-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 0.5rem; }",
       ".tb-feature-delete { border: none; background: transparent; color: #fca5a5; font-size: 0.875rem; font-weight: 500; padding: 0.35rem 0.6rem; border-radius: 6px; cursor: pointer; transition: color 0.2s ease, background 0.2s ease; }",
       ".tb-feature-delete:hover { color: #fecaca; background: rgba(248, 113, 113, 0.18); }",
@@ -2079,6 +2085,12 @@
     var isImplemented = Boolean(feature.implemented_at);
     var isExpired = Boolean(feature.expired_at);
     var expiresAt = feature.expires_at ? new Date(feature.expires_at) : null;
+    var implementationState =
+      typeof feature.implemented_state === "string"
+        ? feature.implemented_state.toLowerCase()
+        : "";
+    var isUnsuccessfulImplementation =
+      isImplemented && implementationState === "unsuccessful";
     var isExpiringSoon =
       !isImplemented && !isExpired && expiresAt && !Number.isNaN(expiresAt.getTime())
         ? expiresAt.getTime() - Date.now() <= 48 * 60 * 60 * 1000
@@ -2086,6 +2098,9 @@
 
     if (isExpiringSoon) {
       card.classList.add("tb-feature-expiring");
+    }
+    if (isUnsuccessfulImplementation) {
+      card.classList.add("tb-feature-implemented-failed");
     }
 
     var vote = document.createElement("button");
@@ -2183,6 +2198,21 @@
       variations.textContent =
         "Variations: " + formatNumber(feature.variation_count);
       meta.appendChild(variations);
+    }
+
+    if (isImplemented && implementationState) {
+      meta.appendChild(createMetaDot());
+      var implementationBadge = document.createElement("span");
+      implementationBadge.className =
+        "tb-meta-item tb-meta-implementation-state";
+      if (implementationState === "unsuccessful") {
+        implementationBadge.classList.add("tb-meta-implementation-failed");
+        implementationBadge.textContent = "Implementation failed";
+      } else {
+        implementationBadge.classList.add("tb-meta-implementation-success");
+        implementationBadge.textContent = "Implementation succeeded";
+      }
+      meta.appendChild(implementationBadge);
     }
 
     var actionsGroup = document.createElement("span");
@@ -2570,6 +2600,17 @@
       ? "Implemented " + formatRelativeTime(feature.implemented_at)
       : formatRelativeTime(feature.created_at);
     parts.push(timeline);
+    var implementationState =
+      typeof feature.implemented_state === "string"
+        ? feature.implemented_state.toLowerCase()
+        : "";
+    if (feature.implemented_at && implementationState) {
+      parts.push(
+        implementationState === "unsuccessful"
+          ? "Implementation failed"
+          : "Implementation succeeded"
+      );
+    }
     if (typeof feature.variation_count === "number" && feature.variation_count > 0) {
       parts.push("Variations: " + formatNumber(feature.variation_count));
     }

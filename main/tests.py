@@ -353,6 +353,18 @@ class FeatureBoardTests(TestCase):
         )
         self.assertEqual(models.Vote.objects.count(), 0)
 
+    def test_post_implementation_command_marks_unsuccessful_state(self) -> None:
+        feature = self._submit_feature()
+
+        call_command("post_implementation", str(feature.pk), failed=True)
+
+        feature.refresh_from_db()
+        self.assertEqual(
+            feature.implemented_state,
+            models.Feature.ImplementationState.UNSUCCESSFUL,
+        )
+        self.assertIsNotNone(feature.implemented_at)
+
     def test_vote_total_uses_snapshot_after_votes_cleared(self) -> None:
         feature = self._submit_feature()
         models.Vote.objects.create(user=self.owner, feature=feature)

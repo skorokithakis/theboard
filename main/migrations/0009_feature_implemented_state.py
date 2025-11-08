@@ -11,7 +11,6 @@ def populate_implemented_state(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("main", "0008_feature_expired_at"),
     ]

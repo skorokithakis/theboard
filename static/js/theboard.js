@@ -2200,18 +2200,13 @@
       meta.appendChild(variations);
     }
 
-    if (isImplemented && implementationState) {
+    if (isImplemented && implementationState === "unsuccessful") {
       meta.appendChild(createMetaDot());
       var implementationBadge = document.createElement("span");
       implementationBadge.className =
         "tb-meta-item tb-meta-implementation-state";
-      if (implementationState === "unsuccessful") {
-        implementationBadge.classList.add("tb-meta-implementation-failed");
-        implementationBadge.textContent = "Implementation failed";
-      } else {
-        implementationBadge.classList.add("tb-meta-implementation-success");
-        implementationBadge.textContent = "Implementation succeeded";
-      }
+      implementationBadge.classList.add("tb-meta-implementation-failed");
+      implementationBadge.textContent = "FAILED";
       meta.appendChild(implementationBadge);
     }
 
@@ -2604,12 +2599,8 @@
       typeof feature.implemented_state === "string"
         ? feature.implemented_state.toLowerCase()
         : "";
-    if (feature.implemented_at && implementationState) {
-      parts.push(
-        implementationState === "unsuccessful"
-          ? "Implementation failed"
-          : "Implementation succeeded"
-      );
+    if (feature.implemented_at && implementationState === "unsuccessful") {
+      parts.push("FAILED");
     }
     if (typeof feature.variation_count === "number" && feature.variation_count > 0) {
       parts.push("Variations: " + formatNumber(feature.variation_count));

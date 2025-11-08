@@ -20,9 +20,16 @@ class Command(BaseCommand):
             type=int,
             help="The ID of the feature to mark as implemented",
         )
+        parser.add_argument(
+            "--failed",
+            action="store_true",
+            dest="failed",
+            help="Mark the implementation as unsuccessful",
+        )
 
     def handle(self, *args, **options) -> None:
         feature_id = options["feature_id"]
+        failed = options["failed"]
 
         try:
             feature = Feature.objects.get(id=feature_id)
@@ -39,6 +46,9 @@ class Command(BaseCommand):
             return
 
         now = timezone.now()
+        if failed:
+            feature.implemented_state = Feature.ImplementationState.UNSUCCESSFUL
+
         feature.implement(when=now)
 
         # Reset all votes for the next iteration
@@ -46,7 +56,8 @@ class Command(BaseCommand):
 
         self.stdout.write(
             self.style.SUCCESS(
-                f'Successfully marked feature "{feature_title}" (ID: {feature_id}) as implemented at {now.isoformat()}'
+                f'Successfully marked feature "{feature_title}" (ID: {feature_id}) as '
+                f"{'failed' if failed else 'implemented'} at {now.isoformat()}"
             )
         )
         if deleted_count > 0:

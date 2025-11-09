@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Josefin+Sans:wght@300;400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Josefin+Sans:wght@300;400;500;600&family=Press+Start+2P&display=swap");
 
 :root {
   --brand: #f3c969;
@@ -738,6 +738,202 @@ a:hover {
 .graveyard-reminder {
   font-style: italic;
   color: rgba(248, 113, 113, 0.85);
+}
+
+.feature-button-wall {
+  margin-top: 2.5rem;
+  padding: 2rem;
+  border-radius: 18px;
+  border: 1px solid rgba(243, 201, 105, 0.28);
+  background: radial-gradient(circle at top, rgba(43, 179, 175, 0.15), transparent 60%), rgba(5, 18, 27, 0.9);
+  box-shadow: 0 28px 52px -32px rgba(0, 0, 0, 0.7);
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-button-wall::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border: 1px solid rgba(243, 201, 105, 0.18);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.feature-button-wall__heading {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 540px;
+  margin: 0 auto 1.75rem;
+}
+
+.feature-button-wall__heading h2 {
+  margin-bottom: 0.75rem;
+}
+
+.feature-button-wall__heading p {
+  margin: 0;
+  color: rgba(253, 247, 227, 0.78);
+  font-size: 0.95rem;
+}
+
+.feature-button-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+  gap: 0.85rem 1rem;
+  justify-items: center;
+  align-items: center;
+  padding: 0.5rem 0 0.25rem;
+}
+
+.feature-button {
+  --button-color: #fdf7e3;
+  width: 88px;
+  height: 31px;
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  border-radius: 4px;
+  background-color: rgba(5, 10, 18, 0.95);
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent 55%);
+  background-size: 4px 4px, 4px 4px, 100% 100%;
+  box-shadow:
+    inset 0 0 0 1px rgba(0, 0, 0, 0.35),
+    0 6px 14px rgba(2, 6, 10, 0.85);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1px;
+  padding: 2px 4px;
+  text-transform: uppercase;
+  font-family: "Press Start 2P", "Josefin Sans", monospace;
+  font-size: 0.48rem;
+  line-height: 1.1;
+  color: #fdf7e3;
+  text-shadow: 0 0 6px rgba(0, 0, 0, 0.85);
+  letter-spacing: 0.04em;
+  position: relative;
+  overflow: hidden;
+  justify-self: center;
+}
+
+.feature-button::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.35), transparent 42%);
+  mix-blend-mode: screen;
+  opacity: 0.15;
+  animation: featureButtonGlimmer 4.5s ease-in-out infinite;
+}
+
+.feature-button__title,
+.feature-button__desc {
+  width: 100%;
+  display: block;
+  text-align: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.feature-button__title {
+  color: var(--button-color);
+}
+
+.feature-button__desc {
+  font-size: 0.42rem;
+  opacity: 0.85;
+  color: #d2f7ff;
+}
+
+.feature-button__scanlines {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    rgba(255, 255, 255, 0.05) 1px,
+    rgba(255, 255, 255, 0.05) 2px
+  );
+  animation: featureButtonScanlines 8s linear infinite;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+.feature-button:nth-child(5n + 1) {
+  --button-color: #f3c969;
+  border-color: rgba(243, 201, 105, 0.9);
+  background-color: rgba(26, 22, 10, 0.9);
+}
+
+.feature-button:nth-child(5n + 2) {
+  --button-color: #2bb3af;
+  border-color: rgba(43, 179, 175, 0.85);
+  background-color: rgba(6, 27, 31, 0.95);
+}
+
+.feature-button:nth-child(5n + 3) {
+  --button-color: #f45b69;
+  border-color: rgba(244, 91, 105, 0.8);
+  background-color: rgba(34, 10, 16, 0.92);
+}
+
+.feature-button:nth-child(5n + 4) {
+  --button-color: #d6bbff;
+  border-color: rgba(214, 187, 255, 0.9);
+  background-color: rgba(27, 14, 35, 0.92);
+}
+
+.feature-button:nth-child(5n) {
+  --button-color: #9ae6b4;
+  border-color: rgba(154, 230, 180, 0.9);
+  background-color: rgba(6, 28, 13, 0.95);
+}
+
+.feature-button:nth-child(odd) {
+  animation: featureButtonPulse 7s ease-in-out infinite;
+}
+
+@keyframes featureButtonPulse {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35), 0 6px 14px rgba(2, 6, 10, 0.85);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+      0 10px 24px rgba(0, 0, 0, 0.75);
+  }
+}
+
+@keyframes featureButtonGlimmer {
+  0%,
+  80% {
+    opacity: 0.05;
+  }
+  90% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0.05;
+  }
+}
+
+@keyframes featureButtonScanlines {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(2px);
+  }
 }
 
 .site-footer {

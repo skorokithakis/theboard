@@ -37,4 +37,22 @@
     <p>Ideas that wander the board for more than a week without being implemented fade into the graveyard. You can pay your respects and see what haunts the backlog from the board&rsquo;s new graveyard view.</p>
     <p class="graveyard-reminder">Keep your favorites alive: rally votes before midnight on the seventh day, or they&rsquo;ll return draped in spectral CSS.</p>
 </section>
+
+{% if feature_buttons %}
+<section class="feature-button-wall">
+    <div class="feature-button-wall__heading">
+        <h2>Feature Button Wall</h2>
+        <p>Every fresh idea earns its own 88x31 pixel badge. Scroll through the grid to see the latest ambitions.</p>
+    </div>
+    <div class="feature-button-grid" role="list" aria-label="Feature buttons generated from the current backlog">
+        {% for feature in feature_buttons %}
+        <div class="feature-button" role="img" aria-label="{{ feature.title }}" title="{{ feature.description }}">
+            <span class="feature-button__title">{{ feature.title|truncatechars:18 }}</span>
+            <span class="feature-button__desc">{{ feature.description|truncatechars:22 }}</span>
+            <span class="feature-button__scanlines" aria-hidden="true"></span>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
 {% endblock %}

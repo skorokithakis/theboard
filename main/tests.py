@@ -1,15 +1,16 @@
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import date, timedelta
 from unittest import mock
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from . import models, turnstile
+from . import fortune, models, turnstile
 
 User = get_user_model()
 
@@ -538,3 +539,26 @@ class FeatureBoardTests(TestCase):
         payload = response.json()
         self.assertEqual(payload.get("database"), "ok")
         self.assertIn("cache", payload)
+
+
+class DailyFortuneTests(TestCase):
+    def test_get_daily_fortune_is_deterministic(self) -> None:
+        fortune_one = fortune.get_daily_fortune(date(2024, 12, 1))
+        fortune_two = fortune.get_daily_fortune(date(2024, 12, 1))
+        self.assertEqual(fortune_one, fortune_two)
+
+    def test_homepage_includes_daily_fortune(self) -> None:
+        storage_settings = {
+            **settings.STORAGES,
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            },
+        }
+        with override_settings(
+            STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage",
+            STORAGES=storage_settings,
+        ):
+            response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        context_fortune = response.context["daily_fortune"]
+        self.assertIn(context_fortune, fortune.FORTUNE_COOKIES)

@@ -7,6 +7,15 @@
     <div>
         <h1 class="page-title">{{ request.site.name }}</h1>
         <p class="page-lead"><i>Be careful what you wish for.</i></p>
+        {% if daily_fortune %}
+        <figure class="daily-fortune" role="status" aria-live="polite">
+            <figcaption class="daily-fortune__label">
+                Daily fortune &middot; {{ daily_fortune.collection }} ({{ daily_fortune.package }})
+            </figcaption>
+            <blockquote class="daily-fortune__text">&ldquo;{{ daily_fortune.text }}&rdquo;</blockquote>
+            <p class="daily-fortune__attribution">- {{ daily_fortune.attribution }}</p>
+        </figure>
+        {% endif %}
         {% if next_iteration_at %}
         <p class="page-countdown" id="next-iteration-countdown" data-next-iteration="{{ next_iteration_at|date:'c' }}">Next iteration at {{ next_iteration_at|date:'F j, Y H:i \\U\\T\\C' }}</p>
         {% else %}

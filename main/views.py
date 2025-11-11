@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
+from .fortune import get_daily_fortune
 from .models import Feature
 from .utils import get_next_iteration_at
 
@@ -21,5 +22,6 @@ def index(request: HttpRequest) -> HttpResponse:
     context = {
         "next_iteration_at": get_next_iteration_at(),
         "feature_buttons": button_features,
+        "daily_fortune": get_daily_fortune(),
     }
     return render(request, "index.html", context)

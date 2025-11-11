@@ -351,6 +351,38 @@ a:hover {
   line-height: 1.6;
 }
 
+.daily-fortune {
+  margin: 1rem 0 0;
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  border: 1px solid rgba(243, 201, 105, 0.35);
+  background: rgba(10, 31, 38, 0.75);
+  box-shadow: inset 0 0 18px rgba(43, 179, 175, 0.1);
+}
+
+.daily-fortune__label {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--muted-text);
+}
+
+.daily-fortune__text {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.daily-fortune__attribution {
+  margin: 0.3rem 0 0;
+  font-size: 0.95rem;
+  color: rgba(253, 247, 227, 0.7);
+  font-style: italic;
+  letter-spacing: 0.08em;
+}
+
 .page-countdown {
   margin: 0.75rem 0 0;
   font-size: 0.95rem;

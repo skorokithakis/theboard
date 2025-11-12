@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone as dt_timezone
 from unittest import mock
 
 from django.conf import settings
@@ -10,7 +10,7 @@ from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from . import fortune, models, turnstile
+from . import fortune, models, turnstile, utils
 
 User = get_user_model()
 
@@ -562,3 +562,17 @@ class DailyFortuneTests(TestCase):
         self.assertEqual(response.status_code, 200)
         context_fortune = response.context["daily_fortune"]
         self.assertIn(context_fortune, fortune.FORTUNE_COOKIES)
+
+
+class UtilsTests(TestCase):
+    def test_get_next_iteration_at_before_noon_returns_same_day_noon(self) -> None:
+        reference = datetime(2024, 5, 1, 9, 30, tzinfo=dt_timezone.utc)
+        result = utils.get_next_iteration_at(reference)
+        expected = datetime(2024, 5, 1, 12, 0, tzinfo=dt_timezone.utc)
+        self.assertEqual(result, expected)
+
+    def test_get_next_iteration_at_after_noon_returns_next_midnight(self) -> None:
+        reference = datetime(2024, 5, 1, 18, 0, tzinfo=dt_timezone.utc)
+        result = utils.get_next_iteration_at(reference)
+        expected = datetime(2024, 5, 2, 0, 0, tzinfo=dt_timezone.utc)
+        self.assertEqual(result, expected)

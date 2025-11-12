@@ -1388,16 +1388,16 @@
 
   function computeNextLocalIteration(reference) {
     var now = reference instanceof Date ? reference : new Date();
-    var targetMs = Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate() + 1,
-      0,
-      0,
-      0,
-      0
-    );
-    return new Date(targetMs);
+    var year = now.getUTCFullYear();
+    var month = now.getUTCMonth();
+    var day = now.getUTCDate();
+    var nowMs = now.getTime();
+    var noonTargetMs = Date.UTC(year, month, day, 12, 0, 0, 0);
+    if (nowMs < noonTargetMs) {
+      return new Date(noonTargetMs);
+    }
+    var midnightNextMs = Date.UTC(year, month, day + 1, 0, 0, 0, 0);
+    return new Date(midnightNextMs);
   }
 
   function parseNextIterationDate(value) {

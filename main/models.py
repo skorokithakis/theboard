@@ -165,6 +165,13 @@ class Feature(models.Model):
             "Only used once the feature is implemented or expired to keep showing votes after nightly cleanup."
         ),
     )
+    missed_vote_days = models.PositiveIntegerField(
+        default=0,
+        help_text=(
+            "Number of daily vote resets where this feature failed to receive an up-vote. "
+            "Each missed day shortens the time before the feature expires."
+        ),
+    )
 
     objects = FeatureQuerySet.as_manager()
 
@@ -204,7 +211,8 @@ class Feature(models.Model):
         """Return the scheduled expiration timestamp (created_at + 7 days)."""
         if self.is_implemented or self.is_expired:
             return None
-        return self.created_at + self.EXPIRATION_AGE
+        penalty = timedelta(days=self.missed_vote_days)
+        return self.created_at + self.EXPIRATION_AGE - penalty
 
     def implement(self, when: datetime | None = None) -> None:
         """Mark the feature as implemented and snapshot its vote total."""
@@ -258,17 +266,16 @@ class Feature(models.Model):
     def expire_stale(cls, reference: datetime | None = None) -> list[int]:
         """Expire features that have been pending for longer than the grace period."""
         now = reference or timezone.now()
-        threshold = now - cls.EXPIRATION_AGE
-        stale_features = (
-            cls.objects.pending()
-            .filter(created_at__lt=threshold)
-            .annotate(total_votes=Count("vote_records", distinct=True))
+        stale_features = cls.objects.pending().annotate(
+            total_votes=Count("vote_records", distinct=True)
         )
         expired_ids: list[int] = []
         for feature in stale_features:
-            snapshot = getattr(feature, "total_votes", None)
-            feature.expire(when=now, snapshot=snapshot)
-            expired_ids.append(feature.pk)
+            expires_at = feature.expires_at
+            if expires_at and expires_at <= now:
+                snapshot = getattr(feature, "total_votes", None)
+                feature.expire(when=now, snapshot=snapshot)
+                expired_ids.append(feature.pk)
         return expired_ids
 
     @classmethod

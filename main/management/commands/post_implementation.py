@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from django.core.management.base import BaseCommand
-from django.core.management.base import CommandError
+from django.core.management.base import BaseCommand, CommandError
+from django.db.models import Count, F
 from django.utils import timezone
 
 from main.models import Feature, Vote
@@ -51,6 +51,8 @@ class Command(BaseCommand):
 
         feature.implement(when=now)
 
+        self._penalize_inactive_features()
+
         # Reset all votes for the next iteration
         deleted_count, _ = Vote.objects.all().delete()
 
@@ -63,4 +65,19 @@ class Command(BaseCommand):
         if deleted_count > 0:
             self.stdout.write(
                 self.style.SUCCESS(f"Reset all votes: deleted {deleted_count} vote(s)")
+            )
+
+    def _penalize_inactive_features(self) -> None:
+        """Shorten the lifespan for pending features that earned zero votes."""
+        updated = (
+            Feature.objects.pending()
+            .annotate(daily_votes=Count("vote_records"))
+            .filter(daily_votes=0)
+            .update(missed_vote_days=F("missed_vote_days") + 1)
+        )
+        if updated:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Penalized {updated} inactive feature(s) for earning zero votes."
+                )
             )

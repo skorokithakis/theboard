@@ -128,6 +128,20 @@ class FeatureBoardTests(TestCase):
         stale.refresh_from_db()
         self.assertIsNotNone(stale.expired_at)
 
+    def test_expire_stale_respects_missed_vote_penalties(self) -> None:
+        feature = self._submit_feature(title="Needs daily love")
+        now = timezone.now()
+        models.Feature.objects.filter(pk=feature.pk).update(
+            created_at=now - timedelta(days=4),
+            missed_vote_days=3,
+        )
+
+        expired_ids = models.Feature.expire_stale(reference=now)
+
+        self.assertIn(feature.pk, expired_ids)
+        feature.refresh_from_db()
+        self.assertIsNotNone(feature.expired_at)
+
     def test_feature_detail_includes_implemented_feature(self) -> None:
         feature = self._submit_feature(title="Already shipped")
         implemented_at = timezone.now()
@@ -377,6 +391,23 @@ class FeatureBoardTests(TestCase):
         feature.refresh_from_db()
         self.assertEqual(feature.votes, 2)
         self.assertEqual(feature.vote_total, 2)
+
+    def test_post_implementation_penalizes_features_without_votes(self) -> None:
+        implemented = self._submit_feature(title="Winner")
+        pending_with_support = self._submit_feature(
+            title="Popular idea", creator=self.other
+        )
+        pending_stale = self._submit_feature(title="Forgotten")
+
+        models.Vote.objects.create(user=self.other, feature=pending_with_support)
+
+        call_command("post_implementation", str(implemented.pk))
+
+        pending_with_support.refresh_from_db()
+        pending_stale.refresh_from_db()
+
+        self.assertEqual(pending_with_support.missed_vote_days, 0)
+        self.assertEqual(pending_stale.missed_vote_days, 1)
 
     def test_implement_deletes_variations_cascadingly(self) -> None:
         parent = self._submit_feature()

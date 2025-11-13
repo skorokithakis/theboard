@@ -4,15 +4,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0009_feature_implemented_state'),
+        ("main", "0009_feature_implemented_state"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='feature',
-            name='missed_vote_days',
-            field=models.PositiveIntegerField(default=0, help_text='Number of daily vote resets where this feature failed to receive an up-vote. Each missed day shortens the time before the feature expires.'),
+            model_name="feature",
+            name="missed_vote_days",
+            field=models.PositiveIntegerField(
+                default=0,
+                help_text="Number of daily vote resets where this feature failed to receive an up-vote. Each missed day shortens the time before the feature expires.",
+            ),
         ),
     ]

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}{{ request.site.name }}{% endblock %}
 
@@ -64,4 +65,47 @@
     </div>
 </section>
 {% endif %}
+
+<section class="breaker-section" aria-labelledby="brick-breaker-heading">
+    <div class="breaker-grid">
+        <div class="breaker-copy">
+            <p class="breaker-pretitle">Interactive backboard</p>
+            <h2 id="brick-breaker-heading">Art Deco Brick Breaker</h2>
+            <p>Every button in the backlog becomes a glass-brick badge. Keep the paddle gilded, launch the obsidian orb, and chip away at the stack—two good hits will shatter any feature.</p>
+            <ul class="breaker-instructions">
+                <li><span>Space</span> fires the ball from the paddle.</li>
+                <li><span>Left / Right</span> move the paddle with eased momentum.</li>
+                <li>The ball ricochets off the display borders&mdash;use them to line up tricky shots.</li>
+            </ul>
+            <p class="breaker-note">Buttons bruise on the first impact and collapse on the second. The feed below keeps score of every casualty.</p>
+        </div>
+        <div class="breaker-game">
+            <div class="breaker-stage" data-breaker-stage>
+                <canvas id="art-deco-brick-breaker" width="960" height="520" aria-describedby="brick-breaker-heading"></canvas>
+                <div class="breaker-stage__overlay" data-breaker-overlay>
+                    <p data-breaker-overlay-text>Press space to launch the gilded sphere.</p>
+                </div>
+            </div>
+            <div class="breaker-hud" aria-live="polite">
+                <p><span>Buttons remaining</span><strong data-breaker-remaining>0</strong></p>
+                <p><span>Shots fired</span><strong data-breaker-shots>0</strong></p>
+                <p><span>Combo streak</span><strong data-breaker-streak>0</strong></p>
+                <p><span>Last break</span><strong data-breaker-last>&mdash;</strong></p>
+            </div>
+            <div class="breaker-feed-wrapper">
+                <h3>Broadcast log</h3>
+                <ul class="breaker-feed" data-breaker-feed aria-live="polite" aria-atomic="false">
+                    <li>Awaiting first volley...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <p class="breaker-empty" data-breaker-empty hidden>No buttons remain to break. Add a feature request to restock the wall.</p>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ block.super }}
+    {{ feature_button_payload|json_script:"feature-button-data" }}
+    <script src="{% static 'js/brickbreaker.js' %}" defer></script>
 {% endblock %}

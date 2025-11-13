@@ -198,6 +198,225 @@ a:hover {
   right: 1.5rem;
 }
 
+.breaker-section {
+  margin: 5rem 0;
+  padding: 3rem;
+  border: 2px solid rgba(243, 201, 105, 0.35);
+  border-radius: 32px;
+  background: radial-gradient(circle at top, rgba(43, 179, 175, 0.15), transparent 60%),
+    linear-gradient(135deg, rgba(9, 27, 35, 0.95), rgba(7, 20, 26, 0.92));
+  box-shadow: 0 35px 80px -50px rgba(0, 0, 0, 0.8);
+  position: relative;
+  overflow: hidden;
+}
+
+.breaker-section::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(243, 201, 105, 0.35);
+  border-radius: 26px;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.breaker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem 3rem;
+  position: relative;
+  z-index: 1;
+}
+
+.breaker-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.breaker-pretitle {
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+  font-size: 0.8rem;
+  color: var(--brand);
+  margin: 0;
+}
+
+.breaker-instructions {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.breaker-instructions li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid rgba(243, 201, 105, 0.25);
+  border-radius: 999px;
+  background: rgba(9, 25, 33, 0.55);
+  font-size: 0.95rem;
+}
+
+.breaker-instructions span {
+  font-family: "Press Start 2P", "Courier New", monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--brand);
+  background: rgba(243, 201, 105, 0.08);
+  padding: 0.35rem 0.55rem;
+  border-radius: 4px;
+  border: 1px solid rgba(243, 201, 105, 0.25);
+}
+
+.breaker-note {
+  font-size: 0.95rem;
+  color: var(--muted-text);
+}
+
+.breaker-game {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.breaker-stage {
+  position: relative;
+  border-radius: 24px;
+  border: 1px solid rgba(243, 201, 105, 0.25);
+  background: radial-gradient(circle at top, rgba(243, 201, 105, 0.06), transparent 65%),
+    linear-gradient(180deg, rgba(5, 11, 16, 0.95), rgba(9, 21, 28, 0.95));
+  box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+
+.breaker-stage canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  mix-blend-mode: lighten;
+  transition: opacity 0.3s ease;
+}
+
+.breaker-stage--disabled canvas {
+  opacity: 0.35;
+  filter: grayscale(40%) saturate(60%);
+}
+
+.breaker-stage__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(7, 18, 25, 0.75), rgba(7, 18, 25, 0.95));
+  color: var(--brand);
+  font-family: "Cinzel", serif;
+  letter-spacing: 0.2em;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.breaker-stage__overlay[hidden] {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.breaker-hud {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.breaker-hud p {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(243, 201, 105, 0.25);
+  border-radius: 14px;
+  background: rgba(10, 27, 34, 0.75);
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.breaker-hud span {
+  text-transform: uppercase;
+  letter-spacing: 0.25em;
+  font-size: 0.65rem;
+  color: rgba(253, 247, 227, 0.65);
+}
+
+.breaker-hud strong {
+  font-size: 1.6rem;
+  color: var(--brand);
+  font-family: "Cinzel", serif;
+}
+
+.breaker-feed-wrapper {
+  border: 1px solid rgba(243, 201, 105, 0.25);
+  border-radius: 18px;
+  padding: 1.2rem 1.5rem;
+  background: rgba(9, 24, 31, 0.85);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.breaker-feed-wrapper h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  letter-spacing: 0.35em;
+}
+
+.breaker-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.breaker-feed li {
+  font-size: 0.9rem;
+  color: rgba(253, 247, 227, 0.85);
+  border-left: 3px solid var(--accent);
+  padding-left: 0.75rem;
+}
+
+.breaker-empty {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 0.95rem;
+  letter-spacing: 0.09em;
+  color: rgba(253, 247, 227, 0.65);
+}
+
+@media (max-width: 640px) {
+  .breaker-section {
+    padding: 2rem 1.25rem;
+  }
+
+  .breaker-instructions li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .breaker-stage__overlay {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+  }
+}
+
 .brand {
   font-family: "Cinzel", "Times New Roman", serif;
   font-weight: 600;

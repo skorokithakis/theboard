@@ -19,6 +19,12 @@
     <header class="site-header">
         <div class="container header-inner">
             <a class="brand" href="{% url 'main:index' %}">{{ request.site.name }}</a>
+            <div class="header-controls">
+                <button class="audio-toggle" type="button" data-audio-toggle aria-pressed="false" aria-live="polite">
+                    <span class="audio-toggle__icon" data-audio-icon aria-hidden="true">🔊</span>
+                    <span class="audio-toggle__label" data-audio-label>Music On</span>
+                </button>
+            </div>
         </div>
     </header>
     <main class="site-main container">
@@ -36,7 +42,9 @@
             <small>&copy; {% now "Y" %} {{ request.site.name }}.</small>
         </div>
     </footer>
+    <audio class="visually-hidden" data-audio-track src="{% static 'audio/chiptune-loop.wav' %}" loop preload="auto" aria-hidden="true"></audio>
     <script src="{% static 'js/theboard.js' %}" defer></script>
+    <script src="{% static 'js/audio-controls.js' %}" defer></script>
     {% if settings.TURNSTILE_ENABLED %}
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&amp;onload=onTurnstileLoad" async defer></script>
     {% endif %}

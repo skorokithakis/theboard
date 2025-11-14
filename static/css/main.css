@@ -198,6 +198,66 @@ a:hover {
   right: 1.5rem;
 }
 
+.header-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.audio-toggle {
+  appearance: none;
+  border: 1px solid rgba(243, 201, 105, 0.65);
+  background: linear-gradient(180deg, rgba(14, 39, 49, 0.9), rgba(9, 24, 31, 0.95));
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.35rem 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 6px 16px -8px var(--shadow);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.audio-toggle:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px -12px var(--shadow);
+}
+
+.audio-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.audio-toggle--muted {
+  border-color: rgba(244, 91, 105, 0.6);
+  color: var(--muted-text);
+  opacity: 0.9;
+}
+
+.audio-toggle__icon {
+  font-size: 1rem;
+}
+
+.audio-toggle__label {
+  font-weight: 600;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .breaker-section {
   margin: 5rem 0;
   padding: 3rem;

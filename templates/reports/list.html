@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Implementation Report Blog · {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <div>
+        <p class="reports-preview__eyebrow">Implementation notes</p>
+        <h1 class="page-title">Implementation Report Blog</h1>
+        <p class="page-lead">Every time the board ships a feature we document the approach, trade-offs, and lessons learned.</p>
+    </div>
+</section>
+
+<section class="reports-directory" aria-label="Implementation reports">
+    <div class="reports-directory__grid">
+        {% for report in reports %}
+        <article class="report-card report-card--stacked">
+            <p class="report-card__meta">{{ report.published_at|date:"F j, Y" }}</p>
+            <h2 class="report-card__title">
+                <a href="{% url 'main:report-detail' report.slug %}">{{ report.title }}</a>
+            </h2>
+            <p class="report-card__summary">{{ report.summary }}</p>
+            <p class="report-card__footer">Feature: {{ report.feature_title }}</p>
+            <ul class="report-card__highlights">
+                {% for item in report.highlights %}
+                <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+            <a class="report-card__cta" href="{% url 'main:report-detail' report.slug %}">Read the report</a>
+        </article>
+        {% empty %}
+        <p>No reports have been published yet.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

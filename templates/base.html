@@ -19,6 +19,9 @@
     <header class="site-header">
         <div class="container header-inner">
             <a class="brand" href="{% url 'main:index' %}">{{ request.site.name }}</a>
+            <nav class="header-nav">
+                <a class="header-nav__link" href="{% url 'main:reports' %}">Implementation Report Blog</a>
+            </nav>
             <div class="header-controls">
                 <button class="audio-toggle" type="button" data-audio-toggle aria-pressed="false" aria-live="polite">
                     <span class="audio-toggle__icon" data-audio-icon aria-hidden="true">🔊</span>

@@ -571,6 +571,42 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(payload.get("database"), "ok")
         self.assertIn("cache", payload)
 
+    def test_reports_list_renders_report_cards(self) -> None:
+        storage_settings = {
+            **settings.STORAGES,
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            },
+        }
+        with override_settings(
+            STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage",
+            STORAGES=storage_settings,
+        ):
+            response = self.client.get("/reports/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Implementation Report Blog")
+        self.assertContains(response, "Read the report")
+
+    def test_report_detail_displays_sections(self) -> None:
+        storage_settings = {
+            **settings.STORAGES,
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            },
+        }
+        with override_settings(
+            STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage",
+            STORAGES=storage_settings,
+        ):
+            response = self.client.get("/reports/implementation-report-blog/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Framing the requirement")
+        self.assertContains(response, "Highlights")
+
+    def test_report_detail_returns_404_for_unknown_slug(self) -> None:
+        response = self.client.get("/reports/nope/")
+        self.assertEqual(response.status_code, 404)
+
 
 class DailyFortuneTests(TestCase):
     def test_get_daily_fortune_is_deterministic(self) -> None:

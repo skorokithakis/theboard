@@ -427,6 +427,13 @@
       ".tb-graveyard-expired { color: #f9a8d4; font-weight: 600; }",
       ".tb-graveyard-votes { color: #c4b5fd; font-weight: 600; }",
       ".tb-graveyard-epitaph { margin: 0; font-size: 0.9rem; color: rgba(234, 219, 255, 0.85); line-height: 1.5; }",
+      ".tb-graveyard-title-button { border: none; background: none; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; display: inline-flex; align-items: center; gap: 0.35rem; }",
+      ".tb-graveyard-title-button:hover { text-decoration: underline; }",
+      ".tb-graveyard-title-button:focus-visible { outline: 2px solid rgba(244, 114, 182, 0.7); outline-offset: 2px; border-radius: 6px; }",
+      ".tb-graveyard-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; }",
+      ".tb-graveyard-detail-button { border: 1px solid rgba(147, 112, 219, 0.55); background: rgba(31, 21, 52, 0.92); color: #f5f3ff; padding: 0.45rem 1rem; border-radius: 999px; font-size: 0.85rem; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }",
+      ".tb-graveyard-detail-button:hover { transform: translateY(-1px); box-shadow: 0 8px 16px -8px rgba(147, 112, 219, 0.8); }",
+      ".tb-graveyard-detail-button:focus-visible { outline: 2px solid rgba(252, 211, 77, 0.6); outline-offset: 2px; }",
       ".tb-detail-body { flex: 1; overflow-y: auto; padding: 1.5rem 2rem 2rem; background: #0d1f29; color: #fdf7e3; }",
       ".tb-detail-body::-webkit-scrollbar { width: 8px; }",
       ".tb-detail-body::-webkit-scrollbar-thumb { background: #143b47; border-radius: 4px; }",
@@ -2010,6 +2017,11 @@
   function createGraveyardFeatureCard(feature) {
     var card = document.createElement("article");
     card.className = "tb-graveyard-card";
+    var descriptionHtml = renderMarkdown(feature.description || "");
+
+    function openGraveyardDetail(trigger) {
+      openFeatureDetail(feature, descriptionHtml, trigger || card);
+    }
 
     var emblem = document.createElement("div");
     emblem.className = "tb-graveyard-emblem";
@@ -2022,7 +2034,17 @@
 
     var title = document.createElement("h3");
     title.className = "tb-graveyard-title";
-    title.textContent = feature.title || "Untitled idea";
+    var titleButton = document.createElement("button");
+    titleButton.type = "button";
+    titleButton.className = "tb-graveyard-title-button";
+    titleButton.textContent = feature.title || "Untitled idea";
+    titleButton.title = "View full request details";
+    titleButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      openGraveyardDetail(titleButton);
+    });
+    title.appendChild(titleButton);
     content.appendChild(title);
 
     var meta = document.createElement("div");
@@ -2062,6 +2084,20 @@
       epitaph.textContent = description;
       content.appendChild(epitaph);
     }
+
+    var actions = document.createElement("div");
+    actions.className = "tb-graveyard-actions";
+    var detailButton = document.createElement("button");
+    detailButton.type = "button";
+    detailButton.className = "tb-graveyard-detail-button";
+    detailButton.textContent = "View full request";
+    detailButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      openGraveyardDetail(detailButton);
+    });
+    actions.appendChild(detailButton);
+    content.appendChild(actions);
 
     card.appendChild(content);
 

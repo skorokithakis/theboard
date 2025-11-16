@@ -10,7 +10,7 @@ from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from . import fortune, health, models, turnstile, utils
+from . import fortune, health, models, reports, turnstile, utils
 
 User = get_user_model()
 
@@ -606,6 +606,52 @@ class FeatureBoardTests(TestCase):
     def test_report_detail_returns_404_for_unknown_slug(self) -> None:
         response = self.client.get("/reports/nope/")
         self.assertEqual(response.status_code, 404)
+
+    def test_auto_report_generated_for_implemented_feature(self) -> None:
+        shipped = self._submit_feature(
+            title="Auto chronicled feature",
+            description="Please make sure this launch appears in the blog.",
+        )
+        now = timezone.now()
+        shipped.implement(when=now)
+
+        generated = [
+            entry
+            for entry in reports.get_reports()
+            if entry.feature_title == shipped.title
+            and entry.slug.startswith("auto-feature-report")
+        ]
+        self.assertTrue(generated)
+        report_entry = generated[0]
+        self.assertEqual(report_entry.published_at, now)
+        self.assertIn(shipped.description, report_entry.sections[0].paragraphs)
+
+    def test_auto_report_detail_view_renders_generated_entry(self) -> None:
+        shipped = self._submit_feature(
+            title="Auto blog detail",
+            description="Document this detail page.",
+        )
+        shipped.implement(when=timezone.now())
+        entry = next(
+            report
+            for report in reports.get_reports()
+            if report.feature_title == shipped.title
+        )
+        storage_settings = {
+            **settings.STORAGES,
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            },
+        }
+        with override_settings(
+            STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage",
+            STORAGES=storage_settings,
+        ):
+            response = self.client.get(f"/reports/{entry.slug}/")
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, shipped.title)
+        self.assertContains(response, shipped.description)
+        self.assertContains(response, "blog stays current")
 
 
 class DailyFortuneTests(TestCase):

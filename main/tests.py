@@ -10,7 +10,7 @@ from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.utils import timezone
 
-from . import fortune, models, turnstile, utils
+from . import fortune, health, models, turnstile, utils
 
 User = get_user_model()
 
@@ -643,3 +643,43 @@ class UtilsTests(TestCase):
         result = utils.get_next_iteration_at(reference)
         expected = datetime(2024, 5, 2, 0, 0, tzinfo=dt_timezone.utc)
         self.assertEqual(result, expected)
+
+
+class BoardHealthTests(TestCase):
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(username="health", password="test-pass")
+
+    def _create_failed_feature(self, title: str) -> models.Feature:
+        feature = models.Feature.objects.create(
+            title=title,
+            description="Doomed idea",
+            creator=self.user,
+        )
+        models.Feature.objects.filter(pk=feature.pk).update(
+            implemented_at=timezone.now(),
+            implemented_state=models.Feature.ImplementationState.UNSUCCESSFUL,
+        )
+        return feature
+
+    def test_full_health_without_failures(self) -> None:
+        board_health = health.get_board_health()
+        self.assertEqual(board_health["percentage"], 100)
+        self.assertEqual(board_health["failed_count"], 0)
+        self.assertEqual(board_health["state"]["key"], "healthy")
+
+    def test_penalty_applied_per_failed_feature(self) -> None:
+        for index in range(3):
+            self._create_failed_feature(f"Failure {index}")
+
+        board_health = health.get_board_health()
+        self.assertEqual(board_health["percentage"], 70)
+        self.assertEqual(board_health["failed_count"], 3)
+        self.assertEqual(board_health["state"]["key"], "scratched")
+
+    def test_health_clamped_at_zero(self) -> None:
+        for index in range(15):
+            self._create_failed_feature(f"Failure {index}")
+
+        board_health = health.get_board_health()
+        self.assertEqual(board_health["percentage"], 0)
+        self.assertEqual(board_health["state"]["key"], "dead")

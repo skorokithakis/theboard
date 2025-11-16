@@ -40,6 +40,54 @@
         {% endif %}
         {% block content %}{% endblock %}
     </main>
+    {% if board_health %}
+    <section class="board-health" aria-labelledby="board-health-heading">
+        <div class="container">
+            <div class="board-health__panel" data-health-state="{{ board_health.state.key }}">
+                <header class="board-health__header">
+                    <p class="board-health__eyebrow">Systems Monitor</p>
+                    <h2 id="board-health-heading">Board Health</h2>
+                    <p class="board-health__intro">Each failed implementation costs {{ board_health.damage_per_failure }}% health. Keep shipping or risk a doomguy faceplant.</p>
+                </header>
+                <div class="board-health__status" role="status" aria-live="polite">
+                    <div class="board-health__reading">
+                        <span class="board-health__value">{{ board_health.percentage }}%</span>
+                        <span class="board-health__state">{{ board_health.state.label }}</span>
+                        <span class="board-health__range">{{ board_health.state.range_label }}</span>
+                    </div>
+                    <figure class="board-health__face" role="img" aria-label="{{ board_health.state.label }}">
+                        <svg class="board-health__face-icon" viewBox="0 0 160 120" aria-hidden="true" focusable="false" xmlns:xlink="http://www.w3.org/1999/xlink">
+                            <use href="{% static 'img/board-health-faces.svg' %}#{{ board_health.state.key }}" xlink:href="{% static 'img/board-health-faces.svg' %}#{{ board_health.state.key }}"></use>
+                        </svg>
+                    </figure>
+                    <div class="board-health__failures">
+                        <span class="board-health__failures-label">Failed features</span>
+                        <span class="board-health__failures-count">{{ board_health.failed_count }}</span>
+                        <span class="board-health__failures-note">&minus;{{ board_health.damage_per_failure }}% each</span>
+                    </div>
+                </div>
+                <div class="board-health__meter" role="img" aria-label="Board health is {{ board_health.percentage }} percent. {{ board_health.state.label }}.">
+                    <div class="board-health__meter-track">
+                        <div class="board-health__meter-fill" style="width: {{ board_health.percentage }}%;"></div>
+                    </div>
+                    <div class="board-health__meter-scale" aria-hidden="true">
+                        {% for segment in board_health.scale %}
+                        <span class="board-health__meter-stop" data-segment="{{ segment.key }}">{{ segment.range_label }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <ul class="board-health__scale" aria-label="Face state legend">
+                    {% for segment in board_health.scale %}
+                    <li class="board-health__scale-item{% if board_health.state.key == segment.key %} board-health__scale-item--active{% endif %}">
+                        <span class="board-health__scale-range">{{ segment.range_label }}</span>
+                        <span class="board-health__scale-label">{{ segment.label }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </section>
+    {% endif %}
     <footer class="site-footer">
         <div class="container">
             <small>&copy; {% now "Y" %} {{ request.site.name }}.</small>

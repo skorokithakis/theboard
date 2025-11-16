@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <symbol id="healthy" viewBox="0 0 160 120">
+    <rect width="160" height="120" rx="10" fill="#2a1b12"/>
+    <rect x="6" y="6" width="148" height="108" rx="8" fill="#3f2515" stroke="#a56b2c" stroke-width="4"/>
+    <rect x="18" y="18" width="124" height="88" rx="6" fill="#d6a36a"/>
+    <rect x="18" y="18" width="124" height="30" fill="#362015"/>
+    <rect x="30" y="54" width="30" height="14" rx="6" fill="#f5d7b0"/>
+    <rect x="100" y="54" width="30" height="14" rx="6" fill="#f5d7b0"/>
+    <rect x="38" y="58" width="20" height="10" rx="4" fill="#0f0c0c"/>
+    <rect x="108" y="58" width="20" height="10" rx="4" fill="#0f0c0c"/>
+    <rect x="72" y="68" width="16" height="18" rx="8" fill="#e6b685"/>
+    <path d="M54 94 C72 106 88 106 106 94" fill="none" stroke="#2e120f" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="32" cy="74" r="5" fill="#e0835c" opacity="0.7"/>
+    <circle cx="128" cy="74" r="5" fill="#e0835c" opacity="0.7"/>
+  </symbol>
+  <symbol id="scratched" viewBox="0 0 160 120">
+    <rect width="160" height="120" rx="10" fill="#2a1b12"/>
+    <rect x="6" y="6" width="148" height="108" rx="8" fill="#432918" stroke="#b97932" stroke-width="4"/>
+    <rect x="18" y="18" width="124" height="88" rx="6" fill="#d19b5f"/>
+    <rect x="18" y="18" width="124" height="30" fill="#301b12"/>
+    <rect x="30" y="54" width="30" height="14" rx="6" fill="#f2cfa6"/>
+    <rect x="100" y="54" width="30" height="14" rx="6" fill="#f2cfa6"/>
+    <rect x="40" y="58" width="18" height="10" rx="4" fill="#1a1210"/>
+    <rect x="110" y="58" width="18" height="10" rx="4" fill="#1a1210"/>
+    <rect x="72" y="68" width="16" height="18" rx="8" fill="#dea973"/>
+    <path d="M52 96 C72 102 88 102 108 96" fill="none" stroke="#2a1310" stroke-width="6" stroke-linecap="round"/>
+    <path d="M78 78 L86 84" stroke="#ab2f2c" stroke-width="4" stroke-linecap="round"/>
+    <path d="M70 86 L80 94" stroke="#8b1f1e" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="38" cy="78" r="6" fill="#c66f4c" opacity="0.6"/>
+    <circle cx="122" cy="78" r="6" fill="#c66f4c" opacity="0.6"/>
+  </symbol>
+  <symbol id="bruised" viewBox="0 0 160 120">
+    <rect width="160" height="120" rx="10" fill="#25150e"/>
+    <rect x="6" y="6" width="148" height="108" rx="8" fill="#3b2316" stroke="#c67c36" stroke-width="4"/>
+    <rect x="18" y="18" width="124" height="88" rx="6" fill="#c58c50"/>
+    <rect x="18" y="18" width="124" height="28" fill="#28150d"/>
+    <rect x="28" y="54" width="32" height="14" rx="6" fill="#e7c396"/>
+    <rect x="100" y="54" width="32" height="14" rx="6" fill="#e7c396"/>
+    <rect x="38" y="60" width="20" height="8" rx="4" fill="#110b0b"/>
+    <rect x="110" y="60" width="20" height="8" rx="4" fill="#110b0b"/>
+    <rect x="70" y="70" width="20" height="18" rx="9" fill="#d49760"/>
+    <path d="M54 99 C72 90 88 90 106 99" fill="none" stroke="#1f0d0c" stroke-width="6" stroke-linecap="round"/>
+    <rect x="58" y="82" width="8" height="20" rx="4" fill="#6a2b1f" opacity="0.8"/>
+    <rect x="94" y="82" width="8" height="20" rx="4" fill="#6a2b1f" opacity="0.8"/>
+    <circle cx="118" cy="82" r="7" fill="#5c3a4f" opacity="0.8"/>
+    <path d="M42 86 L54 98" stroke="#9c1f1f" stroke-width="4" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="critical" viewBox="0 0 160 120">
+    <rect width="160" height="120" rx="10" fill="#1e120c"/>
+    <rect x="6" y="6" width="148" height="108" rx="8" fill="#351f15" stroke="#cf873b" stroke-width="4"/>
+    <rect x="18" y="18" width="124" height="88" rx="6" fill="#b47842"/>
+    <rect x="18" y="18" width="124" height="28" fill="#200f08"/>
+    <rect x="26" y="54" width="34" height="14" rx="6" fill="#d9ad7e"/>
+    <rect x="100" y="54" width="34" height="14" rx="6" fill="#d9ad7e"/>
+    <rect x="36" y="62" width="22" height="7" rx="3" fill="#080505"/>
+    <rect x="110" y="62" width="22" height="7" rx="3" fill="#080505"/>
+    <rect x="68" y="72" width="22" height="18" rx="9" fill="#c1854c"/>
+    <path d="M54 100 C72 92 88 92 106 100" fill="none" stroke="#1b0706" stroke-width="7" stroke-linecap="round"/>
+    <path d="M66 78 L82 94" stroke="#791717" stroke-width="5" stroke-linecap="round"/>
+    <path d="M86 80 L100 100" stroke="#a62121" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="120" cy="84" r="9" fill="#4a1521"/>
+    <circle cx="38" cy="84" r="9" fill="#4a1521"/>
+    <path d="M74 66 L90 66" stroke="#b7251f" stroke-width="5" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="dire" viewBox="0 0 160 120">
+    <rect width="160" height="120" rx="10" fill="#190e09"/>
+    <rect x="6" y="6" width="148" height="108" rx="8" fill="#311911" stroke="#d48c40" stroke-width="4"/>
+    <rect x="18" y="18" width="124" height="88" rx="6" fill="#a36434"/>
+    <rect x="18" y="18" width="124" height="26" fill="#160903"/>
+    <rect x="24" y="54" width="36" height="14" rx="6" fill="#c78c5c"/>
+    <rect x="100" y="54" width="36" height="14" rx="6" fill="#c78c5c"/>
+    <rect x="34" y="64" width="24" height="6" rx="3" fill="#050404"/>
+    <rect x="110" y="64" width="24" height="6" rx="3" fill="#050404"/>
+    <rect x="66" y="72" width="24" height="18" rx="10" fill="#b16d3b"/>
+    <path d="M52 102 C72 94 88 94 108 102" fill="none" stroke="#150505" stroke-width="7" stroke-linecap="round"/>
+    <path d="M50 80 L70 106" stroke="#5f0c0c" stroke-width="6" stroke-linecap="round"/>
+    <path d="M90 78 L112 108" stroke="#891111" stroke-width="6" stroke-linecap="round"/>
+    <path d="M68 84 Q78 70 88 84" stroke="#da2c2c" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <circle cx="38" cy="88" r="10" fill="#54121b"/>
+    <circle cx="122" cy="88" r="10" fill="#54121b"/>
+    <path d="M76 66 L94 66" stroke="#8c1210" stroke-width="6" stroke-linecap="round"/>
+    <rect x="76" y="90" width="8" height="24" fill="#8c1111"/>
+  </symbol>
+  <symbol id="dead" viewBox="0 0 160 120">
+    <rect width="160" height="120" rx="10" fill="#120807"/>
+    <rect x="6" y="6" width="148" height="108" rx="8" fill="#25120d" stroke="#db9444" stroke-width="4"/>
+    <rect x="18" y="18" width="124" height="88" rx="6" fill="#8d5130"/>
+    <rect x="18" y="18" width="124" height="24" fill="#0b0503"/>
+    <rect x="22" y="54" width="38" height="12" rx="6" fill="#b47548"/>
+    <rect x="100" y="54" width="38" height="12" rx="6" fill="#b47548"/>
+    <path d="M32 64 H50" stroke="#050303" stroke-width="5" stroke-linecap="round"/>
+    <path d="M110 64 H128" stroke="#050303" stroke-width="5" stroke-linecap="round"/>
+    <rect x="64" y="74" width="32" height="18" rx="9" fill="#9f5b33"/>
+    <path d="M54 104 C72 98 88 98 106 104" fill="none" stroke="#0d0403" stroke-width="8" stroke-linecap="round"/>
+    <path d="M60 82 L84 110" stroke="#4d0505" stroke-width="6" stroke-linecap="round"/>
+    <path d="M90 80 L110 110" stroke="#6b0a0a" stroke-width="6" stroke-linecap="round"/>
+    <rect x="70" y="94" width="20" height="22" rx="10" fill="#5d0b0b"/>
+    <path d="M74 70 L96 70" stroke="#5d0b0b" stroke-width="7" stroke-linecap="round"/>
+  </symbol>
+</svg>

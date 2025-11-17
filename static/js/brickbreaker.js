@@ -2,6 +2,8 @@
   "use strict";
 
   var MAX_FEATURE_BUTTONS = 120;
+  var FEATURES_ENDPOINT = "/api/features";
+  var RESTOCK_RETRY_DELAY_MS = 60 * 1000;
   var BRICK_WIDTH = 88;
   var BRICK_HEIGHT = 31;
   var BRICK_GAP = 12;
@@ -33,19 +35,7 @@
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.features = features || [];
-    this.bricks = this.features.map(function (feature, index) {
-      return {
-        feature: feature,
-        index: index,
-        hitsRemaining: 2,
-        destroyed: false,
-        pulse: 0,
-        x: 0,
-        y: 0,
-        width: BRICK_WIDTH,
-        height: BRICK_HEIGHT,
-      };
-    });
+    this.bricks = buildBricks(this.features);
     this.paddle = {
       width: 160,
       height: PADDLE_HEIGHT,
@@ -81,6 +71,9 @@
       last: document.querySelector("[data-breaker-last]"),
     };
     this.sounds = new SoundStudio();
+    this.nextIterationAt = getInitialIterationTarget();
+    this.restockTimer = null;
+    this.restockRequest = null;
 
     this.loop = this.loop.bind(this);
     this.handleResize = this.handleResize.bind(this);
@@ -96,6 +89,7 @@
     this.updateHud();
     this.updateEmptyState();
     this.animationFrame = window.requestAnimationFrame(this.loop);
+    this.scheduleIterationRestock();
   }
 
   DecoBreaker.prototype.detach = function () {
@@ -104,6 +98,10 @@
     document.removeEventListener("keyup", this.onKeyup);
     if (this.animationFrame) {
       window.cancelAnimationFrame(this.animationFrame);
+    }
+    if (this.restockTimer) {
+      window.clearTimeout(this.restockTimer);
+      this.restockTimer = null;
     }
   };
 
@@ -216,6 +214,81 @@
     if (!remaining) {
       this.showOverlay("All clear! Submit another feature to restock the wall.");
     }
+  };
+
+  DecoBreaker.prototype.scheduleIterationRestock = function (target) {
+    if (this.restockTimer) {
+      window.clearTimeout(this.restockTimer);
+      this.restockTimer = null;
+    }
+    var nextTarget = target || this.nextIterationAt;
+    if (!(nextTarget instanceof Date) || Number.isNaN(nextTarget.getTime())) {
+      nextTarget = computeNextIteration();
+      this.nextIterationAt = nextTarget;
+    }
+    var delay = nextTarget.getTime() - Date.now();
+    if (delay <= 0) {
+      this.restockFromApi();
+      return;
+    }
+    var self = this;
+    this.restockTimer = window.setTimeout(function () {
+      self.restockFromApi();
+    }, delay);
+  };
+
+  DecoBreaker.prototype.restockFromApi = function () {
+    var self = this;
+    if (this.restockRequest) {
+      return this.restockRequest;
+    }
+    this.restockRequest = fetch(FEATURES_ENDPOINT, { credentials: "include" })
+      .then(function (response) {
+        if (!response.ok) {
+          return response
+            .text()
+            .catch(function () {
+              return "";
+            })
+            .then(function (body) {
+              var message = body || "Unable to reload feature buttons.";
+              throw new Error(message);
+            });
+        }
+        return response.json();
+      })
+      .then(function (data) {
+        var list = Array.isArray(data.features) ? data.features : [];
+        self.restockFromFeatures(list.slice(0, MAX_FEATURE_BUTTONS));
+        var nextTarget = parseIterationDate(data.next_iteration_at);
+        self.nextIterationAt = nextTarget || computeNextIteration();
+        self.logEvent("Restocked the brick wall for a new iteration.");
+        self.scheduleIterationRestock();
+      })
+      .catch(function (error) {
+        console.error("Brick breaker restock failed:", error);
+        var retryTarget = new Date(Date.now() + RESTOCK_RETRY_DELAY_MS);
+        self.scheduleIterationRestock(retryTarget);
+      })
+      .finally(function () {
+        self.restockRequest = null;
+      });
+    return this.restockRequest;
+  };
+
+  DecoBreaker.prototype.restockFromFeatures = function (features) {
+    var normalized = Array.isArray(features) ? features : [];
+    this.features = normalized;
+    this.bricks = buildBricks(this.features);
+    this.lastBreakLabel = "—";
+    this.layoutBricks();
+    if (this.remainingBricks() > 0) {
+      this.resetBall();
+    } else {
+      this.showOverlay("All clear! Submit another feature to restock the wall.");
+    }
+    this.updateHud();
+    this.updateEmptyState();
   };
 
   DecoBreaker.prototype.loop = function (timestamp) {
@@ -530,6 +603,62 @@
       this.keyState.right = false;
     }
   };
+
+  function buildBricks(features) {
+    return (features || []).map(function (feature, index) {
+      return {
+        feature: feature,
+        index: index,
+        hitsRemaining: 2,
+        destroyed: false,
+        pulse: 0,
+        x: 0,
+        y: 0,
+        width: BRICK_WIDTH,
+        height: BRICK_HEIGHT,
+      };
+    });
+  }
+
+  function getInitialIterationTarget() {
+    var countdown = document.getElementById("next-iteration-countdown");
+    if (
+      countdown &&
+      countdown.dataset &&
+      countdown.dataset.nextIteration
+    ) {
+      var parsed = parseIterationDate(countdown.dataset.nextIteration);
+      if (parsed) {
+        return parsed;
+      }
+    }
+    return computeNextIteration();
+  }
+
+  function parseIterationDate(value) {
+    if (!value) {
+      return null;
+    }
+    var parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) {
+      return null;
+    }
+    return parsed;
+  }
+
+  function computeNextIteration(reference) {
+    var now = reference instanceof Date ? reference : new Date();
+    var year = now.getUTCFullYear();
+    var month = now.getUTCMonth();
+    var day = now.getUTCDate();
+    var nowMs = now.getTime();
+    var noonTarget = Date.UTC(year, month, day, 12, 0, 0, 0);
+    if (nowMs < noonTarget) {
+      return new Date(noonTarget);
+    }
+    var midnightTarget = Date.UTC(year, month, day + 1, 0, 0, 0, 0);
+    return new Date(midnightTarget);
+  }
 
   function normalizeVelocity(ball, targetSpeed) {
     var speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);

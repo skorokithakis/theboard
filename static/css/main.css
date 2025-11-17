@@ -832,6 +832,70 @@ a:hover {
   letter-spacing: 0.08em;
 }
 
+.daily-fortune__suggestion {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 18px;
+  border: 1px solid rgba(43, 179, 175, 0.35);
+  background: linear-gradient(135deg, rgba(6, 26, 34, 0.92), rgba(10, 34, 44, 0.88));
+  display: grid;
+  gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .daily-fortune__suggestion {
+    grid-template-columns: 1.1fr 0.9fr;
+    align-items: start;
+  }
+}
+
+.daily-fortune__suggestion-eyebrow {
+  margin: 0;
+  color: rgba(243, 201, 105, 0.8);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.daily-fortune__suggestion-copy {
+  color: var(--muted-text);
+  margin: 0.5rem 0 0;
+  line-height: 1.6;
+}
+
+.daily-fortune__suggestion-form form {
+  margin: 0;
+}
+
+.daily-fortune__suggestion-form .form-field label {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 0.35rem;
+  color: rgba(253, 247, 227, 0.9);
+}
+
+.daily-fortune__suggestion-signin {
+  margin: 0;
+  color: rgba(253, 247, 227, 0.75);
+  font-style: italic;
+}
+
+.fortune-form__submit {
+  border-radius: 999px;
+  border: 1px solid rgba(243, 201, 105, 0.4);
+  background: rgba(243, 201, 105, 0.9);
+  color: #0b161b;
+  font-weight: 600;
+  padding: 0.75rem 1.75rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fortune-form__submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(243, 201, 105, 0.35);
+}
+
 .page-countdown {
   margin: 0.75rem 0 0;
   font-size: 0.95rem;

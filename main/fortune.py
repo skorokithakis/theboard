@@ -174,16 +174,36 @@ FORTUNE_COOKIES: Sequence[Fortune] = (
 )
 
 
+def _community_fortune_pool() -> list[Fortune]:
+    """Return approved community submissions as ``Fortune`` objects."""
+    from .models import QuoteSuggestion
+
+    suggestions = QuoteSuggestion.objects.filter(is_approved=True).order_by("pk")
+    fortunes: list[Fortune] = []
+    for suggestion in suggestions:
+        fortunes.append(
+            Fortune(
+                text=suggestion.text,
+                attribution=suggestion.attribution,
+                collection="Community Submissions",
+                package=f"user-submitted-{suggestion.pk}",
+            )
+        )
+    return fortunes
+
+
 def get_daily_fortune(for_date: date | None = None) -> Fortune:
     """Return a deterministic fortune for the provided date."""
 
-    if not FORTUNE_COOKIES:
+    available_fortunes = [*_community_fortune_pool(), *FORTUNE_COOKIES]
+
+    if not available_fortunes:
         raise RuntimeError("Fortune data is missing.")
 
     target_date = for_date or timezone.now().date()
     digest = hashlib.sha256(target_date.isoformat().encode("utf-8")).digest()
-    index = int.from_bytes(digest[:4], "big") % len(FORTUNE_COOKIES)
-    return FORTUNE_COOKIES[index]
+    index = int.from_bytes(digest[:4], "big") % len(available_fortunes)
+    return available_fortunes[index]
 
 
 __all__ = ["Fortune", "FORTUNE_COOKIES", "get_daily_fortune"]

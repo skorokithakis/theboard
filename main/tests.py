@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
 from django.core.management import call_command
 from django.test import TestCase, override_settings
+from django.urls import reverse
 from django.utils import timezone
 
 from . import fortune, health, models, reports, turnstile, utils
@@ -674,7 +675,79 @@ class DailyFortuneTests(TestCase):
             response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         context_fortune = response.context["daily_fortune"]
-        self.assertIn(context_fortune, fortune.FORTUNE_COOKIES)
+        self.assertTrue(
+            context_fortune in fortune.FORTUNE_COOKIES
+            or context_fortune.collection == "Community Submissions"
+        )
+
+    def test_get_daily_fortune_includes_approved_suggestions(self) -> None:
+        submitter = User.objects.create_user(username="quotes", password="test-pass")
+        suggestion = models.QuoteSuggestion.objects.create(
+            text="Community wisdom deserves the spotlight.",
+            attribution="Quote Bot",
+            submitted_by=submitter,
+            is_approved=True,
+        )
+        with mock.patch.object(fortune, "FORTUNE_COOKIES", ()):
+            result = fortune.get_daily_fortune(date(2024, 9, 1))
+        self.assertEqual(result.text, suggestion.text)
+        self.assertEqual(result.attribution, suggestion.attribution)
+
+
+class QuoteSuggestionViewTests(TestCase):
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(username="submitter", password="test-pass")
+
+    def _static_override(self):
+        storage_settings = {
+            **settings.STORAGES,
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            },
+        }
+        return override_settings(
+            STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage",
+            STORAGES=storage_settings,
+        )
+
+    def test_login_required_for_quote_submission(self) -> None:
+        response = self.client.post(
+            reverse("main:fortune-suggest"),
+            {"text": "Hello", "attribution": "Someone"},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(
+            response["Location"].startswith(settings.LOGIN_URL),
+            msg="Unauthenticated users should be redirected to login.",
+        )
+
+    def test_successful_quote_submission_creates_pending_record(self) -> None:
+        self.client.login(username="submitter", password="test-pass")
+        with self._static_override():
+            response = self.client.post(
+                reverse("main:fortune-suggest"),
+                {"text": "Ship the fun.", "attribution": "Motivator"},
+                follow=True,
+            )
+        self.assertEqual(response.status_code, 200)
+        suggestion = models.QuoteSuggestion.objects.get()
+        self.assertFalse(suggestion.is_approved)
+        self.assertEqual(suggestion.submitted_by, self.user)
+        self.assertContains(response, "We&#x27;ll review your quote")
+
+    def test_invalid_submission_renders_errors(self) -> None:
+        self.client.login(username="submitter", password="test-pass")
+        with self._static_override():
+            response = self.client.post(
+                reverse("main:fortune-suggest"),
+                {"text": "", "attribution": ""},
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(
+            response,
+            "Please provide the quote text.",
+            status_code=400,
+        )
 
 
 class UtilsTests(TestCase):

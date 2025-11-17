@@ -47,6 +47,52 @@ class FeatureForm(forms.ModelForm):
             ).order_by("title")
 
 
+class QuoteSuggestionForm(forms.ModelForm):
+    """Form for capturing community quotes for the homepage fortune slot."""
+
+    class Meta:
+        model = models.QuoteSuggestion
+        fields = ["text", "attribution"]
+        labels = {
+            "text": _("Quote"),
+            "attribution": _("Attribution"),
+        }
+        error_messages = {
+            "text": {"required": _("Please provide the quote text.")},
+            "attribution": {"required": _("Let readers know who to credit.")},
+        }
+        widgets = {
+            "text": forms.Textarea(
+                attrs={
+                    "rows": 3,
+                    "placeholder": _("Share an uplifting, witty, or inspiring quote."),
+                    "class": "textarea",
+                }
+            ),
+            "attribution": forms.TextInput(
+                attrs={
+                    "placeholder": _("Who said this?"),
+                    "class": "input",
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def clean_text(self) -> str:
+        text = (self.cleaned_data.get("text") or "").strip()
+        if not text:
+            raise forms.ValidationError(_("Please provide the quote text."))
+        return text
+
+    def clean_attribution(self) -> str:
+        attribution = (self.cleaned_data.get("attribution") or "").strip()
+        if not attribution:
+            raise forms.ValidationError(_("Let readers know who to credit."))
+        return attribution
+
+
 class SignUpForm(forms.ModelForm):
     """Registration form that captures username and password."""
 

@@ -104,3 +104,25 @@ class VoteAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     list_display = ("feature", "user", "created_at")
     list_filter = ("created_at",)
     autocomplete_fields = ("feature", "user")
+
+
+@admin.register(models.QuoteSuggestion)
+class QuoteSuggestionAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    """Moderation interface for community fortune submissions."""
+
+    list_display = (
+        "attribution",
+        "display_excerpt",
+        "is_approved",
+        "submitted_by",
+        "created_at",
+        "approved_at",
+    )
+    list_filter = ("is_approved", "created_at", "approved_at")
+    search_fields = ("text", "attribution", "submitted_by__username")
+    autocomplete_fields = ("submitted_by",)
+    ordering = ("-created_at",)
+
+    @admin.display(description="Quote")
+    def display_excerpt(self, obj: models.QuoteSuggestion) -> str:
+        return obj.text[:80] + ("…" if len(obj.text) > 80 else "")

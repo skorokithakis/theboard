@@ -326,3 +326,48 @@ class Vote(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user} → {self.feature}"
+
+
+class QuoteSuggestion(models.Model):
+    """User-submitted fortunes that can rotate onto the homepage."""
+
+    text = models.TextField(
+        help_text="Full quote that may appear in the rotating fortune slot.",
+    )
+    attribution = models.CharField(
+        max_length=255,
+        help_text="Name or source credited alongside the quote.",
+    )
+    submitted_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="quote_suggestions",
+        on_delete=models.CASCADE,
+        help_text="Community member who suggested the quote.",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Timestamp for when the quote suggestion was created.",
+    )
+    is_approved = models.BooleanField(
+        default=False,
+        help_text="Indicates whether moderators have cleared this quote for rotation.",
+    )
+    approved_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp captured the moment moderation approved the quote.",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.attribution}: {self.text[:40]}..."
+
+    def save(self, *args, **kwargs):
+        """Ensure the approval timestamp mirrors moderation state."""
+        if self.is_approved and not self.approved_at:
+            self.approved_at = timezone.now()
+        elif not self.is_approved:
+            self.approved_at = None
+        super().save(*args, **kwargs)

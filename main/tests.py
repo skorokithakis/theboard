@@ -626,6 +626,13 @@ class FeatureBoardTests(TestCase):
         report_entry = generated[0]
         self.assertEqual(report_entry.published_at, now)
         self.assertIn(shipped.description, report_entry.sections[0].paragraphs)
+        self.assertEqual(report_entry.sections[0].title, "Framing the request")
+        self.assertEqual(report_entry.sections[1].title, "Trade-offs and chosen path")
+        section_titles = [section.title for section in report_entry.sections]
+        self.assertIn("What had to be reworked", section_titles)
+        self.assertTrue(
+            any(item.startswith("Lead time:") for item in report_entry.highlights)
+        )
 
     def test_auto_report_detail_view_renders_generated_entry(self) -> None:
         shipped = self._submit_feature(
@@ -653,6 +660,9 @@ class FeatureBoardTests(TestCase):
         self.assertContains(response, shipped.title)
         self.assertContains(response, shipped.description)
         self.assertContains(response, "blog stays current")
+        self.assertContains(response, "Trade-offs and chosen path")
+        self.assertContains(response, "What had to be reworked")
+        self.assertContains(response, "Lead time:")
 
 
 class DailyFortuneTests(TestCase):

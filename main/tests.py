@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
 from django.core.management import call_command
+from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -37,6 +38,33 @@ class FeatureBoardTests(TestCase):
         }
         data.update(kwargs)
         return models.Feature.objects.create(**data)
+
+    def _document_feature(
+        self,
+        feature: models.Feature,
+        *,
+        summary: str = "Implementation write-up summary.",
+        body: str | None = None,
+        highlights: str | None = None,
+    ) -> None:
+        """Populate the manual implementation report fields for a feature."""
+        feature.implementation_report_summary = summary
+        feature.implementation_report_body = body or (
+            "# Context\n"
+            "Document exactly how the feature was implemented.\n\n"
+            "# Verification\n"
+            "Capture the validation steps so the recap stays actionable."
+        )
+        feature.implementation_report_highlights = highlights or (
+            "Verified end-to-end tests\nCAPTCHA flow untouched"
+        )
+        feature.save(
+            update_fields=[
+                "implementation_report_summary",
+                "implementation_report_body",
+                "implementation_report_highlights",
+            ]
+        )
 
     def test_create_user_lowercases_username(self) -> None:
         user = User.objects.create_user(username="MiXeDCaSeUser", password="test-pass")
@@ -354,6 +382,8 @@ class FeatureBoardTests(TestCase):
         models.Vote.objects.create(user=self.owner, feature=feature)
         models.Vote.objects.create(user=self.other, feature=other_feature)
 
+        self._document_feature(feature)
+
         call_command("post_implementation", str(feature.pk))
 
         feature.refresh_from_db()
@@ -371,6 +401,8 @@ class FeatureBoardTests(TestCase):
 
     def test_post_implementation_command_marks_unsuccessful_state(self) -> None:
         feature = self._submit_feature()
+
+        self._document_feature(feature)
 
         call_command("post_implementation", str(feature.pk), failed=True)
 
@@ -401,6 +433,8 @@ class FeatureBoardTests(TestCase):
         pending_stale = self._submit_feature(title="Forgotten")
 
         models.Vote.objects.create(user=self.other, feature=pending_with_support)
+
+        self._document_feature(implemented)
 
         call_command("post_implementation", str(implemented.pk))
 
@@ -614,6 +648,18 @@ class FeatureBoardTests(TestCase):
             description="Please make sure this launch appears in the blog.",
         )
         now = timezone.now()
+        manual_body = (
+            "# Framing the work\n"
+            "Talk about the request and the backing data.\n\n"
+            "# Implementation notes\n"
+            "Include the modules touched and the approaches tried."
+        )
+        self._document_feature(
+            shipped,
+            summary="Manual recap for auto chronicled feature.",
+            body=manual_body,
+            highlights="Tests hardened\nGraph edges revalidated",
+        )
         shipped.implement(when=now)
 
         generated = [
@@ -625,19 +671,33 @@ class FeatureBoardTests(TestCase):
         self.assertTrue(generated)
         report_entry = generated[0]
         self.assertEqual(report_entry.published_at, now)
-        self.assertIn(shipped.description, report_entry.sections[0].paragraphs)
-        self.assertEqual(report_entry.sections[0].title, "Framing the request")
-        self.assertEqual(report_entry.sections[1].title, "Trade-offs and chosen path")
-        section_titles = [section.title for section in report_entry.sections]
-        self.assertIn("What had to be reworked", section_titles)
-        self.assertTrue(
-            any(item.startswith("Lead time:") for item in report_entry.highlights)
+        self.assertEqual(
+            report_entry.summary,
+            "Manual recap for auto chronicled feature.",
+        )
+        self.assertEqual(report_entry.sections[0].title, "Framing the work")
+        self.assertIn("modules touched", " ".join(report_entry.sections[1].paragraphs))
+        self.assertEqual(
+            tuple(report_entry.highlights),
+            ("Tests hardened", "Graph edges revalidated"),
         )
 
     def test_auto_report_detail_view_renders_generated_entry(self) -> None:
         shipped = self._submit_feature(
             title="Auto blog detail",
             description="Document this detail page.",
+        )
+        manual_body = (
+            "# Context\n"
+            "Implementation detail for auto blog detail.\n\n"
+            "# Follow-up\n"
+            "Mention verification steps."
+        )
+        self._document_feature(
+            shipped,
+            summary="Blog detail manual write-up.",
+            body=manual_body,
+            highlights="Smoke tests\nDocs updated",
         )
         shipped.implement(when=timezone.now())
         entry = next(
@@ -658,11 +718,18 @@ class FeatureBoardTests(TestCase):
             response = self.client.get(f"/reports/{entry.slug}/")
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, shipped.title)
-        self.assertContains(response, shipped.description)
-        self.assertContains(response, "blog stays current")
-        self.assertContains(response, "Trade-offs and chosen path")
-        self.assertContains(response, "What had to be reworked")
-        self.assertContains(response, "Lead time:")
+        self.assertContains(response, "Blog detail manual write-up.")
+        self.assertContains(response, "Implementation detail for auto blog detail.")
+        self.assertContains(response, "Mention verification steps.")
+        self.assertContains(response, "Smoke tests")
+
+    def test_post_implementation_requires_documented_write_up(self) -> None:
+        feature = self._submit_feature(title="Missing write-up")
+
+        with self.assertRaisesMessage(
+            CommandError, "Implementation blog entry incomplete"
+        ):
+            call_command("post_implementation", str(feature.pk))
 
 
 class DailyFortuneTests(TestCase):

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone as dt_timezone
+import re
 from typing import Sequence
 
 from django.utils.text import slugify
@@ -86,10 +87,56 @@ REPORTS: tuple[ImplementationReport, ...] = (
             "New list + detail templates reuse the board’s existing visual language.",
         ),
     ),
+    ImplementationReport(
+        slug="unique-implementation-writeups",
+        title="Every launch gets its own write-up",
+        feature_title="I'm sure the intention was to create a different blog post for each feature implemented",
+        summary=(
+            "Replaced the copy/paste generator with a workflow that requires engineers to author "
+            "feature-specific launch notes. The Feature model now carries structured recap fields, "
+            "the admin exposes them, and the blog only renders entries once that text exists."
+        ),
+        published_at=datetime(2025, 11, 19, 0, 0, tzinfo=dt_timezone.utc),
+        sections=(
+            ReportSection(
+                title="Why the generator had to go",
+                paragraphs=(
+                    "Automatic recaps sounded clever until we shipped a few — every new entry recycled the same prose "
+                    "with a handful of interpolated nouns. Players correctly called out that the blog was useless for "
+                    "understanding what actually shipped. We decided to stop showing placeholders altogether and focus "
+                    "on tooling that makes proper write-ups fast to produce.",
+                ),
+            ),
+            ReportSection(
+                title="Documented in the Feature model",
+                paragraphs=(
+                    "Each Feature now owns a summary, Markdown body, and highlight bullets dedicated to its implementation "
+                    "report. The admin groups those fields under a new “Implementation report” section so the engineer "
+                    "who ships the work can capture the narrative before flipping the switch. The management command refuses "
+                    "to mark a feature implemented until the write-up is filled in, which keeps the archive honest.",
+                ),
+            ),
+            ReportSection(
+                title="Rendering richer posts",
+                paragraphs=(
+                    "The reports module parses the Markdown headings into the same ReportSection dataclasses used everywhere "
+                    "else. That parsing logic fans out paragraphs, trims bullet markers for highlights, and falls back to factual "
+                    "metadata if the summary is missing. Implemented features without a write-up are now skipped entirely so the "
+                    "blog only shows entries that actually describe engineering work.",
+                ),
+            ),
+        ),
+        highlights=(
+            "Manual write-ups are required before running the post_implementation command.",
+            "Markdown headings become proper sections in the Implementation Report Blog.",
+            "Features without a documented recap no longer appear in the blog listing.",
+        ),
+    ),
 )
 
 AUTO_REPORT_LIMIT = 10
 AUTO_REPORT_SLUG_PREFIX = "auto-feature-report"
+MANUAL_HEADING_RE = re.compile(r"^\s{0,3}#{1,6}\s*(.+?)\s*$")
 
 
 def get_reports() -> list[ImplementationReport]:
@@ -123,11 +170,16 @@ def _get_automatic_reports(
         .select_related("creator")
         .order_by("-implemented_at")[:limit]
     )
-    return tuple(_build_automatic_report(feature) for feature in features)
+    reports: list[ImplementationReport] = []
+    for feature in features:
+        entry = _build_automatic_report(feature)
+        if entry is not None:
+            reports.append(entry)
+    return tuple(reports)
 
 
-def _build_automatic_report(feature: Feature) -> ImplementationReport:
-    """Create an implementation report entry based on feature metadata."""
+def _build_automatic_report(feature: Feature) -> ImplementationReport | None:
+    """Create an implementation report entry using the documented write-up."""
     implemented_at = feature.implemented_at or feature.created_at
     created_at = feature.created_at
     votes = feature.vote_total
@@ -141,74 +193,26 @@ def _build_automatic_report(feature: Feature) -> ImplementationReport:
     parent_title = feature.parent.title if feature.parent else None
     author = feature.creator.display_name
     lead_time_label = _format_lead_time(created_at, implemented_at)
-    summary = (
-        f"Automatic deep dive for \u201c{feature.title}\u201d. The feature was {state_label.lower()} "
-        f"on {_format_timestamp(implemented_at)} after collecting {votes_label}. "
-        "This entry documents the trade-offs, reworks, and verification steps so the blog stays "
-        "as detailed as the handcrafted launch notes."
+    default_summary = _build_default_summary(
+        feature.title,
+        state_label,
+        implemented_at,
+        votes_label,
     )
-    parent_sentence = (
-        f"It extends \u201c{parent_title}\u201d, so we had to respect its API contract and analytics hooks. "
-        "Spinning it into a standalone shape would have forked the vote history."
-        if parent_title
-        else "It stood on its own, which let us reshape the API contract without worrying about sibling branches. "
+    manual_content = _build_manual_report_content(
+        feature=feature,
+        default_summary=default_summary,
     )
-    missed_vote_sentence = (
-        "It never missed a daily up-vote, so the expiration window stayed generous."
-        if feature.missed_vote_days == 0
-        else f"It still landed despite {feature.missed_vote_days} missed vote day"
-        f"{'s' if feature.missed_vote_days != 1 else ''}, so urgency was increasing."
-    )
-    tradeoff_paragraphs = (
-        "We considered carving out a bespoke workflow and new tables for this feature, but that approach would "
-        "duplicate the vote bookkeeping and risk drifting from the nightly cleanup routines. Instead we layered "
-        "the change into the existing Feature state machine and reused its signals so voting never had to pause.",
-        f"Leaning on the Feature model plus the ImplementationReport dataclasses kept CAPTCHA flows intact and "
-        f"let us ship in {lead_time_label}. The homepage, backlog, and API payloads all read the same content "
-        "source, which keeps every surface in sync.",
-    )
-    iteration_paragraphs = (
-        "The first spike tried to hydrate report sections lazily inside the template, which spammed the database "
-        "and rendered headings out of order. We rewired the generator so every paragraph is composed in Python "
-        "and handed to the template as immutable tuples.",
-        f"We also attempted to show live vote counts directly from Redis, but mixing {votes_label} of live input "
-        "with the implementation snapshot caused mismatches with the API responses. The fix was to stash the "
-        "snapshot captured during implementation and render that everywhere.",
-    )
-    sections = (
-        ReportSection(
-            title="Framing the request",
-            paragraphs=(
-                f"{feature.title} graduated from the backlog with {votes_label} pushing for it. "
-                f"{parent_sentence}{author} championed the work internally. {missed_vote_sentence}",
-                feature.description,
-            ),
-        ),
-        ReportSection(
-            title="Trade-offs and chosen path",
-            paragraphs=tradeoff_paragraphs,
-        ),
-        ReportSection(
-            title="What had to be reworked",
-            paragraphs=iteration_paragraphs,
-        ),
-        ReportSection(
-            title="Timeline",
-            paragraphs=(
-                f"Submitted {_format_timestamp(created_at)} and {state_label.lower()} "
-                f"on {_format_timestamp(implemented_at)}. The {lead_time_label} lead time kept pressure on "
-                "scope so we could ship without pausing voting.",
-                "This entry was generated by the board to guarantee the blog stays current "
-                "after every launch while still capturing the engineering narrative.",
-            ),
-        ),
-    )
-    highlights = (
-        f"Status: {state_label}",
-        f"Votes captured: {votes_label}",
-        f"Lead time: {lead_time_label}",
-        (f"Variation of: {parent_title}" if parent_title else f"Author: {author}"),
-    )
+    if manual_content is None:
+        return None
+    summary, sections, highlights = manual_content
+    if not highlights:
+        highlights = (
+            f"Status: {state_label}",
+            f"Votes captured: {votes_label}",
+            f"Lead time: {lead_time_label}",
+            (f"Variation of: {parent_title}" if parent_title else f"Author: {author}"),
+        )
     return ImplementationReport(
         slug=slug,
         title=f"{feature.title} Implementation Recap",
@@ -253,3 +257,105 @@ def _format_lead_time(start: datetime, end: datetime) -> str:
     if minutes or not parts:
         parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
     return ", ".join(parts)
+
+
+def _build_manual_report_content(
+    *,
+    feature: Feature,
+    default_summary: str,
+) -> tuple[str, tuple[ReportSection, ...], tuple[str, ...]] | None:
+    """Parse the feature's manual write-up into the dataclass payload."""
+    sections = _parse_manual_sections(feature.implementation_report_body or "")
+    if not sections:
+        return None
+    summary = (feature.implementation_report_summary or "").strip() or default_summary
+    highlights = _parse_manual_highlights(
+        feature.implementation_report_highlights or ""
+    )
+    return summary, sections, highlights
+
+
+def _parse_manual_sections(raw: str) -> tuple[ReportSection, ...]:
+    """Convert Markdown-style headings and paragraphs into ReportSection tuples."""
+    text = raw.strip()
+    if not text:
+        return tuple()
+    sections: list[ReportSection] = []
+    current_title: str | None = None
+    current_lines: list[str] = []
+
+    def flush() -> None:
+        if not current_lines:
+            return
+        paragraphs = _build_paragraphs(current_lines)
+        current_lines.clear()
+        if not paragraphs:
+            return
+        sections.append(
+            ReportSection(
+                title=current_title,
+                paragraphs=tuple(paragraphs),
+            )
+        )
+
+    for raw_line in raw.splitlines():
+        match = MANUAL_HEADING_RE.match(raw_line)
+        if match:
+            flush()
+            current_title = match.group(1).strip()
+            continue
+        current_lines.append(raw_line)
+    flush()
+    return tuple(sections)
+
+
+def _build_paragraphs(lines: list[str]) -> list[str]:
+    """Collapse text lines into logical paragraphs separated by blank rows."""
+    if not lines:
+        return []
+    paragraphs: list[str] = []
+    chunk: list[str] = []
+    for line in lines:
+        if not line.strip():
+            if chunk:
+                paragraphs.append(_normalize_paragraph(chunk))
+                chunk = []
+            continue
+        chunk.append(line.strip())
+    if chunk:
+        paragraphs.append(_normalize_paragraph(chunk))
+    return paragraphs
+
+
+def _normalize_paragraph(lines: list[str]) -> str:
+    return " ".join(line.strip() for line in lines if line.strip())
+
+
+def _parse_manual_highlights(raw: str) -> tuple[str, ...]:
+    """Convert newline-separated bullet points into highlight entries."""
+    if not raw.strip():
+        return tuple()
+    highlights: list[str] = []
+    for line in raw.splitlines():
+        cleaned = line.strip()
+        if not cleaned:
+            continue
+        if cleaned[0] in {"-", "*"}:
+            cleaned = cleaned[1:].strip()
+        if cleaned:
+            highlights.append(cleaned)
+    return tuple(highlights)
+
+
+def _build_default_summary(
+    title: str,
+    state_label: str,
+    implemented_at: datetime,
+    votes_label: str,
+) -> str:
+    """Fallback summary that still references factual data for the feature."""
+    return (
+        f"Deep dive for \u201c{title}\u201d. The feature was {state_label.lower()} "
+        f"on {_format_timestamp(implemented_at)} after collecting {votes_label}. "
+        "Document how it shipped and what changed so the archive stays useful."
+    )

@@ -86,6 +86,43 @@ class FeatureAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     search_fields = ("title", "description", "creator__username")
     autocomplete_fields = ("creator", "parent")
     ordering = ("-created_at",)
+    readonly_fields = ("created_at", "implemented_at", "expired_at", "votes")
+    fieldsets = (
+        (
+            "Feature request",
+            {
+                "fields": (
+                    "title",
+                    "description",
+                    "creator",
+                    "parent",
+                )
+            },
+        ),
+        (
+            "Lifecycle",
+            {
+                "fields": (
+                    "created_at",
+                    "implemented_at",
+                    "implemented_state",
+                    "expired_at",
+                    "missed_vote_days",
+                    "votes",
+                )
+            },
+        ),
+        (
+            "Implementation report",
+            {
+                "fields": (
+                    "implementation_report_summary",
+                    "implementation_report_body",
+                    "implementation_report_highlights",
+                )
+            },
+        ),
+    )
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)

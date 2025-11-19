@@ -13,6 +13,7 @@ class UserSchema(Schema):
     id: int
     username: str
     display_name: str
+    status: str | None = None
     is_superuser: bool
 
 

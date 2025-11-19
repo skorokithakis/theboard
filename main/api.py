@@ -67,6 +67,7 @@ def _serialize_user(user: models.User) -> dict[str, Any]:
         "id": user.pk,
         "username": user.username,
         "display_name": user.display_name,
+        "status": user.status,
         "is_superuser": user.is_superuser,
     }
 

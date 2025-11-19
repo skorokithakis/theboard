@@ -4,25 +4,33 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0011_quotesuggestion'),
+        ("main", "0011_quotesuggestion"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='feature',
-            name='implementation_report_body',
-            field=models.TextField(blank=True, help_text='Full technical write-up for the implementation blog entry. Use Markdown-style headings starting with # to mark new sections and blank lines for paragraphs.'),
+            model_name="feature",
+            name="implementation_report_body",
+            field=models.TextField(
+                blank=True,
+                help_text="Full technical write-up for the implementation blog entry. Use Markdown-style headings starting with # to mark new sections and blank lines for paragraphs.",
+            ),
         ),
         migrations.AddField(
-            model_name='feature',
-            name='implementation_report_highlights',
-            field=models.TextField(blank=True, help_text='Newline-separated list of highlight bullets that surface in the implementation blog entry.'),
+            model_name="feature",
+            name="implementation_report_highlights",
+            field=models.TextField(
+                blank=True,
+                help_text="Newline-separated list of highlight bullets that surface in the implementation blog entry.",
+            ),
         ),
         migrations.AddField(
-            model_name='feature',
-            name='implementation_report_summary',
-            field=models.TextField(blank=True, help_text='Short paragraph summarizing how this feature was implemented for the blog entry.'),
+            model_name="feature",
+            name="implementation_report_summary",
+            field=models.TextField(
+                blank=True,
+                help_text="Short paragraph summarizing how this feature was implemented for the blog entry.",
+            ),
         ),
     ]

@@ -2050,10 +2050,11 @@
     var meta = document.createElement("div");
     meta.className = "tb-graveyard-meta";
 
-    if (feature.creator && feature.creator.display_name) {
+    if (feature.creator) {
       var author = document.createElement("span");
       author.className = "tb-graveyard-author";
-      author.textContent = "by " + feature.creator.display_name;
+      author.appendChild(document.createTextNode("by "));
+      author.appendChild(createProfileLink(feature.creator));
       meta.appendChild(author);
     }
 
@@ -2204,7 +2205,8 @@
 
     var creatorItem = document.createElement("span");
     creatorItem.className = "tb-meta-item";
-    creatorItem.textContent = "by " + getCreatorName(feature);
+    creatorItem.appendChild(document.createTextNode("by "));
+    creatorItem.appendChild(createProfileLink(feature.creator));
     meta.appendChild(creatorItem);
 
     meta.appendChild(createMetaDot());
@@ -2374,7 +2376,8 @@
     }
 
     if (ELEMENTS.detailMeta) {
-      ELEMENTS.detailMeta.textContent = formatFeatureMeta(feature);
+      ELEMENTS.detailMeta.innerHTML = "";
+      ELEMENTS.detailMeta.appendChild(buildFeatureMetaFragment(feature));
     }
 
     if (ELEMENTS.detailDescription) {
@@ -2624,9 +2627,8 @@
     lastDetailTrigger = null;
   }
 
-  function formatFeatureMeta(feature) {
+  function getFeatureMetaParts(feature) {
     var parts = [];
-    parts.push("by " + getCreatorName(feature));
     var timeline = feature.implemented_at
       ? "Implemented " + formatRelativeTime(feature.implemented_at)
       : formatRelativeTime(feature.created_at);
@@ -2641,6 +2643,23 @@
     if (typeof feature.variation_count === "number" && feature.variation_count > 0) {
       parts.push("Variations: " + formatNumber(feature.variation_count));
     }
+    return parts;
+  }
+
+  function buildFeatureMetaFragment(feature) {
+    var fragment = document.createDocumentFragment();
+    fragment.appendChild(document.createTextNode("by "));
+    fragment.appendChild(createProfileLink(feature && feature.creator ? feature.creator : null));
+    var parts = getFeatureMetaParts(feature);
+    parts.forEach(function (part) {
+      fragment.appendChild(document.createTextNode(" · " + part));
+    });
+    return fragment;
+  }
+
+  function formatFeatureMeta(feature) {
+    var parts = getFeatureMetaParts(feature);
+    parts.unshift("by " + getCreatorName(feature));
     return parts.join(" · ");
   }
 
@@ -3521,6 +3540,30 @@
       return new Intl.NumberFormat().format(value);
     }
     return String(value);
+  }
+
+  function createProfileLink(user, extraClass) {
+    var label = "Unknown member";
+    if (user && (user.display_name || user.username)) {
+      label = user.display_name || user.username;
+    }
+    var classes = ["tb-profile-link"];
+    if (extraClass) {
+      classes.push(extraClass);
+    }
+    var className = classes.join(" ");
+    if (!user || !user.username) {
+      var fallback = document.createElement("span");
+      fallback.className = className;
+      fallback.textContent = label;
+      return fallback;
+    }
+    var link = document.createElement("a");
+    link.href = "/profiles/" + encodeURIComponent(user.username);
+    link.textContent = label;
+    link.className = className;
+    link.setAttribute("data-profile-username", user.username);
+    return link;
   }
 
   function getCreatorName(feature) {

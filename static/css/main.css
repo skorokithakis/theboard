@@ -1717,6 +1717,126 @@ a:hover {
   color: #f45b69;
 }
 
+.tb-profile-link {
+  color: #7dd3fc;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(125, 211, 252, 0.4);
+  transition: color 0.2s ease, border-bottom-color 0.2s ease;
+}
+
+.tb-profile-link:hover {
+  color: #a5f3fc;
+  border-bottom-color: rgba(165, 243, 252, 0.85);
+}
+
+.profile-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0 3rem;
+}
+
+.profile-card {
+  background: rgba(4, 12, 18, 0.9);
+  border: 1px solid rgba(243, 201, 105, 0.2);
+  border-radius: 18px;
+  padding: 2rem;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+}
+
+.profile-card--form {
+  border-color: rgba(244, 91, 105, 0.4);
+}
+
+.profile-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.7rem;
+  color: rgba(243, 201, 105, 0.7);
+  margin-bottom: 0.75rem;
+}
+
+.profile-name {
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 700;
+}
+
+.profile-handle {
+  margin: 0.25rem 0 1.5rem;
+  color: rgba(255, 255, 255, 0.58);
+  font-family: "Space Mono", monospace;
+}
+
+.profile-status {
+  border-top: 1px solid rgba(243, 201, 105, 0.25);
+  padding-top: 1.25rem;
+}
+
+.profile-status__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  gap: 0.75rem;
+}
+
+.profile-status__label {
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: rgba(243, 201, 105, 0.85);
+}
+
+.profile-status__hint {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.profile-status__message {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.profile-status__empty {
+  color: rgba(255, 255, 255, 0.55);
+  font-style: italic;
+}
+
+.profile-form__title {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.profile-form__helper {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.profile-form textarea {
+  width: 100%;
+  font-size: 1rem;
+}
+
+.profile-form__submit {
+  background: linear-gradient(90deg, #48c6ef, #6f86d6);
+  color: #010a14;
+  border: none;
+  border-radius: 999px;
+  padding: 0.9rem 1.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-form__submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(73, 198, 239, 0.35);
+}
+
 @keyframes featureButtonPulse {
   0%,
   100% {

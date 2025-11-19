@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.display_name }} · Profile{% endblock %}
+
+{% block content %}
+<section class="profile-section">
+    <article class="profile-card">
+        <p class="profile-eyebrow">Board member</p>
+        <h1 class="profile-name">{{ profile_user.display_name }}</h1>
+        <p class="profile-handle">@{{ profile_user.username }}</p>
+        <div class="profile-status">
+            <div class="profile-status__header">
+                <span class="profile-status__label">Status</span>
+                {% if not profile_user.status and can_edit_profile %}
+                <span class="profile-status__hint">Let others know what you're up to.</span>
+                {% endif %}
+            </div>
+            {% if profile_user.status %}
+            <p class="profile-status__message">{{ profile_user.status }}</p>
+            {% else %}
+            <p class="profile-status__empty">
+                {% if can_edit_profile %}
+                    You haven't shared a status yet.
+                {% else %}
+                    {{ profile_user.display_name }} hasn't shared a status yet.
+                {% endif %}
+            </p>
+            {% endif %}
+        </div>
+    </article>
+    {% if can_edit_profile %}
+    <article class="profile-card profile-card--form">
+        <h2 class="profile-form__title">Update your status</h2>
+        <p class="profile-form__helper">Statuses appear on your profile for anyone to read.</p>
+        <form method="post" class="profile-form">
+            {% csrf_token %}
+            <div class="form-field">
+                {{ profile_form.status.label_tag }}
+                {{ profile_form.status }}
+                {% if profile_form.status.help_text %}
+                <p class="form-help">{{ profile_form.status.help_text }}</p>
+                {% endif %}
+                {% if profile_form.status.errors %}
+                    {% for error in profile_form.status.errors %}
+                    <p class="form-error">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="profile-form__submit">Save status</button>
+            </div>
+        </form>
+    </article>
+    {% endif %}
+</section>
+{% endblock %}

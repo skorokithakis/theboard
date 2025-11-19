@@ -64,6 +64,13 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
+    status = models.CharField(
+        max_length=160,
+        blank=True,
+        help_text=(
+            "Short message the member can pin to their profile to share their current focus or vibe."
+        ),
+    )
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)

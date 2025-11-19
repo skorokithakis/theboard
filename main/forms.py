@@ -157,3 +157,37 @@ class SignUpForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+
+class ProfileForm(forms.ModelForm):
+    """Form for updating a member's short status message."""
+
+    status_max_length = models.User._meta.get_field("status").max_length
+
+    class Meta:
+        model = models.User
+        fields = ("status",)
+        widgets = {
+            "status": forms.Textarea(
+                attrs={
+                    "rows": 3,
+                    "placeholder": _(
+                        "Share a short update about what you're building or thinking about."
+                    ),
+                    "class": "textarea",
+                    "maxlength": str(models.User._meta.get_field("status").max_length),
+                }
+            )
+        }
+        labels = {
+            "status": _("Profile status"),
+        }
+        help_texts = {
+            "status": _("Keep it friendly and under 160 characters."),
+        }
+
+    def clean_status(self) -> str:
+        status = (self.cleaned_data.get("status") or "").strip()
+        if len(status) > self.status_max_length:
+            raise forms.ValidationError(_("Status is too long."))
+        return status

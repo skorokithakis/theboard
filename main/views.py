@@ -3,16 +3,20 @@
 from __future__ import annotations
 
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
+from django.core.exceptions import PermissionDenied
 
-from .forms import QuoteSuggestionForm
+from .forms import ProfileForm, QuoteSuggestionForm
 from .fortune import get_daily_fortune
 from .models import Feature
 from .reports import get_latest_reports, get_report, get_reports
 from .utils import get_next_iteration_at
+
+User = get_user_model()
 
 
 def _build_homepage_context(
@@ -101,3 +105,44 @@ def submit_quote_suggestion(request: HttpRequest) -> HttpResponse:
     )
     context = _build_homepage_context(fortune_form=form)
     return render(request, "index.html", context, status=400)
+
+
+def profile_detail(request: HttpRequest, username: str | None = None) -> HttpResponse:
+    """Show an individual profile and allow owners to update their status."""
+
+    if username:
+        lookup = username.strip()
+        if not lookup:
+            raise Http404("Profile not found.")
+        try:
+            profile_user = User.objects.get(username__iexact=lookup)
+        except User.DoesNotExist as exc:
+            raise Http404("Profile not found.") from exc
+    else:
+        if not request.user.is_authenticated:
+            messages.info(request, "Sign in to view your profile.")
+            return redirect("main:index")
+        profile_user = request.user
+
+    can_edit = request.user.is_authenticated and request.user.pk == profile_user.pk
+    form: ProfileForm | None
+
+    if request.method == "POST":
+        if not can_edit:
+            raise PermissionDenied("You cannot edit another member's profile.")
+        form = ProfileForm(request.POST, instance=profile_user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Status updated.")
+            if username:
+                return redirect("main:profile-detail", username=profile_user.username)
+            return redirect("main:profile")
+    else:
+        form = ProfileForm(instance=profile_user) if can_edit else None
+
+    context = {
+        "profile_user": profile_user,
+        "profile_form": form,
+        "can_edit_profile": can_edit,
+    }
+    return render(request, "profiles/detail.html", context)

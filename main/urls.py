@@ -14,4 +14,6 @@ urlpatterns = [
         views.submit_quote_suggestion,
         name="fortune-suggest",
     ),
+    path("profile/", views.profile_detail, name="profile"),
+    path("profiles/<str:username>/", views.profile_detail, name="profile-detail"),
 ]

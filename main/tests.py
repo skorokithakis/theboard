@@ -30,6 +30,18 @@ class FeatureBoardTests(TestCase):
             password="test-pass-2",
         )
 
+    def _static_override(self):
+        storage_settings = {
+            **settings.STORAGES,
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            },
+        }
+        return override_settings(
+            STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage",
+            STORAGES=storage_settings,
+        )
+
     def _submit_feature(self, **kwargs) -> models.Feature:
         data = {
             "title": kwargs.pop("title", "Sample Feature"),
@@ -730,6 +742,51 @@ class FeatureBoardTests(TestCase):
             CommandError, "Implementation blog entry incomplete"
         ):
             call_command("post_implementation", str(feature.pk))
+
+    def test_profile_view_updates_status_for_owner(self) -> None:
+        self.client.login(username=self.owner.username, password="test-pass-1")
+        response = self.client.post(
+            reverse("main:profile"),
+            {"status": "  shipping cool vibes "},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.owner.refresh_from_db()
+        self.assertEqual(self.owner.status, "shipping cool vibes")
+
+    def test_profile_detail_shows_status_publicly(self) -> None:
+        self.owner.status = "Exploring status pages"
+        self.owner.save(update_fields=["status"])
+
+        with self._static_override():
+            response = self.client.get(
+                reverse("main:profile-detail", args=[self.owner.username])
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Exploring status pages")
+        self.assertContains(response, self.owner.username)
+
+    def test_profile_edit_forbidden_for_other_accounts(self) -> None:
+        self.client.login(username=self.other.username, password="test-pass-2")
+        response = self.client.post(
+            reverse("main:profile-detail", args=[self.owner.username]),
+            {"status": "Trying to spoof"},
+        )
+        self.assertEqual(response.status_code, 403)
+        self.owner.refresh_from_db()
+        self.assertEqual(self.owner.status, "")
+
+    def test_feature_list_includes_creator_status(self) -> None:
+        self.owner.status = "API surfaces the vibe"
+        self.owner.save(update_fields=["status"])
+        feature = self._submit_feature(title="Status aware feature")
+
+        response = self.client.get("/api/features")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["features"][0]["id"], feature.id)
+        self.assertEqual(
+            payload["features"][0]["creator"]["status"], "API surfaces the vibe"
+        )
 
 
 class DailyFortuneTests(TestCase):

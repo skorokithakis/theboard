@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0012_feature_implementation_report_body_and_more'),
+        ("main", "0012_feature_implementation_report_body_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='status',
-            field=models.CharField(blank=True, help_text='Short message the member can pin to their profile to share their current focus or vibe.', max_length=160),
+            model_name="user",
+            name="status",
+            field=models.CharField(
+                blank=True,
+                help_text="Short message the member can pin to their profile to share their current focus or vibe.",
+                max_length=160,
+            ),
         ),
     ]

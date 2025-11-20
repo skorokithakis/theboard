@@ -518,6 +518,16 @@
       ".tb-feature-description h2 { font-size: 1.45rem; }",
       ".tb-feature-description h3 { font-size: 1.3rem; }",
       ".tb-feature-description h4 { font-size: 1.15rem; }",
+      ".tb-feature-status { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 12px; background: rgba(15, 39, 52, 0.82); border: 1px solid rgba(59, 130, 246, 0.28); color: #e2e8f0; }",
+      ".tb-feature-status-label { font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: #93c5fd; flex: 0 0 auto; padding-top: 0.1rem; }",
+      ".tb-feature-status-text { flex: 1 1 auto; font-weight: 600; color: #f8fafc; word-break: break-word; }",
+      ".tb-feature-status-empty .tb-feature-status-text { color: #cbd5f5; font-weight: 500; }",
+      ".tb-feature-status-inline { margin-top: 0.25rem; }",
+      ".tb-detail-profile { border: 1px solid rgba(59, 130, 246, 0.28); background: linear-gradient(135deg, rgba(14, 38, 48, 0.95), rgba(9, 28, 38, 0.95)); border-radius: 14px; padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; }",
+      ".tb-detail-profile-header { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; font-size: 0.95rem; color: #e2e8f0; }",
+      ".tb-detail-profile-meta { display: inline-flex; align-items: baseline; gap: 0.5rem; }",
+      ".tb-detail-profile-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: #93c5fd; }",
+      ".tb-detail-profile-actions { display: inline-flex; gap: 0.75rem; align-items: center; }",
       ".tb-feature-description h5 { font-size: 1.05rem; }",
       ".tb-feature-description h6 { font-size: 0.95rem; color: #a5b4fc; }",
       ".tb-feature-description h1:first-child, .tb-feature-description h2:first-child, .tb-feature-description h3:first-child, .tb-feature-description h4:first-child, .tb-feature-description h5:first-child, .tb-feature-description h6:first-child { margin-top: 0; }",
@@ -784,6 +794,7 @@
       '<div class="tb-detail-body">',
       '  <article class="tb-detail-content">',
       '    <h2 class="tb-detail-feature-title" id="tb-detail-feature-title"></h2>',
+      '    <div class="tb-detail-profile" id="tb-detail-profile" aria-live="polite"></div>',
       '    <div class="tb-feature-description" id="tb-detail-description"></div>',
       '    <div class="tb-detail-variations" id="tb-detail-variations" aria-live="polite"></div>',
       "  </article>",
@@ -814,6 +825,7 @@
     ELEMENTS.detailActions = modal.querySelector("#tb-detail-actions");
     ELEMENTS.detailDescription = modal.querySelector("#tb-detail-description");
     ELEMENTS.detailVariations = modal.querySelector("#tb-detail-variations");
+    ELEMENTS.detailProfile = modal.querySelector("#tb-detail-profile");
 
     if (ELEMENTS.detailClose) {
       ELEMENTS.detailClose.addEventListener("click", closeFeatureDetail);
@@ -1545,6 +1557,12 @@
       var actions = document.createElement("div");
       actions.className = "tb-user-actions";
 
+      var profileLink = document.createElement("a");
+      profileLink.className = "tb-link";
+      profileLink.href = "/profile/";
+      profileLink.textContent = "View profile";
+      actions.appendChild(profileLink);
+
       var logout = document.createElement("button");
       logout.type = "button";
       logout.className = "tb-link";
@@ -2200,6 +2218,14 @@
     }
     body.appendChild(description);
 
+    var statusBlock = createStatusBlock(feature.creator, {
+      hideWhenEmpty: true,
+      extraClass: "tb-feature-status-inline",
+    });
+    if (statusBlock) {
+      body.appendChild(statusBlock);
+    }
+
     var meta = document.createElement("div");
     meta.className = "tb-feature-meta";
 
@@ -2347,6 +2373,38 @@
     return normalized;
   }
 
+  function createStatusBlock(user, options) {
+    var settings = options || {};
+    var status =
+      user && typeof user.status === "string" ? user.status.trim() : "";
+
+    if (!status && settings.hideWhenEmpty) {
+      return null;
+    }
+
+    var wrapper = document.createElement("div");
+    wrapper.className = "tb-feature-status";
+    if (settings.extraClass) {
+      wrapper.className += " " + settings.extraClass;
+    }
+    if (!status) {
+      wrapper.classList.add("tb-feature-status-empty");
+    }
+
+    var label = document.createElement("span");
+    label.className = "tb-feature-status-label";
+    label.textContent = "Status";
+    wrapper.appendChild(label);
+
+    var text = document.createElement("span");
+    text.className = "tb-feature-status-text";
+    text.textContent =
+      status || settings.emptyText || "No status shared yet.";
+    wrapper.appendChild(text);
+
+    return wrapper;
+  }
+
   function openFeatureDetail(feature, descriptionHtml, triggerElement) {
     if (!ELEMENTS.detailOverlay || !ELEMENTS.detailModal || !feature) {
       return;
@@ -2380,6 +2438,8 @@
       ELEMENTS.detailMeta.appendChild(buildFeatureMetaFragment(feature));
     }
 
+    renderDetailProfile(feature);
+
     if (ELEMENTS.detailDescription) {
       var html = descriptionHtml || renderMarkdown(feature.description || "");
       if (html) {
@@ -2391,6 +2451,67 @@
 
     renderDetailActions(feature);
     renderDetailVariations(feature);
+  }
+
+  function renderDetailProfile(feature) {
+    var container = ELEMENTS.detailProfile;
+    if (!container) {
+      return;
+    }
+    container.innerHTML = "";
+    if (!feature || !feature.creator) {
+      return;
+    }
+
+    var header = document.createElement("div");
+    header.className = "tb-detail-profile-header";
+
+    var meta = document.createElement("div");
+    meta.className = "tb-detail-profile-meta";
+
+    var label = document.createElement("span");
+    label.className = "tb-detail-profile-label";
+    label.textContent = "Profile";
+    meta.appendChild(label);
+
+    meta.appendChild(createProfileLink(feature.creator, "tb-detail-profile-link"));
+    header.appendChild(meta);
+
+    var actions = document.createElement("div");
+    actions.className = "tb-detail-profile-actions";
+
+    var viewProfile = document.createElement("a");
+    viewProfile.className = "tb-link";
+    viewProfile.href =
+      "/profiles/" + encodeURIComponent(feature.creator.username);
+    viewProfile.textContent = "View profile";
+    actions.appendChild(viewProfile);
+
+    if (
+      STATE.user &&
+      feature.creator &&
+      Number(STATE.user.id) === Number(feature.creator.id)
+    ) {
+      var editStatus = document.createElement("a");
+      editStatus.className = "tb-link";
+      editStatus.href = "/profile/";
+      editStatus.textContent = "Edit status";
+      actions.appendChild(editStatus);
+    }
+
+    if (actions.childNodes.length) {
+      header.appendChild(actions);
+    }
+
+    container.appendChild(header);
+
+    var statusBlock = createStatusBlock(feature.creator, {
+      emptyText: "No status yet. Share what you're working on.",
+      hideWhenEmpty: false,
+    });
+    if (statusBlock) {
+      container.appendChild(statusBlock);
+    }
   }
 
   function renderDetailActions(feature) {

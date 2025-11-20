@@ -47,8 +47,6 @@ class Command(BaseCommand):
 
         now = timezone.now()
 
-        self._ensure_report_is_documented(feature)
-
         if failed:
             feature.implemented_state = Feature.ImplementationState.UNSUCCESSFUL
 
@@ -83,22 +81,4 @@ class Command(BaseCommand):
                 self.style.WARNING(
                     f"Penalized {updated} inactive feature(s) for earning zero votes."
                 )
-            )
-
-    def _ensure_report_is_documented(self, feature: Feature) -> None:
-        """Require a full implementation write-up before flipping the switch."""
-        missing: list[str] = []
-        fields = {
-            "summary": feature.implementation_report_summary,
-            "body": feature.implementation_report_body,
-            "highlights": feature.implementation_report_highlights,
-        }
-        for label, value in fields.items():
-            if not value or not value.strip():
-                missing.append(label)
-        if missing:
-            joined = ", ".join(missing)
-            raise CommandError(
-                f'Implementation blog entry incomplete for feature "{feature.title}" (missing: {joined}). '
-                "Document the launch in the admin before marking it as implemented."
             )

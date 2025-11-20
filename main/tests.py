@@ -7,7 +7,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
 from django.core.management import call_command
-from django.core.management.base import CommandError
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -735,13 +734,13 @@ class FeatureBoardTests(TestCase):
         self.assertContains(response, "Mention verification steps.")
         self.assertContains(response, "Smoke tests")
 
-    def test_post_implementation_requires_documented_write_up(self) -> None:
+    def test_post_implementation_allows_missing_write_up(self) -> None:
         feature = self._submit_feature(title="Missing write-up")
 
-        with self.assertRaisesMessage(
-            CommandError, "Implementation blog entry incomplete"
-        ):
-            call_command("post_implementation", str(feature.pk))
+        call_command("post_implementation", str(feature.pk))
+
+        feature.refresh_from_db()
+        self.assertIsNotNone(feature.implemented_at)
 
     def test_profile_view_updates_status_for_owner(self) -> None:
         self.client.login(username=self.owner.username, password="test-pass-1")

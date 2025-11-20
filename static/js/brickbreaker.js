@@ -33,6 +33,7 @@
 
   function DecoBreaker(canvas, features) {
     this.canvas = canvas;
+    this.canvas.tabIndex = 0;
     this.ctx = canvas.getContext("2d");
     this.features = features || [];
     this.bricks = buildBricks(this.features);
@@ -79,10 +80,25 @@
     this.handleResize = this.handleResize.bind(this);
     this.onKeydown = this.onKeydown.bind(this);
     this.onKeyup = this.onKeyup.bind(this);
+    this.onFocus = this.onFocus.bind(this);
+    this.onBlur = this.onBlur.bind(this);
 
     window.addEventListener("resize", this.handleResize);
     document.addEventListener("keydown", this.onKeydown);
     document.addEventListener("keyup", this.onKeyup);
+    this.canvas.addEventListener("focus", this.onFocus);
+    this.canvas.addEventListener("blur", this.onBlur);
+    if (this.stage) {
+      this.stage.addEventListener("pointerdown", function () {
+        if (document.activeElement !== canvas) {
+          canvas.focus();
+        }
+      });
+    }
+
+    this.cheatBuffer = "";
+    this.noClipEnabled = false;
+    this.hasFocus = document.activeElement === this.canvas;
 
     this.handleResize();
     this.resetBall();
@@ -96,6 +112,8 @@
     window.removeEventListener("resize", this.handleResize);
     document.removeEventListener("keydown", this.onKeydown);
     document.removeEventListener("keyup", this.onKeyup);
+    this.canvas.removeEventListener("focus", this.onFocus);
+    this.canvas.removeEventListener("blur", this.onBlur);
     if (this.animationFrame) {
       window.cancelAnimationFrame(this.animationFrame);
     }
@@ -337,29 +355,36 @@
       return;
     }
 
+    if (this.noClipEnabled && this.ballIsOutOfSight(this.ball.radius)) {
+      this.handleNoClipDrift();
+      return;
+    }
+
     this.ball.x += this.ball.vx * delta;
     this.ball.y += this.ball.vy * delta;
 
     var radius = this.ball.radius;
-    if (this.ball.x - radius <= 0) {
-      this.ball.x = radius;
-      this.ball.vx = Math.abs(this.ball.vx);
-      this.sounds.play("bounce");
-    } else if (this.ball.x + radius >= this.canvas.width) {
-      this.ball.x = this.canvas.width - radius;
-      this.ball.vx = -Math.abs(this.ball.vx);
-      this.sounds.play("bounce");
-    }
+    if (!this.noClipEnabled) {
+      if (this.ball.x - radius <= 0) {
+        this.ball.x = radius;
+        this.ball.vx = Math.abs(this.ball.vx);
+        this.sounds.play("bounce");
+      } else if (this.ball.x + radius >= this.canvas.width) {
+        this.ball.x = this.canvas.width - radius;
+        this.ball.vx = -Math.abs(this.ball.vx);
+        this.sounds.play("bounce");
+      }
 
-    if (this.ball.y - radius <= 0) {
-      this.ball.y = radius;
-      this.ball.vy = Math.abs(this.ball.vy);
-      this.sounds.play("bounce");
-    }
+      if (this.ball.y - radius <= 0) {
+        this.ball.y = radius;
+        this.ball.vy = Math.abs(this.ball.vy);
+        this.sounds.play("bounce");
+      }
 
-    if (this.ball.y + radius >= this.canvas.height) {
-      this.handleMiss();
-      return;
+      if (this.ball.y + radius >= this.canvas.height) {
+        this.handleMiss();
+        return;
+      }
     }
 
     this.checkPaddleCollision();
@@ -583,6 +608,7 @@
     if (isTypingTarget(event.target)) {
       return;
     }
+    this.handleCheatCode(event);
     if (event.code === "ArrowLeft") {
       this.keyState.left = true;
     } else if (event.code === "ArrowRight") {
@@ -602,6 +628,69 @@
     } else if (event.code === "ArrowRight") {
       this.keyState.right = false;
     }
+  };
+
+  DecoBreaker.prototype.handleCheatCode = function (event) {
+    if (!this.hasBreakerFocus()) {
+      this.cheatBuffer = "";
+      return;
+    }
+    if (!event.key || event.key.length !== 1) {
+      return;
+    }
+    this.cheatBuffer = (this.cheatBuffer + event.key).slice(-6).toUpperCase();
+    if (this.cheatBuffer === "IDCLIP") {
+      this.noClipEnabled = !this.noClipEnabled;
+      this.cheatBuffer = "";
+      if (!this.noClipEnabled) {
+        this.snapBallIntoBounds();
+      }
+      var message = this.noClipEnabled
+        ? "IDCLIP enabled—boundaries disabled."
+        : "IDCLIP disabled—boundaries restored.";
+      this.logEvent(message);
+    }
+  };
+
+  DecoBreaker.prototype.hasBreakerFocus = function () {
+    if (this.hasFocus) {
+      return true;
+    }
+    if (!this.stage) {
+      return false;
+    }
+    return this.stage.contains(document.activeElement);
+  };
+
+  DecoBreaker.prototype.onFocus = function () {
+    this.hasFocus = true;
+  };
+
+  DecoBreaker.prototype.onBlur = function () {
+    this.hasFocus = false;
+  };
+
+  DecoBreaker.prototype.ballIsOutOfSight = function (radius) {
+    var margin = 160;
+    return (
+      this.ball.x + radius < -margin ||
+      this.ball.x - radius > this.canvas.width + margin ||
+      this.ball.y + radius < -margin ||
+      this.ball.y - radius > this.canvas.height + margin
+    );
+  };
+
+  DecoBreaker.prototype.handleNoClipDrift = function () {
+    this.showOverlay("The orb slipped past the walls. Press space to relaunch.");
+    this.combo = 0;
+    this.resetBall();
+    this.updateHud();
+  };
+
+  DecoBreaker.prototype.snapBallIntoBounds = function () {
+    var radius = this.ball.radius;
+    this.ball.x = Math.min(Math.max(radius, this.ball.x), this.canvas.width - radius);
+    this.ball.y = Math.min(Math.max(radius, this.ball.y), this.canvas.height - radius);
   };
 
   function buildBricks(features) {

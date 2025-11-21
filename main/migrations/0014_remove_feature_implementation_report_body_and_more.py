@@ -4,22 +4,21 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0013_user_status'),
+        ("main", "0013_user_status"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='feature',
-            name='implementation_report_body',
+            model_name="feature",
+            name="implementation_report_body",
         ),
         migrations.RemoveField(
-            model_name='feature',
-            name='implementation_report_highlights',
+            model_name="feature",
+            name="implementation_report_highlights",
         ),
         migrations.RemoveField(
-            model_name='feature',
-            name='implementation_report_summary',
+            model_name="feature",
+            name="implementation_report_summary",
         ),
     ]

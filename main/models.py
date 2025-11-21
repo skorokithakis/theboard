@@ -179,25 +179,6 @@ class Feature(models.Model):
             "Each missed day shortens the time before the feature expires."
         ),
     )
-    implementation_report_summary = models.TextField(
-        blank=True,
-        help_text=(
-            "Short paragraph summarizing how this feature was implemented for the blog entry."
-        ),
-    )
-    implementation_report_body = models.TextField(
-        blank=True,
-        help_text=(
-            "Full technical write-up for the implementation blog entry. "
-            "Use Markdown-style headings starting with # to mark new sections and blank lines for paragraphs."
-        ),
-    )
-    implementation_report_highlights = models.TextField(
-        blank=True,
-        help_text=(
-            "Newline-separated list of highlight bullets that surface in the implementation blog entry."
-        ),
-    )
 
     objects = FeatureQuerySet.as_manager()
 

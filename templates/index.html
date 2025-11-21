@@ -98,31 +98,6 @@
     <p class="graveyard-reminder">Keep your favorites alive: rally votes before midnight on the seventh day, or they&rsquo;ll return draped in spectral CSS.</p>
 </section>
 
-{% if latest_reports %}
-<section class="reports-preview" aria-labelledby="reports-preview-heading">
-    <div class="reports-preview__header">
-        <div>
-            <p class="reports-preview__eyebrow">Implementation notes</p>
-            <h2 id="reports-preview-heading">Implementation Report Blog</h2>
-            <p>After every deployment we publish a short recap that outlines how the feature shipped and what changed under the hood.</p>
-        </div>
-        <a class="reports-preview__cta" href="{% url 'main:reports' %}">View all reports</a>
-    </div>
-    <div class="reports-preview__grid">
-        {% for report in latest_reports %}
-        <article class="report-card">
-            <p class="report-card__meta">{{ report.published_at|date:"F j, Y" }}</p>
-            <h3 class="report-card__title">
-                <a href="{% url 'main:report-detail' report.slug %}">{{ report.title }}</a>
-            </h3>
-            <p class="report-card__summary">{{ report.summary }}</p>
-            <p class="report-card__footer">Feature: {{ report.feature_title }}</p>
-        </article>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
-
 {% if feature_buttons %}
 <section class="feature-button-wall">
     <div class="feature-button-wall__heading">

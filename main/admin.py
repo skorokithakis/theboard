@@ -112,16 +112,6 @@ class FeatureAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
                 )
             },
         ),
-        (
-            "Implementation report",
-            {
-                "fields": (
-                    "implementation_report_summary",
-                    "implementation_report_body",
-                    "implementation_report_highlights",
-                )
-            },
-        ),
     )
 
     def get_queryset(self, request):

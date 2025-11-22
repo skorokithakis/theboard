@@ -5,6 +5,7 @@ from __future__ import annotations
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.db.models import Count, Q
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
@@ -12,7 +13,7 @@ from django.core.exceptions import PermissionDenied
 
 from .forms import ProfileForm, QuoteSuggestionForm
 from .fortune import get_daily_fortune
-from .models import Feature
+from .models import Feature, QuoteSuggestion
 from .utils import get_next_iteration_at
 
 User = get_user_model()
@@ -110,9 +111,24 @@ def profile_detail(request: HttpRequest, username: str | None = None) -> HttpRes
     else:
         form = ProfileForm(instance=profile_user) if can_edit else None
 
+    quote_suggestions = QuoteSuggestion.objects.filter(submitted_by=profile_user).only(
+        "id",
+        "text",
+        "attribution",
+        "is_approved",
+        "created_at",
+        "submitted_by",
+    )
+    quote_totals = QuoteSuggestion.objects.aggregate(
+        approved_count=Count("id", filter=Q(is_approved=True)),
+        pending_count=Count("id", filter=Q(is_approved=False)),
+    )
+
     context = {
         "profile_user": profile_user,
         "profile_form": form,
         "can_edit_profile": can_edit,
+        "quote_suggestions": quote_suggestions,
+        "quote_totals": quote_totals,
     }
     return render(request, "profiles/detail.html", context)

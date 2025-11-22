@@ -624,6 +624,57 @@ class FeatureBoardTests(TestCase):
         self.owner.refresh_from_db()
         self.assertEqual(self.owner.status, "")
 
+    def test_profile_detail_lists_quote_submissions_with_status(self) -> None:
+        pending = models.QuoteSuggestion.objects.create(
+            text="Pending wisdom awaits.",
+            attribution="Queue",
+            submitted_by=self.owner,
+        )
+        approved = models.QuoteSuggestion.objects.create(
+            text="Approved knowledge flows.",
+            attribution="Gatekeeper",
+            submitted_by=self.owner,
+            is_approved=True,
+            approved_at=timezone.now(),
+        )
+
+        with self._static_override():
+            response = self.client.get(
+                reverse("main:profile-detail", args=[self.owner.username])
+            )
+
+        self.assertEqual(response.status_code, 200)
+        suggestions = response.context["quote_suggestions"]
+        self.assertIn(pending, suggestions)
+        self.assertIn(approved, suggestions)
+        self.assertContains(response, "Pending review")
+        self.assertContains(response, "Approved knowledge flows.")
+
+    def test_profile_detail_includes_global_quote_totals(self) -> None:
+        models.QuoteSuggestion.objects.create(
+            text="Fresh submission.",
+            attribution="Submitter",
+            submitted_by=self.owner,
+        )
+        models.QuoteSuggestion.objects.create(
+            text="Approved submission.",
+            attribution="Reviewer",
+            submitted_by=self.other,
+            is_approved=True,
+            approved_at=timezone.now(),
+        )
+
+        with self._static_override():
+            response = self.client.get(
+                reverse("main:profile-detail", args=[self.owner.username])
+            )
+
+        self.assertEqual(response.status_code, 200)
+        totals = response.context["quote_totals"]
+        self.assertEqual(totals["approved_count"], 1)
+        self.assertEqual(totals["pending_count"], 1)
+        self.assertContains(response, "Awaiting review")
+
     def test_feature_list_includes_creator_status(self) -> None:
         self.owner.status = "API surfaces the vibe"
         self.owner.save(update_fields=["status"])

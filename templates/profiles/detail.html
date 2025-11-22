@@ -28,6 +28,49 @@
             {% endif %}
         </div>
     </article>
+    <article class="profile-card profile-card--quotes">
+        <div class="quote-overview__header">
+            <p class="profile-eyebrow">Quotes overview</p>
+            <h2 class="quote-overview__title">Quote suggestions</h2>
+            <p class="quote-overview__helper">Track your submissions and see how many quotes are in the moderation queue.</p>
+        </div>
+        <dl class="quote-totals" aria-label="Quote moderation totals">
+            <div class="quote-total">
+                <dt>Approved</dt>
+                <dd>{{ quote_totals.approved_count|default:0 }}</dd>
+            </div>
+            <div class="quote-total">
+                <dt>Awaiting review</dt>
+                <dd>{{ quote_totals.pending_count|default:0 }}</dd>
+            </div>
+        </dl>
+        <div class="quote-list">
+            {% if quote_suggestions %}
+            <ul class="quote-list__items">
+                {% for quote in quote_suggestions %}
+                <li class="quote-list__item">
+                    <p class="quote-list__text">“{{ quote.text }}”</p>
+                    <div class="quote-list__meta">
+                        <span class="quote-list__attribution">— {{ quote.attribution }}</span>
+                        <span class="quote-status {% if quote.is_approved %}quote-status--approved{% else %}quote-status--pending{% endif %}">
+                            {% if quote.is_approved %}Approved{% else %}Pending review{% endif %}
+                        </span>
+                        <span class="quote-list__timestamp">{{ quote.created_at|date:"M j, Y" }}</span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="quote-list__empty">
+                {% if can_edit_profile %}
+                    You haven't submitted any quotes yet. Share something memorable from the homepage.
+                {% else %}
+                    No quotes submitted yet.
+                {% endif %}
+            </p>
+            {% endif %}
+        </div>
+    </article>
     {% if can_edit_profile %}
     <article class="profile-card profile-card--form">
         <h2 class="profile-form__title">Update your status</h2>

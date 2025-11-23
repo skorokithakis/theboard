@@ -83,6 +83,10 @@ HEALTH_SEGMENTS: tuple[HealthSegment, ...] = (
     ),
 )
 
+SCALE_SEGMENTS: tuple[HealthSegment, ...] = tuple(
+    sorted(HEALTH_SEGMENTS, key=lambda segment: segment.range_min)
+)
+
 
 def get_board_health() -> BoardHealthPayload:
     """Return the current board health value and descriptive segments."""
@@ -101,7 +105,7 @@ def get_board_health() -> BoardHealthPayload:
         "damage_per_failure": PENALTY_PER_FAILURE,
         "max_failures": max_failures,
         "state": _segment_payload(active_segment),
-        "scale": [_segment_payload(segment) for segment in HEALTH_SEGMENTS],
+        "scale": [_segment_payload(segment) for segment in SCALE_SEGMENTS],
     }
 
 

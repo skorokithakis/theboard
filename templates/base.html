@@ -28,6 +28,7 @@
                 <button class="audio-toggle" type="button" data-audio-toggle aria-pressed="false" aria-live="polite">
                     <span class="audio-toggle__icon" data-audio-icon aria-hidden="true">🔊</span>
                     <span class="audio-toggle__label" data-audio-label>Music On</span>
+                    <span class="audio-toggle__track" data-audio-track-label>Site Mix</span>
                 </button>
             </div>
         </div>
@@ -95,7 +96,18 @@
             <small>&copy; {% now "Y" %} {{ request.site.name }}.</small>
         </div>
     </footer>
-    <audio class="visually-hidden" data-audio-track src="{% static 'audio/chiptune-loop.wav' %}" loop preload="auto" aria-hidden="true"></audio>
+    <audio
+        class="visually-hidden"
+        data-audio-track
+        data-soundtrack-default="atrium"
+        data-soundtrack-atrium="{% static 'audio/atrium-bloom.wav' %}"
+        data-soundtrack-greenhouse="{% static 'audio/greenhouse-hum.wav' %}"
+        data-soundtrack-arcade="{% static 'audio/chiptune-loop.wav' %}"
+        data-soundtrack-graveyard="{% static 'audio/graveyard-chime.wav' %}"
+        src="{% static 'audio/atrium-bloom.wav' %}"
+        loop
+        preload="auto"
+        aria-hidden="true"></audio>
     <script src="{% static 'js/theboard.js' %}" defer></script>
     <script src="{% static 'js/audio-controls.js' %}" defer></script>
     {% if settings.TURNSTILE_ENABLED %}

@@ -4,7 +4,7 @@
 {% block title %}{{ request.site.name }}{% endblock %}
 
 {% block content %}
-<section class="page-header">
+<section class="page-header" data-soundtrack="atrium">
     <div>
         <h1 class="page-title">{{ request.site.name }}</h1>
         <p class="page-lead"><i>Be careful what you wish for.</i></p>
@@ -75,7 +75,7 @@
     </div>
 </section>
 
-<section class="plant-terrarium" aria-labelledby="plant-heading">
+<section class="plant-terrarium" aria-labelledby="plant-heading" data-soundtrack="greenhouse">
     <div class="plant-terrarium__copy">
         <p class="plant-terrarium__eyebrow">Feature delivered</p>
         <h2 id="plant-heading">Homepage terrarium</h2>
@@ -121,14 +121,14 @@
     </div>
 </section>
 
-<section class="about-section">
+<section class="about-section" data-soundtrack="atrium">
     <h2>What is {{ request.site.name }}?</h2>
     <p>{{ request.site.name }} is an open-source feature board web app. You can propose features and vote on them.</p>
     <p>There's one twist, though: Twice a day, at noon and midnight UTC, the top-voted feature is automatically implemented on {{ request.site.name }}. The site vibe-codes itself.</p>
     <p>What will you make of {{ request.site.name }}? There's only one way to find out.</p>
 </section>
 
-<section class="about-section">
+<section class="about-section" data-soundtrack="atrium">
     <h2>How it works</h2>
     <ul>
         <li>Click the floating button on the right and submit a feature request for something you want to see changed on this site.</li>
@@ -138,14 +138,14 @@
     </ul>
 </section>
 
-<section class="about-section graveyard-callout">
+<section class="about-section graveyard-callout" data-soundtrack="graveyard">
     <h2>Beware the Feature Graveyard</h2>
     <p>Ideas that wander the board for more than a week without being implemented fade into the graveyard. You can pay your respects and see what haunts the backlog from the board&rsquo;s new graveyard view.</p>
     <p class="graveyard-reminder">Keep your favorites alive: rally votes before midnight on the seventh day, or they&rsquo;ll return draped in spectral CSS.</p>
 </section>
 
 {% if feature_buttons %}
-<section class="feature-button-wall">
+<section class="feature-button-wall" data-soundtrack="arcade">
     <div class="feature-button-wall__heading">
         <h2>Feature Button Wall</h2>
         <p>Every fresh idea earns its own 88x31 pixel badge. Scroll through the grid to see the latest ambitions.</p>
@@ -162,7 +162,7 @@
 </section>
 {% endif %}
 
-<section class="breaker-section" aria-labelledby="brick-breaker-heading">
+<section class="breaker-section" aria-labelledby="brick-breaker-heading" data-soundtrack="arcade">
     <div class="breaker-grid">
         <div class="breaker-copy">
             <p class="breaker-pretitle">Interactive backboard</p>

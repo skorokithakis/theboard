@@ -243,7 +243,8 @@ a:hover {
   padding: 0.35rem 0.85rem;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.45rem;
+  flex-wrap: wrap;
   font-size: 0.85rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -274,6 +275,31 @@ a:hover {
 
 .audio-toggle__label {
   font-weight: 600;
+}
+
+.audio-toggle__track {
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  padding-left: 0.65rem;
+  margin-left: 0.2rem;
+  color: var(--muted-text);
+  border-left: 1px solid rgba(243, 201, 105, 0.35);
+  line-height: 1.3;
+}
+
+@media (max-width: 640px) {
+  .audio-toggle {
+    justify-content: center;
+  }
+
+  .audio-toggle__track {
+    flex-basis: 100%;
+    border-left: none;
+    padding-left: 0;
+    margin-left: 0;
+    text-align: center;
+  }
 }
 
 .visually-hidden {

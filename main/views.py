@@ -14,6 +14,7 @@ from django.core.exceptions import PermissionDenied
 from .forms import ProfileForm, QuoteSuggestionForm
 from .fortune import get_daily_fortune
 from .models import Feature, QuoteSuggestion
+from .terrarium import build_terrarium_state
 from .utils import get_next_iteration_at
 
 User = get_user_model()
@@ -44,6 +45,7 @@ def _build_homepage_context(
         "feature_button_payload": feature_button_payload,
         "daily_fortune": get_daily_fortune(),
         "fortune_suggestion_form": fortune_form or QuoteSuggestionForm(),
+        "terrarium_state": build_terrarium_state(),
     }
 
 

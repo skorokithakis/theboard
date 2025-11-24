@@ -11,7 +11,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from . import fortune, health, models, turnstile, utils
+from . import fortune, health, models, terrarium, turnstile, utils
 
 User = get_user_model()
 
@@ -836,3 +836,36 @@ class BoardHealthTests(TestCase):
         board_health = health.get_board_health()
         self.assertEqual(board_health["percentage"], 0)
         self.assertEqual(board_health["state"]["key"], "dead")
+
+
+class TerrariumStateTests(TestCase):
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(username="gardener", password="test-pass")
+
+    def test_thriving_when_votes_are_fresh(self) -> None:
+        feature = models.Feature.objects.create(
+            title="Dynamic canopy",
+            description="Make the plant react to votes.",
+            creator=self.user,
+        )
+        now = datetime(2024, 5, 1, 12, 0, tzinfo=dt_timezone.utc)
+        voters = [User.objects.create_user(username=f"voter_{idx}") for idx in range(3)]
+        for offset, voter in enumerate(voters):
+            vote = models.Vote.objects.create(user=voter, feature=feature)
+            models.Vote.objects.filter(pk=vote.pk).update(
+                created_at=now - timedelta(hours=1, minutes=offset)
+            )
+
+        state = terrarium.build_terrarium_state(reference=now)
+
+        self.assertEqual(state["key"], "thriving")
+        self.assertEqual(state["label"], feature.title)
+        self.assertIn("Misted", state["water"])
+
+    def test_dormant_when_no_votes_or_backlog(self) -> None:
+        now = datetime(2024, 5, 1, 12, 0, tzinfo=dt_timezone.utc)
+        state = terrarium.build_terrarium_state(reference=now)
+
+        self.assertEqual(state["key"], "dormant")
+        self.assertIn("Dormant", state["label"])
+        self.assertIn("no votes", state["water"].lower())

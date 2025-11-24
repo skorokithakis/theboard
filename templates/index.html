@@ -75,32 +75,32 @@
     </div>
 </section>
 
-<section class="plant-terrarium" aria-labelledby="plant-heading" data-soundtrack="greenhouse">
+<section class="plant-terrarium" aria-labelledby="plant-heading" data-soundtrack="greenhouse" data-plant-state="{{ terrarium_state.key }}">
     <div class="plant-terrarium__copy">
-        <p class="plant-terrarium__eyebrow">Feature delivered</p>
+        <p class="plant-terrarium__eyebrow">{{ terrarium_state.headline }}</p>
         <h2 id="plant-heading">Homepage terrarium</h2>
         <p class="plant-terrarium__lead">
-            The board asked for a plant, so we planted a neon terrarium beside the roadmap to give the homepage a calm anchor.
+            The terrarium now mirrors live board activity: health fuels the light, and each vote mists the glass.
         </p>
         <p class="plant-terrarium__note">
-            Votes act like mist&mdash;the more activity, the brighter the glow. The fronds sway quietly so the arcade vibes have somewhere serene to land.
+            {{ terrarium_state.note }}
         </p>
         <div class="plant-terrarium__chips" role="list">
             <div class="plant-chip" role="listitem">
                 <span class="plant-chip__label">Sun</span>
-                <span class="plant-chip__value">Filtered dusk</span>
+                <span class="plant-chip__value">{{ terrarium_state.sun }}</span>
             </div>
             <div class="plant-chip" role="listitem">
                 <span class="plant-chip__label">Water</span>
-                <span class="plant-chip__value">Light mist after each vote reset</span>
+                <span class="plant-chip__value">{{ terrarium_state.water }}</span>
             </div>
             <div class="plant-chip" role="listitem">
                 <span class="plant-chip__label">Mood</span>
-                <span class="plant-chip__value">Calm focus for feature plotting</span>
+                <span class="plant-chip__value">{{ terrarium_state.mood }}</span>
             </div>
         </div>
     </div>
-    <div class="plant-terrarium__art" role="img" aria-label="Glass terrarium with glowing fronds resting in warm soil.">
+    <div class="plant-terrarium__art" role="img" aria-label="{{ terrarium_state.aria_label }}">
         <div class="terrarium">
             <div class="terrarium__halo"></div>
             <div class="terrarium__sparkles" aria-hidden="true">
@@ -116,7 +116,7 @@
             </div>
             <div class="terrarium__soil"></div>
             <div class="terrarium__glass"></div>
-            <div class="terrarium__label">plant request</div>
+            <div class="terrarium__label">{{ terrarium_state.label|default:"plant request"|truncatechars:24 }}</div>
         </div>
     </div>
 </section>

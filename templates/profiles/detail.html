@@ -28,6 +28,55 @@
             {% endif %}
         </div>
     </article>
+    <article class="profile-card profile-card--economy">
+        <p class="profile-eyebrow">Board economy</p>
+        <h2 class="profile-balance__title">Treasury</h2>
+        <p class="profile-balance__amount">
+            <span class="profile-balance__value">{{ profile_user.balance|default:0 }}</span>
+            <span class="profile-balance__label">coins</span>
+        </p>
+        <dl class="profile-balance__meta" aria-label="Daily bonus status">
+            <div class="profile-balance__row">
+                <dt>Daily bonus</dt>
+                <dd>
+                    {% if daily_bonus.available %}
+                        Ready (+{{ daily_bonus.amount }} coins)
+                    {% else %}
+                        Claimed for today
+                    {% endif %}
+                </dd>
+            </div>
+            <div class="profile-balance__row">
+                <dt>Last claimed</dt>
+                <dd>
+                    {% if daily_bonus.last_awarded_at %}
+                        {{ daily_bonus.last_awarded_at|date:"M j, Y H:i \\U\\T\\C" }}
+                    {% else %}
+                        Not claimed yet
+                    {% endif %}
+                </dd>
+            </div>
+            <div class="profile-balance__row">
+                <dt>Next bonus</dt>
+                <dd>
+                    {% if daily_bonus.next_available_at %}
+                        {{ daily_bonus.next_available_at|date:"M j, Y H:i \\U\\T\\C" }}
+                    {% else %}
+                        Ready on first login
+                    {% endif %}
+                </dd>
+            </div>
+        </dl>
+        {% if can_edit_profile %}
+        <p class="profile-balance__note">
+            You automatically collect {{ daily_bonus.amount }} coins the first time you sign in each UTC day.
+        </p>
+        {% else %}
+        <p class="profile-balance__note">
+            Bonuses refresh when {{ profile_user.display_name }} signs in for the day.
+        </p>
+        {% endif %}
+    </article>
     <article class="profile-card profile-card--quotes">
         <div class="quote-overview__header">
             <p class="profile-eyebrow">Quotes overview</p>

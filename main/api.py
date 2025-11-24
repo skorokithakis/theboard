@@ -17,7 +17,7 @@ from ninja import NinjaAPI
 from ninja.errors import HttpError
 from ninja.security import SessionAuth
 
-from . import models, schemas, turnstile
+from . import economy, models, schemas, turnstile
 from .utils import get_next_iteration_at
 
 FEATURE_DAILY_LIMIT = 3
@@ -63,12 +63,18 @@ def _user_vote_ids(user: models.User) -> set[int]:
 
 def _serialize_user(user: models.User) -> dict[str, Any]:
     """Convert a user model to a dictionary for schema validation."""
+    bonus = economy.daily_bonus_status(user)
     return {
         "id": user.pk,
         "username": user.username,
         "display_name": user.display_name,
         "status": user.status,
         "is_superuser": user.is_superuser,
+        "balance": user.balance,
+        "last_daily_bonus_at": bonus["last_awarded_at"],
+        "next_daily_bonus_at": bonus["next_available_at"],
+        "daily_bonus_available": bonus["available"],
+        "daily_bonus_amount": bonus["amount"],
     }
 
 
@@ -433,9 +439,12 @@ def auth_login(request: HttpRequest, data: schemas.LoginInput) -> dict[str, Any]
         raise HttpError(401, "Invalid credentials")
 
     login(request, user)
+    bonus_awarded = economy.award_daily_login_bonus(user)
     return {
         "message": "Login successful",
         "user": _serialize_user(user),
+        "daily_bonus_awarded": bonus_awarded,
+        "daily_bonus_amount": economy.DAILY_LOGIN_BONUS,
     }
 
 
@@ -513,9 +522,12 @@ def auth_signup(
             )
 
     login(request, user)
+    bonus_awarded = economy.award_daily_login_bonus(user)
     return 201, {
         "message": "Account created successfully",
         "user": _serialize_user(user),
+        "daily_bonus_awarded": bonus_awarded,
+        "daily_bonus_amount": economy.DAILY_LOGIN_BONUS,
     }
 
 

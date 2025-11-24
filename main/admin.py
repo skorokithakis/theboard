@@ -29,10 +29,18 @@ class CustomUserAdmin(BaseUserAdmin):
     form = CustomUserChangeForm
     model = models.User
 
-    list_display = ("username", "first_name", "last_name", "is_staff", "is_active")
+    list_display = (
+        "username",
+        "first_name",
+        "last_name",
+        "balance",
+        "is_staff",
+        "is_active",
+    )
     list_filter = ("is_staff", "is_superuser", "is_active", "groups")
     ordering = ("username",)
     search_fields = ("username", "first_name", "last_name")
+    readonly_fields = ("last_daily_bonus_at",)
 
     fieldsets = (
         (None, {"fields": ("username", "password")}),
@@ -49,6 +57,7 @@ class CustomUserAdmin(BaseUserAdmin):
                 )
             },
         ),
+        ("Economy", {"fields": ("balance", "last_daily_bonus_at")}),
         ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
     add_fieldsets = (

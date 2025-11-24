@@ -15,6 +15,11 @@ class UserSchema(Schema):
     display_name: str
     status: str | None = None
     is_superuser: bool
+    balance: int
+    last_daily_bonus_at: datetime | None = None
+    next_daily_bonus_at: datetime | None = None
+    daily_bonus_available: bool
+    daily_bonus_amount: int
 
 
 class ParentFeatureSchema(Schema):
@@ -139,6 +144,8 @@ class LoginResponse(Schema):
 
     message: str
     user: UserSchema
+    daily_bonus_awarded: bool
+    daily_bonus_amount: int
 
 
 class SignupResponse(Schema):
@@ -146,6 +153,8 @@ class SignupResponse(Schema):
 
     message: str
     user: UserSchema
+    daily_bonus_awarded: bool
+    daily_bonus_amount: int
 
 
 class CurrentUserResponse(Schema):

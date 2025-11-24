@@ -71,6 +71,15 @@ class User(AbstractBaseUser, PermissionsMixin):
             "Short message the member can pin to their profile to share their current focus or vibe."
         ),
     )
+    balance = models.PositiveIntegerField(
+        default=0,
+        help_text="Amount of virtual currency the member has earned for daily logins and future board rewards.",
+    )
+    last_daily_bonus_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp of when the member most recently received the daily login bonus.",
+    )
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(default=timezone.now)

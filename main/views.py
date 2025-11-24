@@ -11,6 +11,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
 from django.core.exceptions import PermissionDenied
 
+from .economy import daily_bonus_status
 from .forms import ProfileForm, QuoteSuggestionForm
 from .fortune import get_daily_fortune
 from .models import Feature, QuoteSuggestion
@@ -125,6 +126,7 @@ def profile_detail(request: HttpRequest, username: str | None = None) -> HttpRes
         approved_count=Count("id", filter=Q(is_approved=True)),
         pending_count=Count("id", filter=Q(is_approved=False)),
     )
+    daily_bonus = daily_bonus_status(profile_user)
 
     context = {
         "profile_user": profile_user,
@@ -132,5 +134,6 @@ def profile_detail(request: HttpRequest, username: str | None = None) -> HttpRes
         "can_edit_profile": can_edit,
         "quote_suggestions": quote_suggestions,
         "quote_totals": quote_totals,
+        "daily_bonus": daily_bonus,
     }
     return render(request, "profiles/detail.html", context)

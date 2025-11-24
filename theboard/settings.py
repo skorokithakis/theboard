@@ -68,6 +68,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.contrib.sites.middleware.CurrentSiteMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "main.middleware.DailyLoginRewardMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]

@@ -11,7 +11,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from . import fortune, health, models, terrarium, turnstile, utils
+from . import economy, fortune, health, models, terrarium, turnstile, utils
 
 User = get_user_model()
 
@@ -69,6 +69,11 @@ class FeatureBoardTests(TestCase):
         data = response.json()
         self.assertEqual(data["user"]["username"], "newuser")
         self.assertTrue(User.objects.filter(username="newuser").exists())
+        self.assertIn("balance", data["user"])
+        self.assertTrue(data["daily_bonus_awarded"])
+        self.assertEqual(data["daily_bonus_amount"], economy.DAILY_LOGIN_BONUS)
+        self.assertFalse(data["user"]["daily_bonus_available"])
+        self.assertIsNotNone(data["user"]["next_daily_bonus_at"])
 
     def test_feature_list_orders_by_vote_total(self) -> None:
         low = self._submit_feature(title="Low votes")
@@ -613,6 +618,7 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Exploring status pages")
         self.assertContains(response, self.owner.username)
+        self.assertContains(response, "Treasury")
 
     def test_profile_edit_forbidden_for_other_accounts(self) -> None:
         self.client.login(username=self.other.username, password="test-pass-2")
@@ -687,6 +693,35 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(
             payload["features"][0]["creator"]["status"], "API surfaces the vibe"
         )
+
+    def test_login_awards_daily_bonus_once_per_day(self) -> None:
+        morning = datetime(2024, 5, 1, 9, 0, tzinfo=dt_timezone.utc)
+        with mock.patch("main.economy.timezone.now", return_value=morning):
+            response = self.client.post(
+                "/api/auth/login",
+                {"username": self.owner.username, "password": "test-pass-1"},
+                content_type="application/json",
+            )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.owner.refresh_from_db()
+        self.assertEqual(self.owner.balance, economy.DAILY_LOGIN_BONUS)
+        self.assertTrue(data["daily_bonus_awarded"])
+        self.assertEqual(data["user"]["balance"], economy.DAILY_LOGIN_BONUS)
+        self.assertEqual(data["daily_bonus_amount"], economy.DAILY_LOGIN_BONUS)
+
+        later_same_day = morning + timedelta(hours=3)
+        with mock.patch("main.economy.timezone.now", return_value=later_same_day):
+            response = self.client.post(
+                "/api/auth/login",
+                {"username": self.owner.username, "password": "test-pass-1"},
+                content_type="application/json",
+            )
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.owner.refresh_from_db()
+        self.assertEqual(self.owner.balance, economy.DAILY_LOGIN_BONUS)
+        self.assertFalse(data["daily_bonus_awarded"])
 
 
 class DailyFortuneTests(TestCase):

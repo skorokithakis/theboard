@@ -65,10 +65,7 @@ def build_terrarium_state(reference: datetime | None = None) -> TerrariumState:
     )
 
     if state_key == "thriving":
-        note = (
-            f"{vote_activity}—the mist is constant ({last_vote_label}). "
-            f"{base_note}"
-        )
+        note = f"{vote_activity}—the mist is constant ({last_vote_label}). {base_note}"
         sun = (
             f"{metrics.board_health['percentage']}% health; "
             "warm glass amplifies every glow."
@@ -120,18 +117,13 @@ def build_terrarium_state(reference: datetime | None = None) -> TerrariumState:
         aria_label = "Terrarium looks thirsty with dimmed glow and slower sway."
         headline = "Parched terrarium"
     else:
-        note = (
-            "The board has been silent—no votes to mist the glass yet. "
-            f"{base_note}"
-        )
+        note = f"The board has been silent—no votes to mist the glass yet. {base_note}"
         sun = (
             f"{metrics.board_health['percentage']}% health; "
             "the canopy is resting while the board idles."
         )
         water = "No votes yet; bone dry. A single vote would wake the fronds."
-        mood = (
-            f"Dormant until a new request arrives; {metrics.pending_count} seeds waiting."
-        )
+        mood = f"Dormant until a new request arrives; {metrics.pending_count} seeds waiting."
         label = "Dormant"
         aria_label = "Dormant terrarium resting in cool tones."
         headline = "Dormant terrarium"
@@ -205,9 +197,7 @@ def _determine_state(
     return "growing"
 
 
-def _format_last_vote_label(
-    last_vote_at: datetime | None, reference: datetime
-) -> str:
+def _format_last_vote_label(last_vote_at: datetime | None, reference: datetime) -> str:
     """Return a short label for when the last vote landed."""
 
     if not last_vote_at:

@@ -4,20 +4,26 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0014_remove_feature_implementation_report_body_and_more'),
+        ("main", "0014_remove_feature_implementation_report_body_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='balance',
-            field=models.PositiveIntegerField(default=0, help_text='Amount of virtual currency the member has earned for daily logins and future board rewards.'),
+            model_name="user",
+            name="balance",
+            field=models.PositiveIntegerField(
+                default=0,
+                help_text="Amount of virtual currency the member has earned for daily logins and future board rewards.",
+            ),
         ),
         migrations.AddField(
-            model_name='user',
-            name='last_daily_bonus_at',
-            field=models.DateTimeField(blank=True, help_text='Timestamp of when the member most recently received the daily login bonus.', null=True),
+            model_name="user",
+            name="last_daily_bonus_at",
+            field=models.DateTimeField(
+                blank=True,
+                help_text="Timestamp of when the member most recently received the daily login bonus.",
+                null=True,
+            ),
         ),
     ]

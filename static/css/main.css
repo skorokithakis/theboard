@@ -358,6 +358,10 @@ a:hover {
   z-index: 1;
 }
 
+.breaker-grid > * {
+  min-width: 0;
+}
+
 .breaker-copy {
   display: flex;
   flex-direction: column;
@@ -427,6 +431,8 @@ a:hover {
 
 .breaker-stage canvas {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   height: auto;
   display: block;
   mix-blend-mode: lighten;

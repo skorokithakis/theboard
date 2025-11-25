@@ -121,27 +121,24 @@
     </div>
 </section>
 
-<section class="about-section" data-soundtrack="atrium">
-    <h2>What is {{ request.site.name }}?</h2>
-    <p>{{ request.site.name }} is an open-source feature board web app. You can propose features and vote on them.</p>
-    <p>There's one twist, though: Twice a day, at noon and midnight UTC, the top-voted feature is automatically implemented on {{ request.site.name }}. The site vibe-codes itself.</p>
-    <p>What will you make of {{ request.site.name }}? There's only one way to find out.</p>
-</section>
-
-<section class="about-section" data-soundtrack="atrium">
-    <h2>How it works</h2>
-    <ul>
-        <li>Click the floating button on the right and submit a feature request for something you want to see changed on this site.</li>
-        <li>Vote on feature requests.</li>
-        <li>Twice daily (noon and midnight UTC), the top-rated feature request will be automatically implemented by AI and deployed to this site.</li>
-        <li>All votes reset after each implementation window.</li>
-    </ul>
-</section>
-
-<section class="about-section graveyard-callout" data-soundtrack="graveyard">
-    <h2>Beware the Feature Graveyard</h2>
-    <p>Ideas that wander the board for more than a week without being implemented fade into the graveyard. You can pay your respects and see what haunts the backlog from the board&rsquo;s new graveyard view.</p>
-    <p class="graveyard-reminder">Keep your favorites alive: rally votes before midnight on the seventh day, or they&rsquo;ll return draped in spectral CSS.</p>
+<section class="about-preview" data-soundtrack="atrium">
+    <div class="about-preview__copy">
+        <p class="about-preview__eyebrow">Want the lore?</p>
+        <h2>Explore how the board works</h2>
+        <p>We moved the full backstory and rules into a dedicated About page so you can quickly learn how deployments, voting guardrails, and the graveyard behave.</p>
+        <ul class="about-preview__list">
+            <li>Top-voted features deploy automatically at noon and midnight UTC.</li>
+            <li>Every vote runs through a CAPTCHA to keep the signal clean.</li>
+            <li>Requests that lose momentum drift into a spectral graveyard.</li>
+        </ul>
+        <div class="about-preview__actions">
+            <a class="button" href="{% url 'main:about' %}">Visit the About page</a>
+        </div>
+    </div>
+    <div class="about-preview__badge" aria-hidden="true">
+        <span class="about-preview__badge-title">New</span>
+        <p>Dedicated About page with the full story, guardrails, and rituals.</p>
+    </div>
 </section>
 
 {% if feature_buttons %}

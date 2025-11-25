@@ -57,6 +57,22 @@ def index(request: HttpRequest) -> HttpResponse:
     return render(request, "index.html", context)
 
 
+@require_GET
+def about(request: HttpRequest) -> HttpResponse:
+    """Share the story and mechanics behind the board."""
+
+    feature_stats = {
+        "pending": Feature.objects.pending().count(),
+        "implemented": Feature.objects.implemented().count(),
+        "graveyard": Feature.objects.expired().count(),
+    }
+    context = {
+        "next_iteration_at": get_next_iteration_at(),
+        "feature_stats": feature_stats,
+    }
+    return render(request, "about.html", context)
+
+
 @login_required
 @require_POST
 def submit_quote_suggestion(request: HttpRequest) -> HttpResponse:

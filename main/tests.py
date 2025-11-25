@@ -681,6 +681,25 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(totals["pending_count"], 1)
         self.assertContains(response, "Awaiting review")
 
+    def test_about_page_reports_feature_counts(self) -> None:
+        self._submit_feature(title="Backlog idea")
+        shipped = self._submit_feature(title="Shipped idea")
+        expired = self._submit_feature(title="Expired idea")
+        models.Feature.objects.filter(pk=shipped.pk).update(
+            implemented_at=timezone.now()
+        )
+        models.Feature.objects.filter(pk=expired.pk).update(expired_at=timezone.now())
+
+        with self._static_override():
+            response = self.client.get(reverse("main:about"))
+
+        self.assertEqual(response.status_code, 200)
+        stats = response.context["feature_stats"]
+        self.assertEqual(stats["pending"], 1)
+        self.assertEqual(stats["implemented"], 1)
+        self.assertEqual(stats["graveyard"], 1)
+        self.assertContains(response, "How it works")
+
     def test_feature_list_includes_creator_status(self) -> None:
         self.owner.status = "API surfaces the vibe"
         self.owner.save(update_fields=["status"])

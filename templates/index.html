@@ -141,6 +141,65 @@
     </div>
 </section>
 
+<section class="logo-lab" aria-labelledby="logo-lab-heading" data-soundtrack="arcade">
+    <div class="logo-lab__grid">
+        <div class="logo-lab__copy">
+            <p class="logo-lab__eyebrow">Turtle terminal</p>
+            <h2 id="logo-lab-heading">Run LOGO on the homepage</h2>
+            <p>Write LOGO commands to nudge the turtle across a glassy stage. The origin sits in the center, positive <code>Y</code> goes up, and every line you draw layers into the canvas.</p>
+            <div class="logo-lab__chips" role="list">
+                <div class="logo-chip" role="listitem">
+                    <span class="logo-chip__label">Origin</span>
+                    <span class="logo-chip__value">(0, 0) at center</span>
+                </div>
+                <div class="logo-chip" role="listitem">
+                    <span class="logo-chip__label">Heading</span>
+                    <span class="logo-chip__value">0&deg; faces north</span>
+                </div>
+                <div class="logo-chip" role="listitem">
+                    <span class="logo-chip__label">Pen</span>
+                    <span class="logo-chip__value">Down &middot; 3px &middot; Gold</span>
+                </div>
+            </div>
+            <div class="logo-cheatsheet" aria-label="LOGO quick reference">
+                <div class="logo-cheatsheet__row"><span>FD n / BK n</span><span>Move forward/back</span></div>
+                <div class="logo-cheatsheet__row"><span>RT n / LT n</span><span>Rotate right/left</span></div>
+                <div class="logo-cheatsheet__row"><span>PU / PD</span><span>Lift or drop the pen</span></div>
+                <div class="logo-cheatsheet__row"><span>SETXY x y</span><span>Teleport to a point</span></div>
+                <div class="logo-cheatsheet__row"><span>PENCOLOR r g b</span><span>Set stroke color</span></div>
+                <div class="logo-cheatsheet__row"><span>PENWIDTH n</span><span>Change stroke weight</span></div>
+                <div class="logo-cheatsheet__row"><span>REPEAT n [ &hellip; ]</span><span>Loop a block</span></div>
+                <div class="logo-cheatsheet__row"><span>HOME / CLEAR</span><span>Reset position or canvas</span></div>
+            </div>
+            <div class="logo-presets" role="group" aria-label="Load a preset LOGO program">
+                <button class="logo-presets__button button-outline button-sm" type="button" data-logo-preset="starburst">Starburst</button>
+                <button class="logo-presets__button button-outline button-sm" type="button" data-logo-preset="rosette">Rosette fan</button>
+                <button class="logo-presets__button button-outline button-sm" type="button" data-logo-preset="spiral">Spiral loom</button>
+            </div>
+        </div>
+        <div class="logo-lab__console">
+            <div class="logo-stage" data-logo-stage>
+                <canvas width="720" height="480" data-logo-canvas aria-label="LOGO drawing canvas"></canvas>
+                <div class="logo-stage__overlay" data-logo-overlay>
+                    <p>Use LOGO to guide the turtle. Ctrl+Enter runs your program.</p>
+                </div>
+                <div class="logo-stage__turtle" data-logo-turtle aria-hidden="true">
+                    <span class="logo-stage__turtle-shell"></span>
+                    <span class="logo-stage__turtle-head"></span>
+                </div>
+            </div>
+            <label class="logo-console__label" for="logo-program">Program</label>
+            <textarea id="logo-program" name="logo-program" rows="10" data-logo-program spellcheck="false" aria-describedby="logo-status" placeholder="REPEAT 6 [ FD 140 RT 60 ]&#10;RT 20&#10;REPEAT 18 [ FD 80 RT 20 ]"></textarea>
+            <div class="logo-console__actions">
+                <button class="button button-sm" type="button" data-logo-run>Run</button>
+                <button class="button-outline button-sm" type="button" data-logo-clear>Clear canvas</button>
+                <button class="button-muted button-sm" type="button" data-logo-home>Center turtle</button>
+            </div>
+            <p class="logo-console__status" id="logo-status" data-logo-status role="status" aria-live="polite">Ready. Pen down with a metallic gold ink. The turtle faces north.</p>
+        </div>
+    </div>
+</section>
+
 {% if feature_buttons %}
 <section class="feature-button-wall" data-soundtrack="arcade">
     <div class="feature-button-wall__heading">
@@ -200,5 +259,6 @@
 {% block extra_scripts %}
     {{ block.super }}
     {{ feature_button_payload|json_script:"feature-button-data" }}
+    <script src="{% static 'js/logo-lab.js' %}" defer></script>
     <script src="{% static 'js/brickbreaker.js' %}" defer></script>
 {% endblock %}

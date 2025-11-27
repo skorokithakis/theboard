@@ -4,10 +4,44 @@
 
 {% block content %}
 <section class="profile-section">
-    <article class="profile-card">
-        <p class="profile-eyebrow">Board member</p>
-        <h1 class="profile-name">{{ profile_user.display_name }}</h1>
-        <p class="profile-handle">@{{ profile_user.username }}</p>
+    <article class="profile-card profile-card--identity">
+        <div class="profile-identity">
+            <div class="profile-avatar" style="
+                --avatar-rotation: {{ profile_avatar.rotation }}deg;
+                --avatar-gradient-start: {{ profile_avatar.gradient_start }};
+                --avatar-gradient-stop: {{ profile_avatar.gradient_stop }};
+                --avatar-spark: {{ profile_avatar.spark_color }};
+                --avatar-noise: {{ profile_avatar.noise_opacity }};
+            ">
+                <span class="profile-avatar__ring"></span>
+                <span class="profile-avatar__spark"></span>
+                <span class="profile-avatar__initial">{{ profile_avatar.initial }}</span>
+            </div>
+            <div class="profile-heading">
+                <p class="profile-eyebrow profile-eyebrow--row">
+                    Board member
+                    {% if profile_user.is_staff or profile_user.is_superuser %}
+                    <span class="profile-badge profile-badge--admin">Admin</span>
+                    {% endif %}
+                </p>
+                <h1 class="profile-name">{{ profile_user.display_name }}</h1>
+                <p class="profile-handle">@{{ profile_user.username }}</p>
+            </div>
+        </div>
+        <dl class="profile-meta" aria-label="Profile facts">
+            <div class="profile-meta__item">
+                <dt>Joined</dt>
+                <dd>{{ profile_user.date_joined|date:"M j, Y" }}</dd>
+            </div>
+            <div class="profile-meta__item">
+                <dt>Feature ideas</dt>
+                <dd>{{ feature_totals.total_count|default:0 }}</dd>
+            </div>
+            <div class="profile-meta__item">
+                <dt>Quotes shared</dt>
+                <dd>{{ member_quote_count|default:0 }}</dd>
+            </div>
+        </dl>
         <div class="profile-status">
             <div class="profile-status__header">
                 <span class="profile-status__label">Status</span>
@@ -26,6 +60,110 @@
                 {% endif %}
             </p>
             {% endif %}
+        </div>
+    </article>
+    <article class="profile-card profile-card--features">
+        <div class="feature-overview__header">
+            <p class="profile-eyebrow">Feature ideas</p>
+            <h2 class="feature-overview__title">Ideas from {{ profile_user.display_name }}</h2>
+            <p class="feature-overview__helper">See what's active, shipped, and archived from this member.</p>
+            <div class="feature-pills" role="list" aria-label="Feature submission breakdown">
+                <div class="feature-pill feature-pill--active" role="listitem">
+                    <span class="feature-pill__label">Active</span>
+                    <span class="feature-pill__value">{{ feature_totals.active_count|default:0 }}</span>
+                </div>
+                <div class="feature-pill feature-pill--implemented" role="listitem">
+                    <span class="feature-pill__label">Implemented</span>
+                    <span class="feature-pill__value">{{ feature_totals.implemented_count|default:0 }}</span>
+                </div>
+                <div class="feature-pill feature-pill--rejected" role="listitem">
+                    <span class="feature-pill__label">Rejected</span>
+                    <span class="feature-pill__value">{{ feature_totals.rejected_count|default:0 }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="feature-grid">
+            <div class="feature-column">
+                <h3 class="feature-column__title">Active</h3>
+                {% if active_features %}
+                <ul class="feature-chip-list">
+                    {% for feature in active_features %}
+                    <li class="feature-chip">
+                        <div class="feature-chip__header">
+                            <p class="feature-chip__title">{{ feature.title }}</p>
+                            <span class="feature-chip__votes">{{ feature.vote_total }} votes</span>
+                        </div>
+                        <p class="feature-chip__meta">Added {{ feature.created_at|date:"M j, Y" }}</p>
+                        {% if feature.description %}
+                        <p class="feature-chip__description">{{ feature.description|truncatewords:18 }}</p>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="feature-chip__empty">
+                    {% if can_edit_profile %}
+                        You haven't proposed any active ideas yet.
+                    {% else %}
+                        No active ideas right now.
+                    {% endif %}
+                </p>
+                {% endif %}
+            </div>
+            <div class="feature-column">
+                <h3 class="feature-column__title">Implemented</h3>
+                {% if implemented_features %}
+                <ul class="feature-chip-list">
+                    {% for feature in implemented_features %}
+                    <li class="feature-chip">
+                        <div class="feature-chip__header">
+                            <p class="feature-chip__title">{{ feature.title }}</p>
+                            <span class="feature-chip__votes">{{ feature.vote_total }} votes</span>
+                        </div>
+                        <p class="feature-chip__meta">Shipped {{ feature.implemented_at|date:"M j, Y" }}</p>
+                        {% if feature.description %}
+                        <p class="feature-chip__description">{{ feature.description|truncatewords:18 }}</p>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="feature-chip__empty">
+                    {% if can_edit_profile %}
+                        None of your ideas have shipped yet.
+                    {% else %}
+                        No shipped ideas from this member yet.
+                    {% endif %}
+                </p>
+                {% endif %}
+            </div>
+            <div class="feature-column">
+                <h3 class="feature-column__title">Rejected</h3>
+                {% if rejected_features %}
+                <ul class="feature-chip-list">
+                    {% for feature in rejected_features %}
+                    <li class="feature-chip">
+                        <div class="feature-chip__header">
+                            <p class="feature-chip__title">{{ feature.title }}</p>
+                            <span class="feature-chip__votes">{{ feature.vote_total }} votes</span>
+                        </div>
+                        <p class="feature-chip__meta">Archived {{ feature.expired_at|date:"M j, Y" }}</p>
+                        {% if feature.description %}
+                        <p class="feature-chip__description">{{ feature.description|truncatewords:18 }}</p>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="feature-chip__empty">
+                    {% if can_edit_profile %}
+                        No ideas have been archived yet.
+                    {% else %}
+                        Nothing has been rejected so far.
+                    {% endif %}
+                </p>
+                {% endif %}
+            </div>
         </div>
     </article>
     <article class="profile-card profile-card--economy">

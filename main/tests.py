@@ -681,6 +681,40 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(totals["pending_count"], 1)
         self.assertContains(response, "Awaiting review")
 
+    def test_profile_detail_lists_feature_submissions_by_state(self) -> None:
+        active = self._submit_feature(title="Active spotlight", creator=self.owner)
+        shipped = self._submit_feature(title="Rolled out feature", creator=self.owner)
+        archived = self._submit_feature(title="Sunset idea", creator=self.owner)
+
+        now = timezone.now()
+        models.Feature.objects.filter(pk=shipped.pk).update(implemented_at=now)
+        models.Feature.objects.filter(pk=archived.pk).update(expired_at=now)
+
+        self.client.login(username=self.owner.username, password="test-pass-1")
+        with self._static_override():
+            response = self.client.get(reverse("main:profile"))
+
+        self.assertEqual(response.status_code, 200)
+        totals = response.context["feature_totals"]
+        self.assertEqual(totals["active_count"], 1)
+        self.assertEqual(totals["implemented_count"], 1)
+        self.assertEqual(totals["rejected_count"], 1)
+        self.assertContains(response, active.title)
+        self.assertContains(response, shipped.title)
+        self.assertContains(response, archived.title)
+
+    def test_profile_detail_marks_admins_with_badge(self) -> None:
+        self.owner.is_staff = True
+        self.owner.save(update_fields=["is_staff"])
+        self.client.login(username=self.owner.username, password="test-pass-1")
+
+        with self._static_override():
+            response = self.client.get(reverse("main:profile"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Admin")
+        self.assertIn("profile_avatar", response.context)
+
     def test_about_page_reports_feature_counts(self) -> None:
         self._submit_feature(title="Backlog idea")
         shipped = self._submit_feature(title="Shipped idea")

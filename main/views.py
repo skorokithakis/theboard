@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -14,11 +16,39 @@ from django.core.exceptions import PermissionDenied
 from .economy import daily_bonus_status
 from .forms import ProfileForm, QuoteSuggestionForm
 from .fortune import get_daily_fortune
-from .models import Feature, QuoteSuggestion
+from .models import Feature, QuoteSuggestion, User as BoardUser
 from .terrarium import build_terrarium_state
 from .utils import get_next_iteration_at
 
 User = get_user_model()
+
+
+def _profile_avatar_descriptor(user: BoardUser) -> dict[str, str]:
+    """Create a deterministic, abstract avatar palette for a user."""
+
+    seed = (user.username or str(user.pk) or "member").lower()
+    digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()
+
+    hue_primary = int(digest[:2], 16) % 360
+    hue_secondary = int(digest[2:4], 16) % 360
+    saturation = 55 + int(digest[4:6], 16) % 30
+    base_lightness = 38 + int(digest[6:8], 16) % 18
+    accent_lightness = 55 + int(digest[8:10], 16) % 28
+    rotation = int(digest[10:12], 16) % 360
+    sparkle_hue = (hue_primary + 48) % 360
+    sparkle_lightness = 60 + int(digest[12:14], 16) % 30
+    noise_opacity = (10 + int(digest[14:16], 16) % 30) / 100
+    initials_source = (user.display_name or user.username or "member").strip()
+    initial = initials_source[:1].upper() if initials_source else "?"
+
+    return {
+        "initial": initial,
+        "gradient_start": f"hsl({hue_primary}, {saturation}%, {base_lightness}%)",
+        "gradient_stop": f"hsl({hue_secondary}, {saturation}%, {accent_lightness}%)",
+        "rotation": str(rotation),
+        "spark_color": f"hsl({sparkle_hue}, 78%, {sparkle_lightness}%)",
+        "noise_opacity": f"{noise_opacity:.2f}",
+    }
 
 
 def _build_homepage_context(
@@ -138,9 +168,38 @@ def profile_detail(request: HttpRequest, username: str | None = None) -> HttpRes
         "created_at",
         "submitted_by",
     )
+    member_quote_count = quote_suggestions.count()
     quote_totals = QuoteSuggestion.objects.aggregate(
         approved_count=Count("id", filter=Q(is_approved=True)),
         pending_count=Count("id", filter=Q(is_approved=False)),
+    )
+
+    feature_submissions = Feature.objects.filter(creator=profile_user)
+    feature_totals = feature_submissions.aggregate(
+        active_count=Count(
+            "id",
+            filter=Q(implemented_at__isnull=True, expired_at__isnull=True),
+        ),
+        implemented_count=Count("id", filter=Q(implemented_at__isnull=False)),
+        rejected_count=Count("id", filter=Q(expired_at__isnull=False)),
+    )
+    feature_totals["total_count"] = sum(
+        feature_totals.get(key) or 0
+        for key in ("active_count", "implemented_count", "rejected_count")
+    )
+
+    active_features = (
+        feature_submissions.pending().with_vote_totals().order_by("-created_at")
+    )
+    implemented_features = (
+        feature_submissions.implemented()
+        .with_vote_totals()
+        .order_by("-implemented_at", "-created_at")
+    )
+    rejected_features = (
+        feature_submissions.expired()
+        .with_vote_totals()
+        .order_by("-expired_at", "-created_at")
     )
     daily_bonus = daily_bonus_status(profile_user)
 
@@ -150,6 +209,12 @@ def profile_detail(request: HttpRequest, username: str | None = None) -> HttpRes
         "can_edit_profile": can_edit,
         "quote_suggestions": quote_suggestions,
         "quote_totals": quote_totals,
+        "member_quote_count": member_quote_count,
+        "feature_totals": feature_totals,
+        "active_features": active_features,
+        "implemented_features": implemented_features,
+        "rejected_features": rejected_features,
         "daily_bonus": daily_bonus,
+        "profile_avatar": _profile_avatar_descriptor(profile_user),
     }
     return render(request, "profiles/detail.html", context)

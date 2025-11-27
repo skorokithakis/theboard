@@ -15,7 +15,7 @@
     <link href="{% static 'css/main.css' %}" rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
-<body {% if settings.TURNSTILE_ENABLED %} data-turnstile-sitekey="{{ settings.TURNSTILE_SITE_KEY }}"{% endif %}>
+<body class="theme-lava"{% if settings.TURNSTILE_ENABLED %} data-turnstile-sitekey="{{ settings.TURNSTILE_SITE_KEY }}"{% endif %}>
     <header class="site-header">
         <div class="container header-inner">
             <a class="brand" href="{% url 'main:index' %}">{{ request.site.name }}</a>

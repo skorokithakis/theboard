@@ -80,6 +80,7 @@
   };
   var WINTER_MONTHS = { 0: true, 10: true, 11: true };
   var SNOWFLAKE_LAYER_CLASS = "snowfall-layer";
+  var MELT_CLASS = "is-melting";
 
   ready(initialize);
   ready(initializeTurnstileAutoRender);
@@ -101,6 +102,7 @@
     createGraveyardModal();
     createAuthModal();
     initializeSnowfall();
+    initializeMeltEffect();
     ELEMENTS.heroCountdown = document.getElementById("next-iteration-countdown");
     if (
       ELEMENTS.heroCountdown &&
@@ -189,6 +191,46 @@
     } else {
       document.body.appendChild(snowLayer);
     }
+  }
+
+  function initializeMeltEffect() {
+    if (!document.body) {
+      return;
+    }
+    var observer = new MutationObserver(handleMeltMutations);
+    observer.observe(document.body, { childList: true, subtree: true });
+    document.querySelectorAll("div").forEach(applyMeltEffect);
+  }
+
+  function handleMeltMutations(mutations) {
+    for (var i = 0; i < mutations.length; i += 1) {
+      var mutation = mutations[i];
+      if (!mutation.addedNodes || !mutation.addedNodes.length) {
+        continue;
+      }
+      mutation.addedNodes.forEach(function (node) {
+        applyMeltEffect(node);
+        if (node.querySelectorAll) {
+          node.querySelectorAll("div").forEach(applyMeltEffect);
+        }
+      });
+    }
+  }
+
+  function applyMeltEffect(node) {
+    if (!node || node.nodeType !== 1 || node.tagName !== "DIV") {
+      return;
+    }
+    if (node.classList.contains(MELT_CLASS)) {
+      return;
+    }
+    node.classList.add(MELT_CLASS);
+    var delay = Math.random() * 4.5;
+    var duration = 13 + Math.random() * 9;
+    var distance = 4 + Math.random() * 10;
+    node.style.setProperty("--melt-delay", delay.toFixed(2) + "s");
+    node.style.setProperty("--melt-duration", duration.toFixed(2) + "s");
+    node.style.setProperty("--melt-distance", distance.toFixed(1) + "px");
   }
 
   function determineSnowflakeCount() {

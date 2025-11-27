@@ -26,6 +26,12 @@
   --plant-pot: rgb(var(--plant-pot-rgb));
   --plant-sand-rgb: 194, 122, 70;
   --plant-sand: rgb(var(--plant-sand-rgb));
+  --lava-char: #1a0503;
+  --lava-core: #3b0d08;
+  --lava-ember: #ff7a1f;
+  --lava-glow: #ffb347;
+  --lava-flare: #ff3f3c;
+  --lava-shadow: rgba(0, 0, 0, 0.45);
 }
 
 * {
@@ -59,6 +65,96 @@ body::before {
   opacity: 0.55;
   pointer-events: none;
   z-index: -1;
+}
+
+body.theme-lava {
+  background-color: var(--lava-char);
+  background-image:
+    radial-gradient(circle at 12% 24%, rgba(255, 122, 31, 0.24), rgba(26, 5, 3, 0) 32%),
+    radial-gradient(circle at 86% 16%, rgba(255, 63, 60, 0.26), rgba(26, 5, 3, 0) 36%),
+    radial-gradient(circle at 38% 64%, rgba(255, 179, 71, 0.26), rgba(26, 5, 3, 0) 44%),
+    linear-gradient(180deg, rgba(26, 5, 3, 0.92), rgba(59, 13, 8, 0.92));
+  color: var(--text);
+}
+
+body.theme-lava::before {
+  background-image:
+    radial-gradient(circle at 30% 28%, rgba(255, 179, 71, 0.14), transparent 45%),
+    radial-gradient(circle at 74% 42%, rgba(255, 63, 60, 0.12), transparent 38%),
+    radial-gradient(circle at 12% 72%, rgba(255, 122, 31, 0.18), transparent 52%),
+    repeating-conic-gradient(
+      from 12deg,
+      rgba(255, 122, 31, 0.32) 0deg 9deg,
+      rgba(59, 13, 8, 0.24) 9deg 14deg,
+      rgba(10, 4, 1, 0.12) 14deg 18deg
+    );
+  opacity: 0.75;
+  filter: saturate(1.08);
+  mix-blend-mode: screen;
+}
+
+body.theme-lava::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 14% 12%, rgba(255, 122, 31, 0.7), rgba(255, 122, 31, 0) 40%),
+    radial-gradient(circle at 70% 30%, rgba(255, 63, 60, 0.6), rgba(255, 63, 60, 0) 45%),
+    radial-gradient(circle at 22% 82%, rgba(255, 179, 71, 0.65), rgba(255, 179, 71, 0) 50%),
+    radial-gradient(circle at 80% 74%, rgba(255, 122, 31, 0.6), rgba(255, 122, 31, 0) 40%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 122, 31, 0.2),
+      rgba(255, 122, 31, 0.08) 18px,
+      rgba(26, 5, 3, 0) 38px,
+      rgba(26, 5, 3, 0) 64px
+    );
+  background-size: 160% 140%, 180% 200%, 200% 180%, 140% 200%, 320% 100%;
+  opacity: 0.65;
+  mix-blend-mode: screen;
+  animation: lavaFlow 26s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: -2;
+}
+
+body.theme-lava .is-melting {
+  position: relative;
+  animation: meltDrip var(--melt-duration, 18s) ease-in-out infinite alternate;
+  animation-delay: var(--melt-delay, 0s);
+  transform-origin: top center;
+  box-shadow: 0 18px 28px var(--lava-shadow);
+  will-change: transform;
+}
+
+body.theme-lava .is-melting {
+  --melt-distance: 11px;
+}
+
+@keyframes lavaFlow {
+  0% {
+    background-position: 0 0, 0 32%, 16% 48%, 0 72%, 0 0;
+  }
+  50% {
+    background-position: 14% 10%, 22% 42%, -8% 62%, 18% 80%, 12% 10%;
+  }
+  100% {
+    background-position: -18% 20%, -12% 52%, 28% 76%, -14% 94%, -12% 20%;
+  }
+}
+
+@keyframes meltDrip {
+  0% {
+    transform: translateY(0) skewX(0deg) scaleY(1);
+  }
+  28% {
+    transform: translateY(calc(var(--melt-distance, 11px) * 0.35)) skewX(-0.45deg) scaleY(1.01);
+  }
+  62% {
+    transform: translateY(calc(var(--melt-distance, 11px) * 0.7)) skewX(0.75deg) scaleY(1.03);
+  }
+  100% {
+    transform: translateY(var(--melt-distance, 11px)) skewX(-1.1deg) scaleY(1.05);
+  }
 }
 
 .snowfall-layer {

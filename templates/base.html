@@ -24,6 +24,10 @@
                     class="header-nav__link{% if request.resolver_match and request.resolver_match.url_name == 'about' %} header-nav__link--active{% endif %}"
                     {% if request.resolver_match and request.resolver_match.url_name == 'about' %}aria-current="page"{% endif %}
                     href="{% url 'main:about' %}">About</a>
+                <a
+                    class="header-nav__link{% if request.resolver_match and request.resolver_match.url_name == 'scoreboard' %} header-nav__link--active{% endif %}"
+                    {% if request.resolver_match and request.resolver_match.url_name == 'scoreboard' %}aria-current="page"{% endif %}
+                    href="{% url 'main:scoreboard' %}">Scoreboard</a>
                 {% if request.user.is_authenticated %}
                 {% with url_name=request.resolver_match.url_name %}
                 <a

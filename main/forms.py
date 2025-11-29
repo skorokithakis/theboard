@@ -93,6 +93,34 @@ class QuoteSuggestionForm(forms.ModelForm):
         return attribution
 
 
+class ScoreRecordForm(forms.ModelForm):
+    """Allow members to update their scoreboard totals."""
+
+    class Meta:
+        model = models.ScoreRecord
+        fields = ("suggestions_score", "minigame_score")
+        widgets = {
+            "suggestions_score": forms.NumberInput(
+                attrs={"min": 0, "class": "input", "inputmode": "numeric"}
+            ),
+            "minigame_score": forms.NumberInput(
+                attrs={"min": 0, "class": "input", "inputmode": "numeric"}
+            ),
+        }
+
+    def clean_suggestions_score(self) -> int:
+        value = self.cleaned_data.get("suggestions_score") or 0
+        if value < 0:
+            raise forms.ValidationError(_("Scores cannot be negative."))
+        return value
+
+    def clean_minigame_score(self) -> int:
+        value = self.cleaned_data.get("minigame_score") or 0
+        if value < 0:
+            raise forms.ValidationError(_("Scores cannot be negative."))
+        return value
+
+
 class SignUpForm(forms.ModelForm):
     """Registration form that captures username and password."""
 

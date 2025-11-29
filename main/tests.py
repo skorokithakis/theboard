@@ -872,6 +872,71 @@ class QuoteSuggestionViewTests(TestCase):
         )
 
 
+class ScoreboardViewTests(TestCase):
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(username="scorer", password="test-pass")
+        self.other = User.objects.create_user(
+            username="ally", password="test-pass-ally"
+        )
+
+    def _static_override(self):
+        storage_settings = {
+            **settings.STORAGES,
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            },
+        }
+        return override_settings(
+            STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage",
+            STORAGES=storage_settings,
+        )
+
+    def test_leaderboard_orders_by_total_score(self) -> None:
+        models.ScoreRecord.objects.create(
+            user=self.user,
+            suggestions_score=2,
+            minigame_score=5,
+        )
+        models.ScoreRecord.objects.create(
+            user=self.other,
+            suggestions_score=4,
+            minigame_score=4,
+        )
+
+        with self._static_override():
+            response = self.client.get(reverse("main:scoreboard"))
+
+        self.assertEqual(response.status_code, 200)
+        leaderboard = response.context["leaderboard"]
+        ordered_usernames = [entry["record"].user.username for entry in leaderboard]
+        self.assertEqual(
+            ordered_usernames[:2], [self.other.username, self.user.username]
+        )
+
+    def test_score_submission_requires_authentication(self) -> None:
+        response = self.client.post(
+            reverse("main:scoreboard"),
+            {"suggestions_score": 7, "minigame_score": 3},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(models.ScoreRecord.objects.count(), 0)
+
+    def test_authenticated_user_can_save_scores(self) -> None:
+        self.client.login(username="scorer", password="test-pass")
+        with self._static_override():
+            response = self.client.post(
+                reverse("main:scoreboard"),
+                {"suggestions_score": 9, "minigame_score": 6},
+                follow=True,
+            )
+
+        self.assertEqual(response.status_code, 200)
+        record = models.ScoreRecord.objects.get(user=self.user)
+        self.assertEqual(record.suggestions_score, 9)
+        self.assertEqual(record.minigame_score, 6)
+        self.assertEqual(record.total_score, 15)
+
+
 class UtilsTests(TestCase):
     def test_get_next_iteration_at_before_noon_returns_same_day_noon(self) -> None:
         reference = datetime(2024, 5, 1, 9, 30, tzinfo=dt_timezone.utc)

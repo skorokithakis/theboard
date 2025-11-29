@@ -10,13 +10,13 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
-from django.views.decorators.http import require_GET, require_POST
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.core.exceptions import PermissionDenied
 
 from .economy import daily_bonus_status
-from .forms import ProfileForm, QuoteSuggestionForm
+from .forms import ProfileForm, QuoteSuggestionForm, ScoreRecordForm
 from .fortune import get_daily_fortune
-from .models import Feature, QuoteSuggestion, User as BoardUser
+from .models import Feature, QuoteSuggestion, ScoreRecord, User as BoardUser
 from .terrarium import build_terrarium_state
 from .utils import get_next_iteration_at
 
@@ -101,6 +101,60 @@ def about(request: HttpRequest) -> HttpResponse:
         "feature_stats": feature_stats,
     }
     return render(request, "about.html", context)
+
+
+@require_http_methods(["GET", "POST"])
+def scoreboard(request: HttpRequest) -> HttpResponse:
+    """Display the scoreboard and allow members to log their scores."""
+
+    rank_titles = {
+        1: "Crown Regent",
+        2: "Arcade Luminary",
+        3: "Lorekeeper",
+        4: "Glorp Whisperer",
+        5: "Idea Forger",
+        6: "Signal Runner",
+        7: "Pulse Collector",
+    }
+
+    if request.method == "POST":
+        if not request.user.is_authenticated:
+            messages.info(
+                request, "Sign in through the board controls to record your score."
+            )
+            return redirect("main:scoreboard")
+
+        record, _ = ScoreRecord.objects.get_or_create(user=request.user)
+        form = ScoreRecordForm(request.POST, instance=record)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Your scoreboard entry has been updated.")
+            return redirect("main:scoreboard")
+    else:
+        record = None
+        if request.user.is_authenticated:
+            record = ScoreRecord.objects.filter(user=request.user).first()
+        form = ScoreRecordForm(instance=record)
+
+    leaderboard = ScoreRecord.objects.leaderboard(limit=20)
+    user_score_record = None
+    if request.user.is_authenticated:
+        user_score_record = (
+            ScoreRecord.objects.with_totals()
+            .select_related("user")
+            .filter(user=request.user)
+            .first()
+        )
+    context = {
+        "leaderboard": [
+            {"rank": idx, "record": record, "title": rank_titles.get(idx)}
+            for idx, record in enumerate(leaderboard, start=1)
+        ],
+        "rank_titles": rank_titles,
+        "score_form": form,
+        "user_score_record": user_score_record,
+    }
+    return render(request, "scoreboard.html", context)
 
 
 @login_required

@@ -6,24 +6,63 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0015_user_balance_user_last_daily_bonus_at'),
+        ("main", "0015_user_balance_user_last_daily_bonus_at"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ScoreRecord',
+            name="ScoreRecord",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('suggestions_score', models.PositiveIntegerField(default=0, help_text='Points earned from feature suggestions or related contributions.')),
-                ('minigame_score', models.PositiveIntegerField(default=0, help_text='Points earned from board-run minigames or arcade events.')),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='Timestamp for when this scoreboard entry was first created.')),
-                ('updated_at', models.DateTimeField(auto_now=True, help_text='Timestamp for the most recent scoreboard update.')),
-                ('user', models.OneToOneField(help_text='Member whose suggestion and minigame points are tracked for the scoreboard.', on_delete=django.db.models.deletion.CASCADE, related_name='score_record', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "suggestions_score",
+                    models.PositiveIntegerField(
+                        default=0,
+                        help_text="Points earned from feature suggestions or related contributions.",
+                    ),
+                ),
+                (
+                    "minigame_score",
+                    models.PositiveIntegerField(
+                        default=0,
+                        help_text="Points earned from board-run minigames or arcade events.",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="Timestamp for when this scoreboard entry was first created.",
+                    ),
+                ),
+                (
+                    "updated_at",
+                    models.DateTimeField(
+                        auto_now=True,
+                        help_text="Timestamp for the most recent scoreboard update.",
+                    ),
+                ),
+                (
+                    "user",
+                    models.OneToOneField(
+                        help_text="Member whose suggestion and minigame points are tracked for the scoreboard.",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="score_record",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-updated_at'],
+                "ordering": ["-updated_at"],
             },
         ),
     ]

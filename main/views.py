@@ -103,7 +103,7 @@ def about(request: HttpRequest) -> HttpResponse:
     return render(request, "about.html", context)
 
 
-@require_http_methods(["GET", "POST"])
+@require_http_methods(["GET", "HEAD", "POST"])
 def scoreboard(request: HttpRequest) -> HttpResponse:
     """Display the scoreboard and allow members to log their scores."""
 

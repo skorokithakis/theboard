@@ -891,6 +891,12 @@ class ScoreboardViewTests(TestCase):
             STORAGES=storage_settings,
         )
 
+    def test_head_request_returns_ok(self) -> None:
+        with self._static_override():
+            response = self.client.head(reverse("main:scoreboard"))
+
+        self.assertEqual(response.status_code, 200)
+
     def test_leaderboard_orders_by_total_score(self) -> None:
         models.ScoreRecord.objects.create(
             user=self.user,

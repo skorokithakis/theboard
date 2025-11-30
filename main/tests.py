@@ -943,6 +943,66 @@ class ScoreboardViewTests(TestCase):
         self.assertEqual(record.total_score, 15)
 
 
+class PlaintextSubmissionViewTests(TestCase):
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(username="plain", password="test-pass")
+        self.other = User.objects.create_user(username="reader", password="test-pass-2")
+
+    def test_plaintext_page_lists_features_and_warning(self) -> None:
+        feature = models.Feature.objects.create(
+            title="Plain request",
+            description="Check rendering",
+            creator=self.other,
+        )
+
+        response = self.client.get(reverse("main:plaintext-submission"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "no-frills fallback")
+        self.assertContains(response, feature.title)
+
+    def test_plaintext_submission_creates_feature_and_vote(self) -> None:
+        self.client.login(username="plain", password="test-pass")
+
+        response = self.client.post(
+            reverse("main:plaintext-submission"),
+            {"title": "Text-only form", "description": "Stay simple"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        feature = models.Feature.objects.get(title="Text-only form")
+        self.assertEqual(feature.creator, self.user)
+        self.assertTrue(
+            models.Vote.objects.filter(user=self.user, feature=feature).exists()
+        )
+
+    @override_settings(TURNSTILE_ENABLED=True)
+    def test_plaintext_vote_toggle_uses_turnstile_verification(self) -> None:
+        feature = models.Feature.objects.create(
+            title="Vote target",
+            description="Toggle with captcha",
+            creator=self.other,
+        )
+        self.client.login(username="plain", password="test-pass")
+
+        with mock.patch("main.views.turnstile.verify") as verify_mock:
+            verify_mock.return_value = turnstile.VerificationResult(
+                success=True,
+                error_codes=(),
+            )
+            response = self.client.post(
+                reverse("main:plaintext-vote-toggle", args=[feature.pk]),
+                {"turnstile_token": "token-add"},
+            )
+
+        self.assertEqual(response.status_code, 302)
+        verify_mock.assert_called_once()
+        self.assertEqual(verify_mock.call_args[0][0], "token-add")
+        self.assertTrue(
+            models.Vote.objects.filter(user=self.user, feature=feature).exists()
+        )
+
+
 class UtilsTests(TestCase):
     def test_get_next_iteration_at_before_noon_returns_same_day_noon(self) -> None:
         reference = datetime(2024, 5, 1, 9, 30, tzinfo=dt_timezone.utc)

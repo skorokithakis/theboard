@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -14,13 +15,29 @@ from django.views.decorators.http import require_GET, require_POST, require_http
 from django.core.exceptions import PermissionDenied
 
 from .economy import daily_bonus_status
-from .forms import ProfileForm, QuoteSuggestionForm, ScoreRecordForm
+from .forms import FeatureForm, ProfileForm, QuoteSuggestionForm, ScoreRecordForm
 from .fortune import get_daily_fortune
-from .models import Feature, QuoteSuggestion, ScoreRecord, User as BoardUser
+from .models import Feature, QuoteSuggestion, ScoreRecord, User as BoardUser, Vote
 from .terrarium import build_terrarium_state
+from . import turnstile
 from .utils import get_next_iteration_at
 
 User = get_user_model()
+
+
+def _client_ip(request: HttpRequest) -> str | None:
+    """Extract client IP from request headers."""
+    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.META.get("REMOTE_ADDR")
+
+
+def _user_vote_ids(user: BoardUser) -> set[int]:
+    """Return feature IDs the user has voted for."""
+    if not user.is_authenticated:
+        return set()
+    return set(user.votes.values_list("feature_id", flat=True))
 
 
 def _profile_avatar_descriptor(user: BoardUser) -> dict[str, str]:
@@ -101,6 +118,113 @@ def about(request: HttpRequest) -> HttpResponse:
         "feature_stats": feature_stats,
     }
     return render(request, "about.html", context)
+
+
+@require_http_methods(["GET", "HEAD", "POST"])
+def plaintext_submission(request: HttpRequest) -> HttpResponse:
+    """Provide a minimal, styling-free path to submit and vote on features."""
+
+    Feature.expire_stale()
+    status_code = 200
+    submission_form = FeatureForm(
+        request.POST or None,
+        allow_parent=False,
+    )
+    can_submit = (
+        request.user.is_authenticated
+        and not Feature.user_has_reached_daily_limit(request.user)
+    )
+
+    if request.method == "POST":
+        if not request.user.is_authenticated:
+            messages.error(request, "Sign in to submit a feature.")
+            status_code = 403
+        elif not can_submit:
+            messages.error(request, "Daily submission limit reached.")
+            status_code = 429
+        else:
+            verification_success = True
+            if turnstile.is_enabled():
+                verification = turnstile.verify(
+                    request.POST.get("turnstile_token", ""),
+                    remote_ip=_client_ip(request),
+                )
+                verification_success = verification.success
+                if not verification.success:
+                    messages.error(
+                        request,
+                        "Captcha verification failed. Please try again.",
+                    )
+                    status_code = 400
+
+            if verification_success and submission_form.is_valid():
+                feature = submission_form.save(commit=False)
+                feature.creator = request.user
+                feature.save()
+                Vote.objects.create(user=request.user, feature=feature)
+                messages.success(request, "Feature submitted successfully.")
+                return redirect("main:plaintext-submission")
+            elif verification_success:
+                status_code = 400
+
+    vote_ids = _user_vote_ids(request.user)
+    features = list(
+        Feature.objects.pending().ordered_by_popularity().select_related("creator")
+    )
+    for feature in features:
+        feature.user_has_voted = feature.id in vote_ids
+
+    context = {
+        "submission_form": submission_form,
+        "features": features,
+        "turnstile_site_key": getattr(settings, "TURNSTILE_SITE_KEY", ""),
+        "can_submit": can_submit,
+    }
+    return render(
+        request,
+        "plaintext_submission.html",
+        context,
+        status=status_code,
+    )
+
+
+@require_POST
+def plaintext_vote_toggle(request: HttpRequest, pk: int) -> HttpResponse:
+    """Toggle a vote from the plain submission page with captcha validation."""
+
+    Feature.expire_stale()
+
+    if not request.user.is_authenticated:
+        messages.error(request, "Sign in to vote on features.")
+        return redirect("main:plaintext-submission")
+
+    try:
+        feature = Feature.objects.select_related("creator").get(pk=pk)
+    except Feature.DoesNotExist:
+        messages.error(request, "Feature not found.")
+        return redirect("main:plaintext-submission")
+
+    if feature.is_implemented or feature.is_expired:
+        messages.error(request, "This feature is no longer open for voting.")
+        return redirect("main:plaintext-submission")
+
+    if turnstile.is_enabled():
+        verification = turnstile.verify(
+            request.POST.get("turnstile_token", ""),
+            remote_ip=_client_ip(request),
+        )
+        if not verification.success:
+            messages.error(request, "Captcha verification failed. Please try again.")
+            return redirect("main:plaintext-submission")
+
+    vote, created = Vote.objects.get_or_create(user=request.user, feature=feature)
+    if created:
+        messages.success(request, "Vote added.")
+    else:
+        vote.delete()
+        messages.info(request, "Vote removed.")
+
+    return redirect("main:plaintext-submission")
 
 
 @require_http_methods(["GET", "HEAD", "POST"])

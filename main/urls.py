@@ -8,6 +8,16 @@ app_name = "main"
 urlpatterns = [
     path("", views.index, name="index"),
     path("about/", views.about, name="about"),
+    path(
+        "plaintext-submission/",
+        views.plaintext_submission,
+        name="plaintext-submission",
+    ),
+    path(
+        "plaintext-submission/features/<int:pk>/vote/",
+        views.plaintext_vote_toggle,
+        name="plaintext-vote-toggle",
+    ),
     path("scoreboard/", views.scoreboard, name="scoreboard"),
     path(
         "fortunes/suggest/",

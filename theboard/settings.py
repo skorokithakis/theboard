@@ -24,9 +24,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("SECRET_KEY", "override me")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True if os.getenv("NODEBUG") is None else False
+DEBUG = False
 
-ALLOWED_HOSTS = ["*"] if os.getenv("NODEBUG") is None else [".theboard.stavros.io"]
+ALLOWED_HOSTS = [
+    ".theboard.stavros.io",
+    "localhost",
+    "127.0.0.1",
+    "[::1]",
+    "testserver",
+]
 
 DEFAULT_FROM_EMAIL = "bots@theboard.stavros.io"
 

@@ -8,8 +8,7 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
-from django.db.models import Count, F, IntegerField
-from django.db.models.functions import Coalesce
+from django.db.models import Count
 from django.utils import timezone
 
 
@@ -388,63 +387,3 @@ class QuoteSuggestion(models.Model):
         elif not self.is_approved:
             self.approved_at = None
         super().save(*args, **kwargs)
-
-
-class ScoreRecordQuerySet(models.QuerySet):
-    """Custom queryset helpers for scoreboard data."""
-
-    def with_totals(self) -> "ScoreRecordQuerySet":
-        """Annotate each score with its combined total."""
-        total_expression = Coalesce(
-            F("suggestions_score"), 0, output_field=IntegerField()
-        ) + Coalesce(F("minigame_score"), 0, output_field=IntegerField())
-        return self.annotate(score_sum=total_expression)
-
-    def leaderboard(self, limit: int | None = None) -> "ScoreRecordQuerySet":
-        """Return records ordered for leaderboard display."""
-        queryset = (
-            self.with_totals()
-            .select_related("user")
-            .order_by("-score_sum", "-suggestions_score", "user__username")
-        )
-        return queryset[:limit] if limit else queryset
-
-
-class ScoreRecord(models.Model):
-    """Tracked scores for community members across suggestions and minigames."""
-
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        related_name="score_record",
-        on_delete=models.CASCADE,
-        help_text="Member whose suggestion and minigame points are tracked for the scoreboard.",
-    )
-    suggestions_score = models.PositiveIntegerField(
-        default=0,
-        help_text="Points earned from feature suggestions or related contributions.",
-    )
-    minigame_score = models.PositiveIntegerField(
-        default=0,
-        help_text="Points earned from board-run minigames or arcade events.",
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        help_text="Timestamp for when this scoreboard entry was first created.",
-    )
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        help_text="Timestamp for the most recent scoreboard update.",
-    )
-
-    objects = ScoreRecordQuerySet.as_manager()
-
-    class Meta:
-        ordering = ["-updated_at"]
-
-    def __str__(self) -> str:
-        return f"{self.user.display_name} — {self.total_score}"
-
-    @property
-    def total_score(self) -> int:
-        """Sum suggestions and minigame points for quick display."""
-        return (self.suggestions_score or 0) + (self.minigame_score or 0)

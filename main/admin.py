@@ -162,27 +162,3 @@ class QuoteSuggestionAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     @admin.display(description="Quote")
     def display_excerpt(self, obj: models.QuoteSuggestion) -> str:
         return obj.text[:80] + ("…" if len(obj.text) > 80 else "")
-
-
-@admin.register(models.ScoreRecord)
-class ScoreRecordAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
-    """Leaderboard administration for suggestion and minigame points."""
-
-    list_display = (
-        "user",
-        "suggestions_score",
-        "minigame_score",
-        "display_total",
-        "updated_at",
-    )
-    search_fields = ("user__username", "user__first_name", "user__last_name")
-    autocomplete_fields = ("user",)
-    ordering = ("-suggestions_score", "-minigame_score", "-updated_at")
-
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        return queryset.with_totals()
-
-    @admin.display(description="Total", ordering="score_sum")
-    def display_total(self, obj: models.ScoreRecord) -> int:
-        return getattr(obj, "score_sum", None) or obj.total_score

@@ -9,8 +9,8 @@
         <p class="scoreboard-hero__eyebrow">Scoreboard VII</p>
         <h1 class="scoreboard-hero__title">Arcade of Suggestions</h1>
         <p class="scoreboard-hero__lead">
-            Track the scores of authenticated members across suggestions and minigames. The top 20 total scores earn a place on the board,
-            while the top seven pick up ceremonial titles.
+            Scores are verified from live Board data: every point comes from votes other members give to your feature proposals. The top 20
+            totals earn a place on the board while the top seven pick up ceremonial titles.
         </p>
         <div class="scoreboard-legend">
             <div class="scoreboard-legend__glow"></div>
@@ -42,93 +42,53 @@
     <div class="scoreboard-grid__list" role="list" aria-label="Top 20 user scores">
         {% if leaderboard %}
             {% for entry in leaderboard %}
-                {% with record=entry.record rank=entry.rank %}
-                <article class="scorecard{% if rank <= 7 %} scorecard--elite{% endif %}" role="listitem">
+                <article class="scorecard{% if entry.rank <= 7 %} scorecard--elite{% endif %}" role="listitem">
                     <div class="scorecard__chrome"></div>
-                    <div class="scorecard__rank">#{{ rank }}</div>
+                    <div class="scorecard__rank">#{{ entry.rank }}</div>
                     <div class="scorecard__identity">
-                        <span class="scorecard__name">{{ record.user.display_name }}</span>
-                        <span class="scorecard__username">@{{ record.user.username }}</span>
+                        <span class="scorecard__name">{{ entry.user.display_name }}</span>
+                        <span class="scorecard__username">@{{ entry.user.username }}</span>
                     </div>
                     {% if entry.title %}
                     <div class="scorecard__title">{{ entry.title }}</div>
                     {% endif %}
                     <div class="scorecard__scores">
-                        <span class="scorecard__score">
-                            <small>Suggestions</small>
-                            <strong>{{ record.suggestions_score }}</strong>
-                        </span>
-                        <span class="scorecard__score">
-                            <small>Minigames</small>
-                            <strong>{{ record.minigame_score }}</strong>
-                        </span>
                         <span class="scorecard__total">
-                            <small>Total</small>
-                            <strong>{{ record.total_score }}</strong>
+                            <small>Verified points</small>
+                            <strong>{{ entry.score }}</strong>
+                        </span>
+                        <span class="scorecard__score">
+                            <small>Source</small>
+                            <strong>Peer votes</strong>
                         </span>
                     </div>
                 </article>
-                {% endwith %}
             {% endfor %}
         {% else %}
-            <p class="scoreboard-empty">No scores logged yet. Be the first to submit yours.</p>
+            <p class="scoreboard-empty">No verified scores yet. Ship a feature and earn votes to appear here.</p>
         {% endif %}
     </div>
     <aside class="scoreboard-panel" aria-labelledby="score-form-heading">
         <div class="scoreboard-panel__glass">
-            <p class="scoreboard-panel__eyebrow">Record your totals</p>
-            <h2 id="score-form-heading">Submit your score</h2>
+            <p class="scoreboard-panel__eyebrow">How scoring works</p>
+            <h2 id="score-form-heading">Verified totals</h2>
             <p class="scoreboard-panel__copy">
-                Authenticated members can log suggestion and minigame points to secure a spot on the top 20.
+                Scores are calculated automatically from trustworthy sources: votes other members place on your feature requests, with final
+                tallies preserved for implemented or expired work. No manual entry needed. (Boot picked up an extra 500-point bug bounty for
+                breaking the old table.)
             </p>
-            {% if request.user.is_authenticated %}
-            <form method="post" class="scoreboard-form">
-                {% csrf_token %}
-                {% if score_form.non_field_errors %}
-                <p class="form-error">{{ score_form.non_field_errors|striptags }}</p>
-                {% endif %}
-                <div class="form-field">
-                    {{ score_form.suggestions_score.label_tag }}
-                    {{ score_form.suggestions_score }}
-                    {% if score_form.suggestions_score.help_text %}
-                    <p class="form-help">{{ score_form.suggestions_score.help_text }}</p>
-                    {% endif %}
-                    {% if score_form.suggestions_score.errors %}
-                        {% for error in score_form.suggestions_score.errors %}
-                        <p class="form-error">{{ error }}</p>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-                <div class="form-field">
-                    {{ score_form.minigame_score.label_tag }}
-                    {{ score_form.minigame_score }}
-                    {% if score_form.minigame_score.help_text %}
-                    <p class="form-help">{{ score_form.minigame_score.help_text }}</p>
-                    {% endif %}
-                    {% if score_form.minigame_score.errors %}
-                        {% for error in score_form.minigame_score.errors %}
-                        <p class="form-error">{{ error }}</p>
-                        {% endfor %}
-                    {% endif %}
-                </div>
-                <div class="form-actions">
-                    <button class="button" type="submit">Save score</button>
-                </div>
-            </form>
-            {% else %}
-                <p class="scoreboard-panel__copy">
-                    Sign in through the board controls to log your score and climb the ranks.
-                </p>
-            {% endif %}
+            <p class="scoreboard-panel__copy">
+                Want to climb? Publish a compelling feature, encourage peers to vote, and you'll see your total rise automatically.
+            </p>
         </div>
-        {% if user_score_record %}
+        {% if user_score_total is not None %}
         <div class="scoreboard-panel__current">
             <p class="scoreboard-panel__eyebrow">Your total</p>
             <div class="scoreboard-panel__badge">
-                <span class="scoreboard-panel__total">{{ user_score_record.total_score }}</span>
+                <span class="scoreboard-panel__total">{{ user_score_total }}</span>
                 <div class="scoreboard-panel__breakdown">
-                    <span>Suggestions: {{ user_score_record.suggestions_score }}</span>
-                    <span>Minigames: {{ user_score_record.minigame_score }}</span>
+                    <span>All points come from peer votes.</span>
+                    <span>Voting on your own proposals doesn't count.</span>
                 </div>
             </div>
         </div>

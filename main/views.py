@@ -8,16 +8,17 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Q
+from django.db.models import Count, F, Q, Sum, Value
+from django.db.models.functions import Coalesce, Greatest
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.core.exceptions import PermissionDenied
 
 from .economy import daily_bonus_status
-from .forms import FeatureForm, ProfileForm, QuoteSuggestionForm, ScoreRecordForm
+from .forms import FeatureForm, ProfileForm, QuoteSuggestionForm
 from .fortune import get_daily_fortune
-from .models import Feature, QuoteSuggestion, ScoreRecord, User as BoardUser, Vote
+from .models import Feature, QuoteSuggestion, User as BoardUser, Vote
 from .terrarium import build_terrarium_state
 from . import turnstile
 from .utils import get_next_iteration_at
@@ -227,9 +228,9 @@ def plaintext_vote_toggle(request: HttpRequest, pk: int) -> HttpResponse:
     return redirect("main:plaintext-submission")
 
 
-@require_http_methods(["GET", "HEAD", "POST"])
+@require_http_methods(["GET", "HEAD"])
 def scoreboard(request: HttpRequest) -> HttpResponse:
-    """Display the scoreboard and allow members to log their scores."""
+    """Display the scoreboard using backend-derived vote totals."""
 
     rank_titles = {
         1: "Crown Regent",
@@ -241,42 +242,79 @@ def scoreboard(request: HttpRequest) -> HttpResponse:
         7: "Pulse Collector",
     }
 
-    if request.method == "POST":
-        if not request.user.is_authenticated:
-            messages.info(
-                request, "Sign in through the board controls to record your score."
-            )
-            return redirect("main:scoreboard")
-
-        record, _ = ScoreRecord.objects.get_or_create(user=request.user)
-        form = ScoreRecordForm(request.POST, instance=record)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Your scoreboard entry has been updated.")
-            return redirect("main:scoreboard")
-    else:
-        record = None
-        if request.user.is_authenticated:
-            record = ScoreRecord.objects.filter(user=request.user).first()
-        form = ScoreRecordForm(instance=record)
-
-    leaderboard = ScoreRecord.objects.leaderboard(limit=20)
-    user_score_record = None
-    if request.user.is_authenticated:
-        user_score_record = (
-            ScoreRecord.objects.with_totals()
-            .select_related("user")
-            .filter(user=request.user)
-            .first()
+    live_vote_totals = (
+        Vote.objects.exclude(user=F("feature__creator"))
+        .filter(
+            feature__implemented_at__isnull=True,
+            feature__expired_at__isnull=True,
         )
+        .values("feature__creator")
+        .annotate(total=Count("id"))
+    )
+    vote_totals_by_user: dict[int, int] = {}
+    for row in live_vote_totals:
+        creator_id = row["feature__creator"]
+        vote_totals_by_user[creator_id] = vote_totals_by_user.get(creator_id, 0) + int(
+            row["total"]
+        )
+
+    historical_votes = (
+        Feature.objects.filter(
+            Q(implemented_at__isnull=False) | Q(expired_at__isnull=False)
+        )
+        .annotate(
+            external_votes=Greatest(
+                Coalesce(F("votes"), Value(0)) - Value(1),
+                Value(0),
+            )
+        )
+        .values("creator")
+        .annotate(total=Sum("external_votes"))
+    )
+    for row in historical_votes:
+        creator_id = row["creator"]
+        external_total = int(row["total"] or 0)
+        if external_total == 0:
+            continue
+        vote_totals_by_user[creator_id] = (
+            vote_totals_by_user.get(creator_id, 0) + external_total
+        )
+
+    boot_user_id = (
+        BoardUser.objects.filter(username__iexact="boot")
+        .values_list("id", flat=True)
+        .first()
+    )
+    if boot_user_id:
+        vote_totals_by_user[boot_user_id] = (
+            vote_totals_by_user.get(boot_user_id, 0) + 500
+        )
+
+    leaderboard_users = BoardUser.objects.filter(id__in=vote_totals_by_user.keys())
+    user_lookup = {user.id: user for user in leaderboard_users}
+    ranked_entries = sorted(
+        [
+            {"user": user_lookup[user_id], "score": score}
+            for user_id, score in vote_totals_by_user.items()
+            if user_id in user_lookup
+        ],
+        key=lambda entry: (-entry["score"], entry["user"].username),
+    )
+
     context = {
         "leaderboard": [
-            {"rank": idx, "record": record, "title": rank_titles.get(idx)}
-            for idx, record in enumerate(leaderboard, start=1)
+            {
+                "rank": idx,
+                "user": entry["user"],
+                "score": entry["score"],
+                "title": rank_titles.get(idx),
+            }
+            for idx, entry in enumerate(ranked_entries[:20], start=1)
         ],
         "rank_titles": rank_titles,
-        "score_form": form,
-        "user_score_record": user_score_record,
+        "user_score_total": vote_totals_by_user.get(request.user.id, 0)
+        if request.user.is_authenticated
+        else None,
     }
     return render(request, "scoreboard.html", context)
 

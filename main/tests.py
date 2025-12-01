@@ -878,6 +878,9 @@ class ScoreboardViewTests(TestCase):
         self.other = User.objects.create_user(
             username="ally", password="test-pass-ally"
         )
+        self.third = User.objects.create_user(
+            username="third", password="test-pass-third"
+        )
 
     def _static_override(self):
         storage_settings = {
@@ -897,50 +900,82 @@ class ScoreboardViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
-    def test_leaderboard_orders_by_total_score(self) -> None:
-        models.ScoreRecord.objects.create(
-            user=self.user,
-            suggestions_score=2,
-            minigame_score=5,
+    def test_leaderboard_orders_by_peer_votes(self) -> None:
+        feature_primary = models.Feature.objects.create(
+            title="Count my votes",
+            description="Votes from peers should rank first.",
+            creator=self.user,
         )
-        models.ScoreRecord.objects.create(
-            user=self.other,
-            suggestions_score=4,
-            minigame_score=4,
+        feature_secondary = models.Feature.objects.create(
+            title="Count other votes",
+            description="Ensure order respects totals.",
+            creator=self.other,
         )
+        models.Vote.objects.create(user=self.other, feature=feature_primary)
+        models.Vote.objects.create(user=self.third, feature=feature_primary)
+        models.Vote.objects.create(user=self.third, feature=feature_secondary)
 
         with self._static_override():
             response = self.client.get(reverse("main:scoreboard"))
 
         self.assertEqual(response.status_code, 200)
         leaderboard = response.context["leaderboard"]
-        ordered_usernames = [entry["record"].user.username for entry in leaderboard]
+        ordered_usernames = [entry["user"].username for entry in leaderboard]
         self.assertEqual(
-            ordered_usernames[:2], [self.other.username, self.user.username]
+            ordered_usernames[:2], [self.user.username, self.other.username]
         )
+        self.assertEqual(leaderboard[0]["score"], 2)
+        self.assertEqual(leaderboard[1]["score"], 1)
 
-    def test_score_submission_requires_authentication(self) -> None:
-        response = self.client.post(
-            reverse("main:scoreboard"),
-            {"suggestions_score": 7, "minigame_score": 3},
+    def test_self_votes_are_not_counted(self) -> None:
+        feature = models.Feature.objects.create(
+            title="Self vote check",
+            description="Ignore creator votes.",
+            creator=self.user,
         )
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(models.ScoreRecord.objects.count(), 0)
+        models.Vote.objects.create(user=self.user, feature=feature)
+        models.Vote.objects.create(user=self.other, feature=feature)
 
-    def test_authenticated_user_can_save_scores(self) -> None:
-        self.client.login(username="scorer", password="test-pass")
         with self._static_override():
-            response = self.client.post(
-                reverse("main:scoreboard"),
-                {"suggestions_score": 9, "minigame_score": 6},
-                follow=True,
-            )
+            response = self.client.get(reverse("main:scoreboard"))
 
-        self.assertEqual(response.status_code, 200)
-        record = models.ScoreRecord.objects.get(user=self.user)
-        self.assertEqual(record.suggestions_score, 9)
-        self.assertEqual(record.minigame_score, 6)
-        self.assertEqual(record.total_score, 15)
+        leaderboard = response.context["leaderboard"]
+        entry = next(item for item in leaderboard if item["user"] == self.user)
+        self.assertEqual(entry["score"], 1)
+
+    def test_historical_votes_use_snapshot_totals(self) -> None:
+        feature = models.Feature.objects.create(
+            title="Implemented idea",
+            description="Snapshot votes should count.",
+            creator=self.user,
+        )
+        models.Vote.objects.create(user=self.user, feature=feature)
+        models.Vote.objects.create(user=self.other, feature=feature)
+        feature.implement(when=timezone.now())
+        models.Vote.objects.all().delete()
+
+        with self._static_override():
+            response = self.client.get(reverse("main:scoreboard"))
+
+        leaderboard = response.context["leaderboard"]
+        entry = next(item for item in leaderboard if item["user"] == self.user)
+        self.assertEqual(entry["score"], 1)
+
+    def test_boot_receives_bug_bounty_bonus(self) -> None:
+        boot = User.objects.create_user(username="boot", password="test-pass-boot")
+        feature = models.Feature.objects.create(
+            title="Boot bonus feature",
+            description="Ensure bonus is added.",
+            creator=self.other,
+        )
+        models.Vote.objects.create(user=self.user, feature=feature)
+
+        with self._static_override():
+            response = self.client.get(reverse("main:scoreboard"))
+
+        leaderboard = response.context["leaderboard"]
+        boot_entry = next(item for item in leaderboard if item["user"] == boot)
+        self.assertEqual(boot_entry["score"], 500)
 
 
 class PlaintextSubmissionViewTests(TestCase):

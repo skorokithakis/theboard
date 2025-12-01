@@ -15,7 +15,7 @@
     <link href="{% static 'css/main.css' %}" rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
-<body class="theme-lava"{% if settings.TURNSTILE_ENABLED %} data-turnstile-sitekey="{{ settings.TURNSTILE_SITE_KEY }}"{% endif %}>
+<body class="theme-summer"{% if settings.TURNSTILE_ENABLED %} data-turnstile-sitekey="{{ settings.TURNSTILE_SITE_KEY }}"{% endif %}>
     <header class="site-header">
         <div class="container header-inner">
             <a class="brand" href="{% url 'main:index' %}">{{ request.site.name }}</a>
@@ -39,6 +39,16 @@
                 {% endif %}
             </nav>
             <div class="header-controls">
+                <div class="theme-switcher">
+                    <label class="theme-switcher__label" for="theme-select">Theme</label>
+                    <select class="theme-switcher__select" id="theme-select" data-theme-select aria-label="Select theme">
+                        <option value="auto" selected>Seasonal</option>
+                        <option value="spring">Spring</option>
+                        <option value="summer">Summer</option>
+                        <option value="fall">Fall</option>
+                        <option value="winter">Winter</option>
+                    </select>
+                </div>
                 <button class="audio-toggle" type="button" data-audio-toggle aria-pressed="false" aria-live="polite">
                     <span class="audio-toggle__icon" data-audio-icon aria-hidden="true">🔊</span>
                     <span class="audio-toggle__label" data-audio-label>Music On</span>
@@ -122,6 +132,7 @@
         loop
         preload="auto"
         aria-hidden="true"></audio>
+    <script src="{% static 'js/theme-picker.js' %}" defer></script>
     <script src="{% static 'js/theboard.js' %}" defer></script>
     <script src="{% static 'js/audio-controls.js' %}" defer></script>
     {% if settings.TURNSTILE_ENABLED %}

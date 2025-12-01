@@ -173,24 +173,17 @@
   }
 
   function initializeSnowfall() {
-    if (!WINTER_MONTHS[new Date().getMonth()]) {
+    if (!document.body) {
       return;
     }
-    if (!document.body || document.querySelector("." + SNOWFLAKE_LAYER_CLASS)) {
-      return;
-    }
-    var flakeCount = determineSnowflakeCount();
-    var snowLayer = document.createElement("div");
-    snowLayer.className = SNOWFLAKE_LAYER_CLASS;
-    var usedSlots = {};
-    for (var i = 0; i < flakeCount; i += 1) {
-      snowLayer.appendChild(createSnowflakeElement(i, usedSlots));
-    }
-    if (document.body.firstChild) {
-      document.body.insertBefore(snowLayer, document.body.firstChild);
-    } else {
-      document.body.appendChild(snowLayer);
-    }
+    syncSnowfall(resolveActiveTheme());
+    document.addEventListener("theme:change", function (event) {
+      var nextTheme = resolveActiveTheme();
+      if (event && event.detail && event.detail.theme) {
+        nextTheme = event.detail.theme;
+      }
+      syncSnowfall(nextTheme);
+    });
   }
 
   function initializeMeltEffect() {
@@ -236,6 +229,61 @@
   function determineSnowflakeCount() {
     var perWidth = Math.round(window.innerWidth / 22);
     return Math.max(32, Math.min(90, perWidth));
+  }
+
+  function syncSnowfall(theme) {
+    var existingLayer = document.querySelector("." + SNOWFLAKE_LAYER_CLASS);
+    if (shouldShowSnow(theme)) {
+      if (!existingLayer) {
+        renderSnowLayer();
+      }
+      return;
+    }
+    if (existingLayer) {
+      existingLayer.remove();
+    }
+  }
+
+  function renderSnowLayer() {
+    if (!document.body || document.querySelector("." + SNOWFLAKE_LAYER_CLASS)) {
+      return;
+    }
+    var flakeCount = determineSnowflakeCount();
+    var snowLayer = document.createElement("div");
+    snowLayer.className = SNOWFLAKE_LAYER_CLASS;
+    var usedSlots = {};
+    for (var i = 0; i < flakeCount; i += 1) {
+      snowLayer.appendChild(createSnowflakeElement(i, usedSlots));
+    }
+    if (document.body.firstChild) {
+      document.body.insertBefore(snowLayer, document.body.firstChild);
+    } else {
+      document.body.appendChild(snowLayer);
+    }
+  }
+
+  function shouldShowSnow(theme) {
+    if (theme) {
+      return theme === "winter";
+    }
+    return WINTER_MONTHS[new Date().getMonth()];
+  }
+
+  function resolveActiveTheme() {
+    if (!document.body) {
+      return "";
+    }
+    if (document.body.dataset && document.body.dataset.theme) {
+      return document.body.dataset.theme;
+    }
+    var className = document.body.className || "";
+    var classes = className.split(/\s+/);
+    for (var i = 0; i < classes.length; i += 1) {
+      if (classes[i].indexOf("theme-") === 0) {
+        return classes[i].replace("theme-", "");
+      }
+    }
+    return "";
   }
 
   function createSnowflakeElement(index, usedSlots) {

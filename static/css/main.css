@@ -67,6 +67,7 @@ body::before {
   z-index: -1;
 }
 
+body.theme-summer,
 body.theme-lava {
   background-color: var(--lava-char);
   background-image:
@@ -77,6 +78,7 @@ body.theme-lava {
   color: var(--text);
 }
 
+body.theme-summer::before,
 body.theme-lava::before {
   background-image:
     radial-gradient(circle at 30% 28%, rgba(255, 179, 71, 0.14), transparent 45%),
@@ -93,6 +95,7 @@ body.theme-lava::before {
   mix-blend-mode: screen;
 }
 
+body.theme-summer::after,
 body.theme-lava::after {
   content: "";
   position: fixed;
@@ -117,6 +120,7 @@ body.theme-lava::after {
   z-index: -2;
 }
 
+body.theme-summer .is-melting,
 body.theme-lava .is-melting {
   position: relative;
   animation: meltDrip var(--melt-duration, 18s) ease-in-out infinite alternate;
@@ -126,8 +130,154 @@ body.theme-lava .is-melting {
   will-change: transform;
 }
 
+body.theme-summer .is-melting,
 body.theme-lava .is-melting {
   --melt-distance: 11px;
+}
+
+body.theme-spring {
+  --background: #0f1f1a;
+  --background-alt: #133027;
+  --surface: rgba(16, 43, 32, 0.9);
+  --surface-alt: rgba(24, 64, 46, 0.88);
+  --card-bg: rgba(15, 39, 30, 0.92);
+  --accent: #7de3b1;
+  --brand: #f6d2ff;
+  background-color: var(--background);
+  background-image:
+    radial-gradient(circle at 20% 18%, rgba(125, 227, 177, 0.18), rgba(10, 31, 27, 0) 32%),
+    radial-gradient(circle at 78% 22%, rgba(246, 210, 255, 0.14), rgba(15, 31, 29, 0) 36%),
+    radial-gradient(circle at 44% 74%, rgba(125, 227, 177, 0.18), rgba(14, 38, 30, 0) 40%),
+    linear-gradient(180deg, rgba(10, 31, 27, 0.92), rgba(14, 40, 30, 0.96));
+}
+
+body.theme-spring::before {
+  background-image:
+    radial-gradient(circle at 18% 26%, rgba(246, 210, 255, 0.28), transparent 46%),
+    radial-gradient(circle at 84% 46%, rgba(125, 227, 177, 0.18), transparent 42%),
+    repeating-conic-gradient(
+      from 4deg,
+      rgba(246, 210, 255, 0.08) 0deg 14deg,
+      rgba(125, 227, 177, 0.08) 14deg 22deg,
+      rgba(12, 46, 32, 0.22) 22deg 26deg
+    );
+  opacity: 0.85;
+  mix-blend-mode: screen;
+}
+
+body.theme-spring::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 24% 18%, rgba(246, 210, 255, 0.24), rgba(246, 210, 255, 0) 40%),
+    radial-gradient(circle at 72% 62%, rgba(125, 227, 177, 0.24), rgba(125, 227, 177, 0) 38%),
+    repeating-linear-gradient(
+      120deg,
+      rgba(125, 227, 177, 0.12),
+      rgba(246, 210, 255, 0.12) 16px,
+      rgba(14, 40, 30, 0) 44px
+    );
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -2;
+}
+
+body.theme-fall {
+  --background: #1c120a;
+  --background-alt: #24160c;
+  --surface: rgba(30, 17, 7, 0.94);
+  --surface-alt: rgba(38, 22, 12, 0.9);
+  --card-bg: rgba(34, 20, 9, 0.92);
+  --accent: #f7a259;
+  --brand: #ffd79a;
+  background-color: var(--background);
+  background-image:
+    radial-gradient(circle at 16% 18%, rgba(247, 162, 89, 0.22), rgba(28, 18, 10, 0) 36%),
+    radial-gradient(circle at 82% 28%, rgba(255, 207, 154, 0.2), rgba(26, 14, 8, 0) 44%),
+    radial-gradient(circle at 44% 70%, rgba(224, 122, 64, 0.16), rgba(34, 18, 9, 0) 40%),
+    linear-gradient(180deg, rgba(22, 12, 6, 0.94), rgba(32, 17, 7, 0.94));
+}
+
+body.theme-fall::before {
+  background-image:
+    radial-gradient(circle at 22% 32%, rgba(255, 207, 154, 0.24), transparent 48%),
+    radial-gradient(circle at 70% 54%, rgba(247, 162, 89, 0.2), transparent 44%),
+    repeating-conic-gradient(
+      from 6deg,
+      rgba(255, 207, 154, 0.14) 0deg 10deg,
+      rgba(247, 162, 89, 0.12) 10deg 18deg,
+      rgba(21, 12, 6, 0.18) 18deg 22deg
+    );
+  opacity: 0.82;
+  mix-blend-mode: screen;
+}
+
+body.theme-fall::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(247, 162, 89, 0.22), rgba(247, 162, 89, 0) 42%),
+    radial-gradient(circle at 78% 12%, rgba(255, 207, 154, 0.2), rgba(255, 207, 154, 0) 38%),
+    radial-gradient(circle at 62% 84%, rgba(224, 122, 64, 0.18), rgba(224, 122, 64, 0) 40%),
+    repeating-linear-gradient(
+      95deg,
+      rgba(247, 162, 89, 0.12),
+      rgba(114, 57, 18, 0) 24px,
+      rgba(255, 207, 154, 0.14) 24px,
+      rgba(25, 12, 6, 0.12) 52px
+    );
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: -2;
+}
+
+body.theme-winter {
+  --background: #0d1420;
+  --background-alt: #0f1d2f;
+  --surface: rgba(12, 23, 37, 0.94);
+  --surface-alt: rgba(14, 28, 42, 0.9);
+  --card-bg: rgba(13, 25, 38, 0.92);
+  --accent: #8bd3ff;
+  --brand: #dce7ff;
+  background-color: var(--background);
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(139, 211, 255, 0.2), rgba(13, 20, 32, 0) 40%),
+    radial-gradient(circle at 82% 28%, rgba(220, 231, 255, 0.2), rgba(12, 22, 34, 0) 44%),
+    linear-gradient(180deg, rgba(10, 18, 28, 0.94), rgba(16, 30, 46, 0.96));
+}
+
+body.theme-winter::before {
+  background-image:
+    radial-gradient(circle at 28% 16%, rgba(220, 231, 255, 0.24), transparent 46%),
+    radial-gradient(circle at 70% 62%, rgba(139, 211, 255, 0.24), transparent 44%),
+    repeating-conic-gradient(
+      from 2deg,
+      rgba(220, 231, 255, 0.12) 0deg 12deg,
+      rgba(139, 211, 255, 0.12) 12deg 20deg,
+      rgba(12, 24, 36, 0.22) 20deg 24deg
+    );
+  opacity: 0.85;
+  mix-blend-mode: screen;
+}
+
+body.theme-winter::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 16% 24%, rgba(139, 211, 255, 0.26), rgba(139, 211, 255, 0) 42%),
+    radial-gradient(circle at 84% 18%, rgba(220, 231, 255, 0.24), rgba(220, 231, 255, 0) 46%),
+    repeating-linear-gradient(
+      100deg,
+      rgba(139, 211, 255, 0.14),
+      rgba(220, 231, 255, 0.12) 16px,
+      rgba(10, 18, 28, 0) 44px
+    );
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -2;
 }
 
 @keyframes lavaFlow {
@@ -189,6 +339,14 @@ body.theme-lava .is-melting {
   border-radius: inherit;
   background: inherit;
   opacity: 0.7;
+}
+
+body.theme-winter .snowfall-layer {
+  opacity: 0.9;
+}
+
+body.theme-winter .snowflake {
+  filter: drop-shadow(0 4px 10px rgba(139, 211, 255, 0.35));
 }
 
 .snowflake::after {
@@ -347,6 +505,44 @@ a:hover {
   margin-left: auto;
   display: flex;
   align-items: center;
+  gap: 0.65rem;
+}
+
+.theme-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(243, 201, 105, 0.45);
+  background: linear-gradient(135deg, rgba(17, 36, 47, 0.9), rgba(12, 26, 34, 0.95));
+  box-shadow: 0 8px 20px -12px var(--shadow);
+}
+
+.theme-switcher__label {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-text);
+}
+
+.theme-switcher__select {
+  appearance: none;
+  background: rgba(10, 25, 32, 0.6);
+  color: var(--text);
+  border: 1px solid rgba(243, 201, 105, 0.45);
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.theme-switcher__select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(43, 179, 175, 0.35);
 }
 
 .audio-toggle {

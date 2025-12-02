@@ -77,17 +77,17 @@
 
 <section class="plant-terrarium" aria-labelledby="plant-heading" data-soundtrack="greenhouse" data-plant-state="{{ terrarium_state.key }}">
     <div class="plant-terrarium__copy">
-        <p class="plant-terrarium__eyebrow">{{ terrarium_state.headline }}</p>
-        <h2 id="plant-heading">Homepage terrarium</h2>
+        <p class="plant-terrarium__eyebrow">Sandspiel terrarium · {{ terrarium_state.headline }}</p>
+        <h2 id="plant-heading">Paint a falling-sand biome</h2>
         <p class="plant-terrarium__lead">
-            The terrarium now mirrors live board activity: health fuels the light, and each vote mists the glass.
+            Mist, light, and board health now feed a tiny sand simulation. Paint materials into the glass and watch how the ecosystem reacts.
         </p>
         <p class="plant-terrarium__note">
             {{ terrarium_state.note }}
         </p>
         <div class="plant-terrarium__chips" role="list">
             <div class="plant-chip" role="listitem">
-                <span class="plant-chip__label">Sun</span>
+                <span class="plant-chip__label">Light</span>
                 <span class="plant-chip__value">{{ terrarium_state.sun }}</span>
             </div>
             <div class="plant-chip" role="listitem">
@@ -98,25 +98,49 @@
                 <span class="plant-chip__label">Mood</span>
                 <span class="plant-chip__value">{{ terrarium_state.mood }}</span>
             </div>
+            <div class="plant-chip plant-chip--label" role="listitem">
+                <span class="plant-chip__label">Beacon feature</span>
+                <span class="plant-chip__value">{{ terrarium_state.label|default:"Sprouting idea"|truncatechars:28 }}</span>
+            </div>
         </div>
     </div>
     <div class="plant-terrarium__art" role="img" aria-label="{{ terrarium_state.aria_label }}">
-        <div class="terrarium">
-            <div class="terrarium__halo"></div>
-            <div class="terrarium__sparkles" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
+        <div class="sand-terrarium" data-sand-terrarium data-plant-state="{{ terrarium_state.key }}">
+            <div class="sand-terrarium__header">
+                <div class="sand-terrarium__meta">
+                    <span class="sand-terrarium__eyebrow">Live sandbox</span>
+                    <span class="sand-terrarium__title">{{ terrarium_state.label|default:"Sprouting idea"|truncatechars:28 }}</span>
+                </div>
+                <div class="sand-terrarium__toggles" role="group" aria-label="Brush size">
+                    <button type="button" class="sand-toggle" data-sand-brush="1" aria-pressed="false">Fine</button>
+                    <button type="button" class="sand-toggle" data-sand-brush="2" aria-pressed="true">Medium</button>
+                    <button type="button" class="sand-toggle" data-sand-brush="3" aria-pressed="false">Flood</button>
+                </div>
             </div>
-            <div class="terrarium__plant">
-                <span class="plant-stem plant-stem--one"></span>
-                <span class="plant-stem plant-stem--two"></span>
-                <span class="plant-stem plant-stem--three"></span>
-                <span class="plant-stem plant-stem--four"></span>
+            <div class="sand-terrarium__frame">
+                <div class="sand-terrarium__controls" role="list" aria-label="Materials">
+                    <button class="sand-chip" type="button" data-sand-material="sand" data-color="#e6be82" aria-pressed="true" role="listitem">Sand</button>
+                    <button class="sand-chip" type="button" data-sand-material="stone" data-color="#8fa7bc" aria-pressed="false" role="listitem">Stone</button>
+                    <button class="sand-chip" type="button" data-sand-material="wood" data-color="#c07f4f" aria-pressed="false" role="listitem">Wood</button>
+                    <button class="sand-chip" type="button" data-sand-material="water" data-color="#5fb8ff" aria-pressed="false" role="listitem">Water</button>
+                    <button class="sand-chip" type="button" data-sand-material="fire" data-color="#ff7044" aria-pressed="false" role="listitem">Fire</button>
+                    <button class="sand-chip" type="button" data-sand-material="bacteria" data-color="#b6ff6c" aria-pressed="false" role="listitem">Bacteria</button>
+                    <button class="sand-chip" type="button" data-sand-material="plant" data-color="#62f1af" aria-pressed="false" role="listitem">Plant</button>
+                </div>
+                <div class="sand-terrarium__status" data-sand-status>Painting with sand · medium brush</div>
+                <div class="sand-terrarium__canvas-wrap">
+                    <canvas data-sand-canvas width="150" height="180" aria-label="Falling sand terrarium canvas"></canvas>
+                    <div class="sand-terrarium__hint">
+                        Click or touch to paint materials. The sim mists itself whenever votes land.
+                    </div>
+                </div>
+                <div class="sand-terrarium__actions">
+                    <button type="button" class="sand-action" data-sand-action="mist">Mist</button>
+                    <button type="button" class="sand-action" data-sand-action="seed">Seed sand</button>
+                    <button type="button" class="sand-action" data-sand-action="burn">Spark</button>
+                    <button type="button" class="sand-action sand-action--clear" data-sand-action="clear">Reset glass</button>
+                </div>
             </div>
-            <div class="terrarium__soil"></div>
-            <div class="terrarium__glass"></div>
-            <div class="terrarium__label">{{ terrarium_state.label|default:"plant request"|truncatechars:24 }}</div>
         </div>
     </div>
 </section>
@@ -317,6 +341,7 @@
 {% block extra_scripts %}
     {{ block.super }}
     {{ feature_button_payload|json_script:"feature-button-data" }}
+    <script src="{% static 'js/sand-terrarium.js' %}" defer></script>
     <script src="{% static 'js/logo-lab.js' %}" defer></script>
     <script src="{% static 'js/brickbreaker.js' %}" defer></script>
 {% endblock %}

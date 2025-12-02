@@ -1296,12 +1296,253 @@ a:hover {
   color: var(--text);
 }
 
+.plant-chip--label {
+  border-color: rgba(107, 240, 179, 0.35);
+  background: linear-gradient(135deg, rgba(12, 38, 46, 0.95), rgba(17, 52, 63, 0.92));
+  box-shadow: 0 14px 28px -22px var(--shadow), inset 0 0 0 1px rgba(243, 201, 105, 0.12);
+}
+
 .plant-terrarium__art {
   position: relative;
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.sand-terrarium {
+  --glass-edge: rgba(243, 201, 105, 0.22);
+  --glass-fill: rgba(9, 26, 34, 0.9);
+  --glass-glow: rgba(107, 240, 179, 0.12);
+  position: relative;
+  width: min(520px, 100%);
+  padding: 1rem;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(107, 240, 179, 0.16), transparent 40%),
+    radial-gradient(circle at 82% 12%, rgba(243, 201, 105, 0.16), transparent 45%),
+    linear-gradient(180deg, rgba(8, 22, 30, 0.95), rgba(9, 28, 36, 0.98));
+  border: 1px solid rgba(243, 201, 105, 0.24);
+  box-shadow:
+    0 16px 42px -24px var(--shadow),
+    inset 0 0 0 1px rgba(43, 179, 175, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+  backdrop-filter: blur(4px);
+}
+
+.sand-terrarium::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(243, 201, 105, 0.18);
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.sand-terrarium__header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.25rem 0.35rem 0.35rem;
+}
+
+.sand-terrarium__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+
+.sand-terrarium__eyebrow {
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: rgba(107, 240, 179, 0.85);
+}
+
+.sand-terrarium__title {
+  font-weight: 700;
+  color: var(--metallic-light);
+}
+
+.sand-terrarium__toggles {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 999px;
+  padding: 0.18rem;
+  border: 1px solid rgba(243, 201, 105, 0.18);
+}
+
+.sand-toggle {
+  border: none;
+  background: transparent;
+  color: var(--muted-text);
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+}
+
+.sand-toggle[aria-pressed="true"] {
+  background: rgba(107, 240, 179, 0.12);
+  color: var(--text);
+  box-shadow: 0 10px 18px -14px var(--shadow);
+  transform: translateY(-1px);
+}
+
+.sand-terrarium__frame {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border-radius: 18px;
+  background: radial-gradient(circle at 20% 12%, var(--glass-glow), transparent 42%), var(--glass-fill);
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), inset 0 10px 26px rgba(0, 0, 0, 0.35);
+}
+
+.sand-terrarium__controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(94px, 1fr));
+  gap: 0.5rem;
+}
+
+.sand-terrarium__status {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.15rem 0 0;
+  font-weight: 700;
+  color: var(--metallic-light);
+  letter-spacing: 0.02em;
+}
+
+.sand-chip {
+  --chip-color: #cfd9df;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.01), rgba(0, 0, 0, 0.12)),
+    rgba(12, 38, 46, 0.35);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 0.55rem 0.65rem;
+  cursor: pointer;
+  font-weight: 600;
+  text-align: left;
+  box-shadow: 0 12px 26px -22px var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.sand-chip::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.sand-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px -22px var(--shadow), 0 0 0 1px rgba(243, 201, 105, 0.18);
+}
+
+.sand-chip[aria-pressed="true"] {
+  color: #0b161b;
+  border-color: var(--chip-color);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.18)),
+    var(--chip-color);
+  box-shadow: 0 14px 30px -20px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--chip-color);
+}
+
+.sand-terrarium__canvas-wrap {
+  position: relative;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(7, 21, 29, 0.94), rgba(9, 30, 40, 0.96)),
+    radial-gradient(circle at 50% 15%, rgba(107, 240, 179, 0.08), transparent 38%);
+  border: 1px solid var(--glass-edge);
+  box-shadow:
+    inset 0 -16px 30px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  padding: 0.6rem;
+}
+
+[data-sand-canvas] {
+  width: 100%;
+  height: auto;
+  display: block;
+  aspect-ratio: 5 / 6;
+  border-radius: 12px;
+  background: radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.05), transparent 42%), #0a1318;
+  box-shadow: inset 0 0 0 1px rgba(243, 201, 105, 0.18), 0 12px 26px -18px rgba(0, 0, 0, 0.65);
+  image-rendering: pixelated;
+}
+
+.sand-terrarium__hint {
+  margin-top: 0.35rem;
+  font-size: 0.86rem;
+  color: var(--muted-text);
+}
+
+.sand-terrarium__actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+}
+
+.sand-action {
+  border: 1px solid rgba(243, 201, 105, 0.2);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0));
+  color: var(--text);
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 26px -22px var(--shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.sand-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 28px -22px var(--shadow);
+}
+
+.sand-action--clear {
+  border-color: rgba(244, 91, 105, 0.35);
+  color: #f45b69;
+}
+
+.plant-terrarium[data-plant-state="thriving"] .sand-terrarium {
+  --glass-edge: rgba(107, 240, 179, 0.32);
+  --glass-fill: linear-gradient(180deg, rgba(6, 30, 24, 0.98), rgba(9, 32, 32, 0.96));
+  --glass-glow: rgba(107, 240, 179, 0.2);
+}
+
+.plant-terrarium[data-plant-state="parched"] .sand-terrarium {
+  --glass-edge: rgba(243, 201, 105, 0.3);
+  --glass-fill: linear-gradient(180deg, rgba(17, 24, 28, 0.96), rgba(22, 26, 28, 0.98));
+  --glass-glow: rgba(244, 91, 105, 0.08);
+}
+
+.plant-terrarium[data-plant-state="dormant"] .sand-terrarium {
+  --glass-edge: rgba(146, 165, 174, 0.24);
+  --glass-fill: linear-gradient(180deg, rgba(9, 16, 21, 0.96), rgba(12, 18, 22, 0.98));
+  --glass-glow: rgba(146, 165, 174, 0.12);
 }
 
 .terrarium {

@@ -24,6 +24,8 @@
   var FIRE = 5;
   var BACTERIA = 6;
   var PLANT = 7;
+  var GLASS = 8;
+  var STEAM = 9;
 
   var MATERIALS = {
     sand: { id: SAND },
@@ -33,6 +35,8 @@
     fire: { id: FIRE },
     bacteria: { id: BACTERIA },
     plant: { id: PLANT },
+    glass: { id: GLASS },
+    steam: { id: STEAM },
   };
 
   var COLORS = {};
@@ -44,6 +48,8 @@
   COLORS[FIRE] = [255, 112, 68];
   COLORS[BACTERIA] = [182, 255, 108];
   COLORS[PLANT] = [98, 241, 175];
+  COLORS[GLASS] = [192, 226, 255];
+  COLORS[STEAM] = [205, 217, 222];
 
   var grid = new Uint8Array(size);
   var energy = new Uint8Array(size);
@@ -220,14 +226,22 @@
     }
   }
 
-  function setCell(cellIndex, type) {
+  function setCell(cellIndex, type, options) {
     grid[cellIndex] = type;
     pigment[cellIndex] = (Math.random() * 18) | 0;
+
+    var defaultEnergy = 0;
     if (type === FIRE) {
-      energy[cellIndex] = 10 + ((Math.random() * 10) | 0);
-    } else {
-      energy[cellIndex] = 0;
+      defaultEnergy = 10 + ((Math.random() * 10) | 0);
+    } else if (type === STEAM) {
+      defaultEnergy = 8 + ((Math.random() * 8) | 0);
     }
+
+    var providedEnergy =
+      options && typeof options.energy === "number"
+        ? options.energy
+        : defaultEnergy;
+    energy[cellIndex] = clamp(providedEnergy, 0, 255);
     processed[cellIndex] = frameId;
   }
 
@@ -277,12 +291,14 @@
           updateWater(x, y, index);
         } else if (cell === FIRE) {
           updateFire(x, y, index);
+        } else if (cell === STEAM) {
+          updateSteam(x, y, index);
         } else if (cell === BACTERIA) {
           updateBacteria(x, y, index);
         } else if (cell === PLANT) {
           updatePlant(x, y, index);
         } else if (cell === WOOD) {
-          touchFire(x, y, index);
+          updateWood(x, y, index);
         }
       }
     }
@@ -307,9 +323,15 @@
   }
 
   function updateWater(x, y, index) {
+    if (evaporateIntoSteam(x, y, index)) {
+      return;
+    }
+
+    erodeStone(x, y);
+
     var moved = false;
     var below = y + 1 < height ? idx(x, y + 1) : -1;
-    if (below !== -1 && (grid[below] === EMPTY || grid[below] === FIRE)) {
+    if (below !== -1 && (grid[below] === EMPTY || grid[below] === STEAM)) {
       swapCells(index, below);
       moved = true;
     }
@@ -317,7 +339,7 @@
     if (!moved) {
       var dir = Math.random() < 0.5 ? -1 : 1;
       var diag = y + 1 < height && x + dir >= 0 && x + dir < width ? idx(x + dir, y + 1) : -1;
-      if (diag !== -1 && (grid[diag] === EMPTY || grid[diag] === FIRE)) {
+      if (diag !== -1 && (grid[diag] === EMPTY || grid[diag] === STEAM)) {
         swapCells(index, diag);
         moved = true;
       }
@@ -326,25 +348,45 @@
     if (!moved) {
       var sideways = Math.random() < 0.5 ? -1 : 1;
       var sideIdx = x + sideways >= 0 && x + sideways < width ? idx(x + sideways, y) : -1;
-      if (sideIdx !== -1 && grid[sideIdx] === EMPTY) {
+      if (sideIdx !== -1 && (grid[sideIdx] === EMPTY || grid[sideIdx] === STEAM)) {
         swapCells(index, sideIdx);
       }
     }
   }
 
+  function evaporateIntoSteam(x, y, index) {
+    var fireNeighbors = neighborIndicesOfType(x, y, FIRE);
+    if (!fireNeighbors.length) {
+      return false;
+    }
+    setCell(index, STEAM, { energy: 12 + ((Math.random() * 6) | 0) });
+    var targetFire = fireNeighbors[(Math.random() * fireNeighbors.length) | 0];
+    setCell(targetFire, STEAM, { energy: 10 + ((Math.random() * 6) | 0) });
+    return true;
+  }
+
+  function erodeStone(x, y) {
+    var stoneNeighbors = neighborIndicesOfType(x, y, STONE);
+    if (stoneNeighbors.length && Math.random() < 0.03) {
+      var target = stoneNeighbors[(Math.random() * stoneNeighbors.length) | 0];
+      setCell(target, SAND);
+    }
+  }
+
   function updateFire(x, y, index) {
     var currentEnergy = energy[index];
-    var extinguished = false;
+    bakeSand(x, y);
     igniteNeighbors(x, y);
-    if (touchWater(x, y)) {
-      extinguished = true;
+
+    if (quenchWithSteam(x, y, index)) {
+      return;
     }
 
     if (currentEnergy > 0) {
       energy[index] = currentEnergy - 1;
     }
 
-    if (extinguished || energy[index] === 0) {
+    if (energy[index] === 0) {
       grid[index] = EMPTY;
       energy[index] = 0;
       pigment[index] = (Math.random() * 6) | 0;
@@ -357,21 +399,107 @@
     var targetX = x + dir;
     if (targetX >= 0 && targetX < width) {
       var swapIndex = idx(targetX, targetY);
-      if (grid[swapIndex] === EMPTY || grid[swapIndex] === WATER) {
+      if (
+        grid[swapIndex] === EMPTY ||
+        grid[swapIndex] === WATER ||
+        grid[swapIndex] === STEAM
+      ) {
         swapCells(index, swapIndex);
       }
     }
   }
 
+  function bakeSand(x, y) {
+    for (var dy = -1; dy <= 1; dy += 1) {
+      for (var dx = -1; dx <= 1; dx += 1) {
+        if (dx === 0 && dy === 0) {
+          continue;
+        }
+        var nx = x + dx;
+        var ny = y + dy;
+        if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
+          continue;
+        }
+        var neighborIdx = idx(nx, ny);
+        if (grid[neighborIdx] === SAND && Math.random() < 0.22) {
+          setCell(neighborIdx, GLASS);
+        }
+      }
+    }
+  }
+
+  function quenchWithSteam(x, y, index) {
+    var waterNeighbors = neighborIndicesOfType(x, y, WATER);
+    if (!waterNeighbors.length) {
+      return false;
+    }
+    setCell(index, STEAM, { energy: 12 + ((Math.random() * 6) | 0) });
+    var targetWater = waterNeighbors[(Math.random() * waterNeighbors.length) | 0];
+    setCell(targetWater, STEAM, { energy: 10 + ((Math.random() * 6) | 0) });
+    return true;
+  }
+
+  function updateSteam(x, y, index) {
+    if (energy[index] > 0) {
+      energy[index] = energy[index] - 1;
+    }
+
+    var moved = false;
+    var above = y - 1 >= 0 ? idx(x, y - 1) : -1;
+    if (above !== -1 && grid[above] === EMPTY) {
+      swapCells(index, above);
+      moved = true;
+    }
+
+    if (!moved) {
+      var dir = Math.random() < 0.5 ? -1 : 1;
+      var diag = y - 1 >= 0 && x + dir >= 0 && x + dir < width ? idx(x + dir, y - 1) : -1;
+      if (diag !== -1 && grid[diag] === EMPTY) {
+        swapCells(index, diag);
+        moved = true;
+      }
+    }
+
+    if (!moved) {
+      var sideways = Math.random() < 0.5 ? -1 : 1;
+      var sideIdx = x + sideways >= 0 && x + sideways < width ? idx(x + sideways, y) : -1;
+      if (sideIdx !== -1 && grid[sideIdx] === EMPTY) {
+        swapCells(index, sideIdx);
+      }
+    }
+
+    if (energy[index] === 0 && Math.random() < 0.45) {
+      grid[index] = EMPTY;
+      energy[index] = 0;
+      processed[index] = frameId;
+    }
+  }
+
   function updateBacteria(x, y, index) {
     touchFire(x, y, index);
-    if (Math.random() < 0.1) {
+    var nourished =
+      hasNeighborOfType(x, y, PLANT) || hasNeighborOfType(x, y, WOOD);
+
+    if (!nourished) {
+      if (Math.random() < 0.05) {
+        grid[index] = EMPTY;
+        processed[index] = frameId;
+      }
+      return;
+    }
+
+    if (Math.random() < 0.12) {
       var dirs = randomNeighbor();
       var targetX = x + dirs[0];
       var targetY = y + dirs[1];
       if (targetX >= 0 && targetX < width && targetY >= 0 && targetY < height) {
         var targetIdx = idx(targetX, targetY);
-        if (grid[targetIdx] === EMPTY || grid[targetIdx] === WATER) {
+        if (
+          grid[targetIdx] === EMPTY ||
+          grid[targetIdx] === WATER ||
+          grid[targetIdx] === PLANT ||
+          grid[targetIdx] === WOOD
+        ) {
           setCell(targetIdx, BACTERIA);
         }
       }
@@ -384,18 +512,48 @@
     }
     var above = y - 1 >= 0 ? idx(x, y - 1) : -1;
     var below = y + 1 < height ? idx(x, y + 1) : -1;
+    var hydrated = hasNeighborOfType(x, y, WATER);
+    var growthBoost = hydrated ? 1.5 : 1;
 
+    if (above !== -1 && grid[above] === EMPTY && Math.random() < 0.12 * growthBoost) {
+      setCell(above, PLANT);
+    }
+
+    if (below !== -1 && grid[below] === WATER && Math.random() < 0.2 * growthBoost) {
+      setCell(below, PLANT);
+    }
+
+    if (hydrated) {
+      var sideways = Math.random() < 0.5 ? -1 : 1;
+      var sideIdx = x + sideways >= 0 && x + sideways < width ? idx(x + sideways, y) : -1;
+      if (sideIdx !== -1 && grid[sideIdx] === EMPTY && Math.random() < 0.08) {
+        setCell(sideIdx, PLANT);
+      }
+    }
+  }
+
+  function updateWood(x, y, index) {
+    if (touchFire(x, y, index)) {
+      return;
+    }
+    if (!hasNeighborOfType(x, y, WATER)) {
+      return;
+    }
+
+    var above = y - 1 >= 0 ? idx(x, y - 1) : -1;
     if (above !== -1 && grid[above] === EMPTY && Math.random() < 0.12) {
       setCell(above, PLANT);
     }
-    if (below !== -1 && grid[below] === WATER && Math.random() < 0.2) {
-      grid[below] = PLANT;
-      processed[below] = frameId;
+
+    var sideways = Math.random() < 0.5 ? -1 : 1;
+    var sideIdx = x + sideways >= 0 && x + sideways < width ? idx(x + sideways, y) : -1;
+    if (sideIdx !== -1 && grid[sideIdx] === EMPTY && Math.random() < 0.05) {
+      setCell(sideIdx, WOOD);
     }
   }
 
   function canFallInto(cell) {
-    return cell === EMPTY || cell === WATER;
+    return cell === EMPTY || cell === WATER || cell === STEAM;
   }
 
   function igniteNeighbors(x, y) {
@@ -420,7 +578,7 @@
     var cell = grid[index];
     if (cell === WOOD || cell === BACTERIA || cell === PLANT) {
       if (hasNeighborOfType(x, y, FIRE)) {
-        setCell(index, FIRE);
+        setCell(index, FIRE, { energy: 6 + ((Math.random() * 6) | 0) });
         return true;
       }
     }
@@ -429,6 +587,27 @@
 
   function touchWater(x, y) {
     return hasNeighborOfType(x, y, WATER);
+  }
+
+  function neighborIndicesOfType(x, y, type) {
+    var matches = [];
+    for (var dy = -1; dy <= 1; dy += 1) {
+      for (var dx = -1; dx <= 1; dx += 1) {
+        if (dx === 0 && dy === 0) {
+          continue;
+        }
+        var nx = x + dx;
+        var ny = y + dy;
+        if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
+          continue;
+        }
+        var neighborIdx = idx(nx, ny);
+        if (grid[neighborIdx] === type) {
+          matches.push(neighborIdx);
+        }
+      }
+    }
+    return matches;
   }
 
   function hasNeighborOfType(x, y, type) {

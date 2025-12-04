@@ -1947,6 +1947,44 @@ a:hover {
   color: var(--text);
 }
 
+.glorp-cat__diagram {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(124, 242, 214, 0.26);
+  background: linear-gradient(140deg, rgba(12, 36, 46, 0.78), rgba(6, 18, 26, 0.9));
+  box-shadow: inset 0 0 0 1px rgba(243, 201, 105, 0.1), 0 14px 26px -20px var(--shadow);
+}
+
+.glorp-cat__diagram-title {
+  margin: 0;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  color: rgba(243, 201, 105, 0.82);
+}
+
+.glorp-cat__diagram-art {
+  margin: 0.35rem 0 0.45rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  background: linear-gradient(125deg, rgba(124, 242, 214, 0.08), rgba(243, 201, 105, 0.06));
+  border: 1px solid rgba(124, 242, 214, 0.24);
+  box-shadow: inset 0 -6px 18px rgba(15, 60, 53, 0.6);
+  color: var(--glorp-lumen);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  white-space: pre;
+  overflow: auto;
+}
+
+.glorp-cat__diagram-note {
+  margin: 0;
+  color: rgba(253, 247, 227, 0.76);
+  font-size: 0.95rem;
+}
+
 .glorp-cat__scene {
   position: relative;
   padding: 1rem;

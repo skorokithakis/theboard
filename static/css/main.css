@@ -1426,6 +1426,49 @@ a:hover {
   letter-spacing: 0.02em;
 }
 
+.sand-invaders {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.65rem 0.8rem;
+  margin: 0.15rem 0 0.25rem;
+  border-radius: 12px;
+  border: 1px dashed rgba(107, 240, 179, 0.28);
+  background:
+    radial-gradient(circle at 16% 36%, rgba(107, 240, 179, 0.12), transparent 38%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.sand-invaders__copy {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.sand-invaders__eyebrow {
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  color: rgba(243, 201, 105, 0.85);
+}
+
+.sand-invaders__title {
+  font-weight: 800;
+  color: var(--text);
+}
+
+.sand-invaders__hint {
+  color: var(--muted-text);
+  font-size: 0.92rem;
+}
+
+.sand-invaders__controls {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: end;
+}
+
 .sand-chip {
   --chip-color: #cfd9df;
   position: relative;
@@ -1467,6 +1510,24 @@ a:hover {
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(0, 0, 0, 0.18)),
     var(--chip-color);
   box-shadow: 0 14px 30px -20px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--chip-color);
+}
+
+.sand-chip--mini {
+  padding: 0.45rem 0.55rem;
+  font-size: 0.92rem;
+  justify-self: end;
+}
+
+.sand-toggle--ghost {
+  border: 1px solid rgba(243, 201, 105, 0.22);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.02);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.sand-toggle--ghost[aria-pressed="true"] {
+  background: rgba(107, 240, 179, 0.14);
+  color: #0b161b;
 }
 
 .sand-terrarium__canvas-wrap {

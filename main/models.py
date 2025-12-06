@@ -115,6 +115,10 @@ class FeatureQuerySet(models.QuerySet):
     def with_vote_totals(self) -> "FeatureQuerySet":
         return self.annotate(total_votes=models.Count("vote_records", distinct=True))
 
+    def with_latest_vote_at(self) -> "FeatureQuerySet":
+        """Annotate features with the timestamp of their most recent vote."""
+        return self.annotate(latest_vote_at=models.Max("vote_records__created_at"))
+
     def ordered_by_popularity(self) -> "FeatureQuerySet":
         return self.with_vote_totals().order_by("-total_votes", "-created_at")
 

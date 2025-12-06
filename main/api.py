@@ -83,7 +83,13 @@ def _serialize_feature(
     user_has_voted: bool = False,
 ) -> dict[str, Any]:
     """Convert a feature model to a dictionary for schema validation."""
-    last_vote = feature.vote_records.order_by("-created_at").first()
+    last_vote_at = getattr(feature, "latest_vote_at", None)
+    if last_vote_at is None:
+        last_vote_at = (
+            feature.vote_records.order_by("-created_at")
+            .values_list("created_at", flat=True)
+            .first()
+        )
 
     data: dict[str, Any] = {
         "id": feature.pk,
@@ -97,7 +103,7 @@ def _serialize_feature(
         "creator": _serialize_user(feature.creator),
         "vote_total": feature.vote_total,
         "user_has_voted": user_has_voted,
-        "last_upvote_at": last_vote.created_at if last_vote else None,
+        "last_upvote_at": last_vote_at,
         "expired_at": feature.expired_at,
         "expires_at": feature.expires_at,
     }
@@ -135,6 +141,7 @@ def features_list(request: HttpRequest) -> dict[str, Any]:
 
     pending_qs = (
         models.Feature.objects.pending()
+        .with_latest_vote_at()
         .ordered_by_popularity()
         .select_related("creator", "parent")
         .annotate(
@@ -149,6 +156,7 @@ def features_list(request: HttpRequest) -> dict[str, Any]:
     implemented_qs = (
         models.Feature.objects.implemented()
         .with_vote_totals()
+        .with_latest_vote_at()
         .select_related("creator", "parent")
         .annotate(
             variation_count=Count(
@@ -163,6 +171,7 @@ def features_list(request: HttpRequest) -> dict[str, Any]:
     graveyard_qs = (
         models.Feature.objects.expired()
         .with_vote_totals()
+        .with_latest_vote_at()
         .select_related("creator", "parent")
         .annotate(
             variation_count=Count(
@@ -286,6 +295,7 @@ def feature_detail(request: HttpRequest, pk: int) -> dict[str, Any]:
 
     variations_qs = (
         models.Feature.objects.pending()
+        .with_latest_vote_at()
         .ordered_by_popularity()
         .select_related("creator")
         .annotate(
@@ -300,6 +310,7 @@ def feature_detail(request: HttpRequest, pk: int) -> dict[str, Any]:
     try:
         feature = (
             models.Feature.objects.ordered_by_popularity()
+            .with_latest_vote_at()
             .select_related("creator", "parent")
             .prefetch_related(Prefetch("variations", queryset=variations_qs))
             .annotate(
@@ -556,6 +567,7 @@ def top_feature(request: HttpRequest) -> dict[str, Any]:
 
     variations_qs = (
         models.Feature.objects.pending()
+        .with_latest_vote_at()
         .ordered_by_popularity()
         .select_related("creator")
         .annotate(
@@ -569,6 +581,7 @@ def top_feature(request: HttpRequest) -> dict[str, Any]:
 
     feature = (
         models.Feature.objects.pending()
+        .with_latest_vote_at()
         .ordered_by_popularity()
         .select_related("creator", "parent")
         .prefetch_related(Prefetch("variations", queryset=variations_qs))

@@ -28,7 +28,9 @@ User = get_user_model()
 
 def _client_ip(request: HttpRequest) -> str | None:
     """Extract client IP from request headers."""
-    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    forwarded_for = request.META.get("HTTP_CF_CONNECTING_IP") or request.META.get(
+        "HTTP_X_FORWARDED_FOR"
+    )
     if forwarded_for:
         return forwarded_for.split(",")[0].strip()
     return request.META.get("REMOTE_ADDR")

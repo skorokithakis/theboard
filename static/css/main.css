@@ -69,12 +69,18 @@ body::before {
 
 body.theme-summer,
 body.theme-lava {
-  background-color: var(--lava-char);
-  background-image:
-    radial-gradient(circle at 12% 24%, rgba(255, 122, 31, 0.24), rgba(26, 5, 3, 0) 32%),
-    radial-gradient(circle at 86% 16%, rgba(255, 63, 60, 0.26), rgba(26, 5, 3, 0) 36%),
-    radial-gradient(circle at 38% 64%, rgba(255, 179, 71, 0.26), rgba(26, 5, 3, 0) 44%),
-    linear-gradient(180deg, rgba(26, 5, 3, 0.92), rgba(59, 13, 8, 0.92));
+  --background: #fff5e6;
+  --background-alt: #ffe6bf;
+  --surface: #fff0d1;
+  --surface-alt: #ffd99f;
+  --card-bg: #fffaf0;
+  --input-bg: #fff7e6;
+  --muted-text: #3a2f1a;
+  --accent: #ff9a3c;
+  --accent-dark: #d36a0a;
+  --brand: #ffd24a;
+  --brand-dark: #e0b000;
+  background-color: var(--background);
   color: var(--text);
 }
 
@@ -126,23 +132,29 @@ body.theme-lava .is-melting {
   animation: meltDrip var(--melt-duration, 18s) ease-in-out infinite alternate;
   animation-delay: var(--melt-delay, 0s);
   transform-origin: top center;
-  box-shadow: 0 18px 28px var(--lava-shadow);
+  box-shadow: 0 12px 18px var(--lava-shadow);
   will-change: transform;
 }
 
 body.theme-summer .is-melting,
 body.theme-lava .is-melting {
-  --melt-distance: 11px;
+  --melt-distance: 7px;
+}
+
+body.theme-summer {
+  overflow-x: hidden;
 }
 
 body.theme-spring {
-  --background: #0f1f1a;
-  --background-alt: #133027;
-  --surface: rgba(16, 43, 32, 0.9);
-  --surface-alt: rgba(24, 64, 46, 0.88);
-  --card-bg: rgba(15, 39, 30, 0.92);
-  --accent: #7de3b1;
-  --brand: #f6d2ff;
+  --background: #e6f5ed;
+  --background-alt: #d7ebdf;
+  --surface: #f4fbf7;
+  --surface-alt: #e5f4ec;
+  --card-bg: #fbfefb;
+  --input-bg: #ffffff;
+  --muted-text: #243f32;
+  --accent: #58caa2;
+  --brand: #d6f0e5;
   background-color: var(--background);
   background-image:
     radial-gradient(circle at 20% 18%, rgba(125, 227, 177, 0.18), rgba(10, 31, 27, 0) 32%),
@@ -184,11 +196,13 @@ body.theme-spring::after {
 }
 
 body.theme-fall {
-  --background: #1c120a;
-  --background-alt: #24160c;
-  --surface: rgba(30, 17, 7, 0.94);
-  --surface-alt: rgba(38, 22, 12, 0.9);
-  --card-bg: rgba(34, 20, 9, 0.92);
+  --background: #f6eee2;
+  --background-alt: #eedfc9;
+  --surface: #fdf5ea;
+  --surface-alt: #f3e0cd;
+  --card-bg: #fffaf3;
+  --input-bg: #fff6e8;
+  --muted-text: #3e2a16;
   --accent: #f7a259;
   --brand: #ffd79a;
   background-color: var(--background);
@@ -234,11 +248,13 @@ body.theme-fall::after {
 }
 
 body.theme-winter {
-  --background: #0d1420;
-  --background-alt: #0f1d2f;
-  --surface: rgba(12, 23, 37, 0.94);
-  --surface-alt: rgba(14, 28, 42, 0.9);
-  --card-bg: rgba(13, 25, 38, 0.92);
+  --background: #e8f1fb;
+  --background-alt: #dbe7f6;
+  --surface: #f5f8ff;
+  --surface-alt: #e4edfb;
+  --card-bg: #fbfdff;
+  --input-bg: #f4f7fd;
+  --muted-text: #243652;
   --accent: #8bd3ff;
   --brand: #dce7ff;
   background-color: var(--background);
@@ -5564,6 +5580,20 @@ a:hover {
   gap: 0.5rem;
 }
 
+.header-balance {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  border: 3px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 5px 5px 0 var(--neo-shadow-color);
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
 .theme-switcher,
 .audio-toggle {
   border-radius: 8px;
@@ -5643,6 +5673,11 @@ a:hover {
   box-shadow: 8px 8px 0 var(--neo-shadow-color);
 }
 
+.sand-chip[aria-pressed="true"],
+.sand-toggle--ghost[aria-pressed="true"] {
+  color: var(--text);
+}
+
 .site-main {
   padding-top: 3rem;
 }
@@ -5697,6 +5732,14 @@ a:hover {
   color: var(--text);
 }
 
+.daily-fortune__suggestion-form .form-field label {
+  color: var(--text);
+}
+
+.daily-fortune__suggestion-signin {
+  color: var(--muted-text);
+}
+
 .daily-fortune__suggestion {
   border: 3px solid var(--border);
   background: linear-gradient(145deg, var(--surface), var(--card-bg));
@@ -5709,7 +5752,7 @@ a:hover {
 .form-field input,
 .form-field textarea,
 .form-field select {
-  background: #ffffff;
+  background: var(--input-bg, #ffffff);
   border: 3px solid var(--border);
   color: var(--text);
   border-radius: 8px;

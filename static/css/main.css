@@ -1492,6 +1492,48 @@ a:hover {
   justify-items: end;
 }
 
+.sand-breaker {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.8rem;
+  padding: 0.65rem 0.8rem;
+  margin: 0.15rem 0 0.25rem;
+  border-radius: 12px;
+  border: 1px dashed rgba(95, 184, 255, 0.3);
+  background:
+    radial-gradient(circle at 12% 22%, rgba(95, 184, 255, 0.12), transparent 40%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.sand-breaker__copy {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.sand-breaker__eyebrow {
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  color: rgba(95, 184, 255, 0.85);
+}
+
+.sand-breaker__title {
+  font-weight: 800;
+  color: var(--text);
+}
+
+.sand-breaker__hint {
+  color: var(--muted-text);
+  font-size: 0.92rem;
+}
+
+.sand-breaker__controls {
+  display: grid;
+  gap: 0.35rem;
+  justify-items: end;
+}
+
 .sand-chip {
   --chip-color: #cfd9df;
   position: relative;

@@ -79,6 +79,18 @@
   var invaderAtCell = {};
   var invaderId = 1;
   var cosmicRayTargets = [SAND, STONE, WOOD, WATER, FIRE, BACTERIA, PLANT, GLASS, STEAM, MUTATED_BACTERIA];
+  var breakerStatusLabel = container.querySelector("[data-breaker-status]");
+  var breakerToggle = container.querySelector("[data-breaker-toggle]");
+  var breakerServeButton = container.querySelector("[data-breaker-serve]");
+  var breakerModeEnabled = false;
+  var breakerScore = 0;
+  var breakerHeat = 0;
+  var paddleX = width / 2;
+  var paddleTargetX = paddleX;
+  var paddleWidth = 26;
+  var paddleBaseWidth = 24;
+  var paddleY = height - 7;
+  var ball = { x: width / 2, y: paddleY - 2, vx: 0, vy: 0, active: false, stuck: false };
 
   var ambientProfile = {
     thriving: { mist: 0.02, seeds: 0.016, embers: 0.001 },
@@ -91,6 +103,7 @@
   initializeBrushToggles();
   initializeActions();
   initializeInvaders();
+  initializeBreaker();
   updateStatus();
   seedGlass();
   draw();
@@ -125,6 +138,8 @@
       spawnInvaderWave(2);
     }
 
+    resetBreakerOrb(true);
+    updateBreakerStatus();
     updateInvaderStatus();
   }
 
@@ -189,6 +204,14 @@
       paint(event);
     });
     canvas.addEventListener("pointermove", function (event) {
+      if (breakerModeEnabled) {
+        var coords = coordsFromEvent(event);
+        movePaddleTo(coords.x);
+        if (isPainting) {
+          applyBrush(coords.x, coords.y);
+          return;
+        }
+      }
       if (isPainting) {
         paint(event);
       }
@@ -219,6 +242,132 @@
     }
 
     updateInvaderStatus();
+  }
+
+  function initializeBreaker() {
+    if (breakerToggle) {
+      breakerToggle.addEventListener("click", function () {
+        if (breakerModeEnabled) {
+          disableBreakerMode();
+        } else {
+          enableBreakerMode();
+        }
+      });
+    }
+
+    if (breakerServeButton) {
+      breakerServeButton.addEventListener("click", function () {
+        serveBreaker();
+      });
+    }
+
+    window.addEventListener("keydown", function (event) {
+      if (isTyping(event)) {
+        return;
+      }
+      var key = event.key;
+      if (!breakerModeEnabled && (key === " " || key === "Spacebar")) {
+        enableBreakerMode();
+        serveBreaker();
+        event.preventDefault();
+        return;
+      }
+
+      if (!breakerModeEnabled) {
+        return;
+      }
+
+      if (key === "ArrowLeft" || key === "a" || key === "A") {
+        movePaddleBy(-6);
+        event.preventDefault();
+      } else if (key === "ArrowRight" || key === "d" || key === "D") {
+        movePaddleBy(6);
+        event.preventDefault();
+      } else if (key === " " || key === "Spacebar") {
+        serveBreaker();
+        event.preventDefault();
+      }
+    });
+
+    resetBreakerOrb(true);
+    updateBreakerStatus();
+  }
+
+  function enableBreakerMode() {
+    breakerModeEnabled = true;
+    breakerHeat = 14;
+    breakerScore = Math.max(0, breakerScore);
+    resetBreakerOrb(true);
+    updateBreakerStatus();
+  }
+
+  function disableBreakerMode() {
+    breakerModeEnabled = false;
+    breakerHeat = 0;
+    resetBreakerOrb(true);
+    updateBreakerStatus();
+  }
+
+  function resetBreakerOrb(forceDock) {
+    paddleWidth = paddleBaseWidth;
+    var bounds = paddleWidth / 2 + 1;
+    paddleTargetX = clamp(paddleTargetX, bounds, width - bounds);
+    paddleX = clamp(paddleX, bounds, width - bounds);
+
+    var shouldDock = forceDock || !breakerModeEnabled;
+    ball.active = shouldDock ? false : ball.active;
+    ball.stuck = shouldDock || !ball.active;
+    ball.vx = 0.9 * (Math.random() < 0.5 ? -1 : 1);
+    ball.vy = -1.8;
+    ball.x = paddleX;
+    ball.y = paddleY - 2;
+  }
+
+  function serveBreaker() {
+    if (!breakerModeEnabled) {
+      return;
+    }
+    ball.active = true;
+    ball.stuck = false;
+    if (Math.abs(ball.vx) < 0.2) {
+      ball.vx = Math.random() * 1.6 - 0.8;
+    }
+    if (ball.vy > -0.5) {
+      ball.vy = -2 - Math.random() * 0.4;
+    }
+    breakerHeat = Math.min(100, breakerHeat + 6);
+    updateBreakerStatus();
+  }
+
+  function movePaddleTo(x) {
+    var bounds = paddleWidth / 2 + 1;
+    paddleTargetX = clamp(x, bounds, width - bounds);
+  }
+
+  function movePaddleBy(delta) {
+    movePaddleTo(paddleTargetX + delta);
+  }
+
+  function updateBreakerStatus() {
+    if (breakerToggle) {
+      breakerToggle.setAttribute("aria-pressed", breakerModeEnabled ? "true" : "false");
+      breakerToggle.textContent = breakerModeEnabled ? "Disable paddle" : "Enable paddle";
+    }
+    if (breakerServeButton) {
+      breakerServeButton.disabled = !breakerModeEnabled;
+      breakerServeButton.textContent = ball.active ? "Nudge orb" : "Serve orb";
+    }
+    if (!breakerStatusLabel) {
+      return;
+    }
+    var stateText = breakerModeEnabled
+      ? ball.active
+        ? "Orb in play"
+        : "Orb docked on paddle"
+      : "Paddle sleeping; enable it to merge brick breaker with the sand.";
+    var scoreText = "Bricks cracked " + breakerScore;
+    var heatText = "Heat " + Math.round(breakerHeat) + "%";
+    breakerStatusLabel.textContent = stateText + " · " + scoreText + " · " + heatText;
   }
 
   function setMaterial(name) {
@@ -278,13 +427,34 @@
     return typeof performance !== "undefined" && performance.now ? performance.now() : Date.now();
   }
 
+  function isTyping(event) {
+    var target = event && event.target;
+    if (!target || !target.tagName) {
+      return false;
+    }
+    var tag = target.tagName.toUpperCase();
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "BUTTON") {
+      return true;
+    }
+    return target.isContentEditable;
+  }
+
   function paint(event) {
+    var coords = coordsFromEvent(event);
+    if (breakerModeEnabled) {
+      movePaddleTo(coords.x);
+    }
+    applyBrush(coords.x, coords.y);
+  }
+
+  function coordsFromEvent(event) {
     var rect = canvas.getBoundingClientRect();
     var scaleX = width / rect.width;
     var scaleY = height / rect.height;
-    var x = Math.floor((event.clientX - rect.left) * scaleX);
-    var y = Math.floor((event.clientY - rect.top) * scaleY);
-    applyBrush(x, y);
+    return {
+      x: Math.floor((event.clientX - rect.left) * scaleX),
+      y: Math.floor((event.clientY - rect.top) * scaleY),
+    };
   }
 
   function applyBrush(x, y) {
@@ -752,6 +922,7 @@
     frameId += 1;
     stepSimulation();
     handleAmbient();
+    updateBreaker();
     draw();
     requestAnimationFrame(tick);
   }
@@ -1135,6 +1306,129 @@
     return options[(Math.random() * options.length) | 0];
   }
 
+  function updateBreaker() {
+    if (!breakerModeEnabled) {
+      return;
+    }
+
+    paddleWidth = paddleBaseWidth + Math.min(8, breakerHeat / 10);
+    var bounds = paddleWidth / 2 + 1;
+    paddleTargetX = clamp(paddleTargetX, bounds, width - bounds);
+    paddleX = clamp(paddleX + (paddleTargetX - paddleX) * 0.25, bounds, width - bounds);
+
+    breakerHeat = Math.max(0, breakerHeat - (breakerHeat > 0 ? 0.18 : 0.08));
+
+    if (!ball.active) {
+      ball.x = paddleX;
+      ball.y = paddleY - 2;
+    } else {
+      advanceBall();
+    }
+
+    if (breakerHeat > 35 && Math.random() < 0.12) {
+      var trailX = clamp(Math.round(ball.x + (Math.random() * 4 - 2)), 0, width - 1);
+      var trailY = clamp(Math.round(ball.y), 0, height - 1);
+      setCell(idx(trailX, trailY), STEAM, { energy: 8 });
+    }
+
+    updateBreakerStatus();
+  }
+
+  function advanceBall() {
+    var steps = 3;
+    for (var i = 0; i < steps; i += 1) {
+      var nextX = ball.x + ball.vx / steps;
+      var nextY = ball.y + ball.vy / steps;
+
+      if (nextX <= 1 || nextX >= width - 2) {
+        ball.vx *= -1;
+        nextX = clamp(nextX, 1, width - 2);
+      }
+
+      if (nextY <= 1) {
+        ball.vy = Math.abs(ball.vy) * 0.98 + 0.08;
+        nextY = 1;
+      }
+
+      if (nextY >= paddleY - 0.2) {
+        var withinPaddle = Math.abs(nextX - paddleX) <= paddleWidth / 2 + 1;
+        if (withinPaddle && ball.vy > 0) {
+          var offset = (nextX - paddleX) / (paddleWidth / 2);
+          ball.vy = -Math.max(1.4, Math.abs(ball.vy)) - 0.25;
+          ball.vx = clamp(ball.vx + offset * 0.65, -2.8, 2.8);
+          breakerHeat = Math.min(100, breakerHeat + 8);
+          breakerScore += 1;
+          nextY = paddleY - 1;
+        } else if (nextY >= height - 2) {
+          breakerSplash();
+          return;
+        }
+      }
+
+      var targetIdx = idx(Math.round(nextX), Math.round(nextY));
+      var targetCell = grid[targetIdx];
+
+      if (!isBreakerPassable(targetCell)) {
+        breakerImpact(targetIdx, targetCell, nextX, nextY);
+        ball.vy *= -1;
+        ball.vx += (Math.random() - 0.5) * 0.22;
+        nextY = clamp(nextY, 1, height - 3);
+      }
+
+      ball.x = nextX;
+      ball.y = nextY;
+    }
+  }
+
+  function breakerImpact(targetIdx, cell, nextX, nextY) {
+    breakerScore += 3;
+    breakerHeat = Math.min(100, breakerHeat + 5);
+
+    if (cell === INVADER) {
+      defeatInvaderAt(targetIdx);
+    } else if (cell === STONE || cell === GLASS) {
+      setCell(targetIdx, EMPTY);
+      scatterSand(4 + ((Math.random() * 4) | 0));
+    } else if (cell === FIRE) {
+      setCell(targetIdx, GLASS);
+    } else if (cell === WATER || cell === STEAM) {
+      setCell(targetIdx, STEAM, { energy: 10 + ((Math.random() * 4) | 0) });
+    } else if (cell === BACTERIA || cell === MUTATED_BACTERIA) {
+      setCell(targetIdx, FIRE, { energy: 10 });
+    } else if (cell === PLANT) {
+      setCell(targetIdx, GLASS);
+    } else {
+      setCell(targetIdx, SAND);
+    }
+
+    if (nextY < height / 3 && Math.random() < 0.28) {
+      spark();
+    }
+
+    if (Math.random() < 0.18) {
+      var splashX = clamp(Math.round(nextX + (Math.random() * 2 - 1)), 0, width - 1);
+      var splashY = clamp(Math.round(nextY + 1), 0, height - 1);
+      setCell(idx(splashX, splashY), WATER);
+    }
+  }
+
+  function breakerSplash() {
+    breakerHeat = Math.max(0, breakerHeat - 8);
+    scatterSand(10);
+    mist(1);
+    ball.active = false;
+    ball.stuck = true;
+    ball.vx = 0.9 * (Math.random() < 0.5 ? -1 : 1);
+    ball.vy = -1.8;
+    ball.x = paddleX;
+    ball.y = paddleY - 2;
+    updateBreakerStatus();
+  }
+
+  function isBreakerPassable(cell) {
+    return cell === EMPTY || cell === COSMIC_RAY || cell === STEAM;
+  }
+
   function handleAmbient() {
     var profile = ambientProfile[plantState] || ambientProfile.growing;
     if (Math.random() < profile.mist) {
@@ -1182,6 +1476,58 @@
       buffer[p + 2] = clamp(color[2] + tint, 0, 255);
       buffer[p + 3] = 255;
     }
+    if (breakerModeEnabled || ball.active || ball.stuck) {
+      paintBreakerOverlay();
+    }
     ctx.putImageData(imageData, 0, 0);
+  }
+
+  function paintBreakerOverlay() {
+    var row = clamp(Math.round(paddleY), 0, height - 1);
+    var half = Math.round(paddleWidth / 2);
+    var start = clamp(Math.round(paddleX) - half, 0, width - 1);
+    var end = clamp(Math.round(paddleX) + half, 0, width - 1);
+
+    for (var px = start; px <= end; px += 1) {
+      var base = (row * width + px) * 4;
+      buffer[base] = 95;
+      buffer[base + 1] = 184;
+      buffer[base + 2] = 255;
+      buffer[base + 3] = 255;
+
+      var glowRow = clamp(row - 1, 0, height - 1);
+      var glowIdx = (glowRow * width + px) * 4;
+      buffer[glowIdx] = Math.min(buffer[glowIdx] + 36, 255);
+      buffer[glowIdx + 1] = Math.min(buffer[glowIdx + 1] + 22, 255);
+      buffer[glowIdx + 2] = Math.min(buffer[glowIdx + 2] + 10, 255);
+    }
+
+    if (!ball.active && !ball.stuck) {
+      return;
+    }
+
+    var bx = clamp(Math.round(ball.x), 0, width - 1);
+    var by = clamp(Math.round(ball.y), 0, height - 1);
+    var ballIdx = (by * width + bx) * 4;
+    buffer[ballIdx] = 255;
+    buffer[ballIdx + 1] = 210;
+    buffer[ballIdx + 2] = 132;
+    buffer[ballIdx + 3] = 255;
+
+    var neighbors = [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ];
+
+    neighbors.forEach(function (offset) {
+      var nx = clamp(bx + offset[0], 0, width - 1);
+      var ny = clamp(by + offset[1], 0, height - 1);
+      var idxValue = (ny * width + nx) * 4;
+      buffer[idxValue] = Math.min(buffer[idxValue] + 70, 255);
+      buffer[idxValue + 1] = Math.min(buffer[idxValue + 1] + 48, 255);
+      buffer[idxValue + 2] = Math.min(buffer[idxValue + 2] + 18, 255);
+    });
   }
 })();

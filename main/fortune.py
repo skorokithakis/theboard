@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, timedelta
 import hashlib
+import random
 from typing import Sequence
 
 from django.utils import timezone
@@ -18,6 +19,11 @@ class Fortune:
     attribution: str
     collection: str
     package: str
+    submitted_by: str | None = None
+
+
+COMMUNITY_FORTUNE_WEIGHT = 3
+RECENT_FORTUNE_WINDOW = 3
 
 
 FORTUNE_COOKIES: Sequence[Fortune] = (
@@ -187,23 +193,123 @@ def _community_fortune_pool() -> list[Fortune]:
                 attribution=suggestion.attribution,
                 collection="Community Submissions",
                 package=f"user-submitted-{suggestion.pk}",
+                submitted_by=suggestion.submitted_by.display_name,
             )
         )
     return fortunes
 
 
+def _fortune_candidates() -> list[Fortune]:
+    """Return weighted fortune candidates with community submissions boosted."""
+    community_fortunes = _community_fortune_pool()
+    weighted_pool: list[Fortune] = []
+    for fortune in community_fortunes:
+        weighted_pool.extend([fortune] * COMMUNITY_FORTUNE_WEIGHT)
+    weighted_pool.extend(FORTUNE_COOKIES)
+    return weighted_pool
+
+
+def _fortune_seed(target_date: date) -> int:
+    """Create a deterministic random seed from the provided date."""
+    digest = hashlib.sha256(target_date.isoformat().encode("utf-8")).digest()
+    return int.from_bytes(digest[:8], "big")
+
+
+def _fortune_signature(fortune: Fortune) -> tuple[str, str, str]:
+    """Stable identifier for a fortune to compare against recent draws."""
+    return (fortune.collection, fortune.package, fortune.text)
+
+
+def _recent_hits_from_history(
+    current_date: date, history: dict[date, Fortune]
+) -> dict[tuple[str, str, str], int]:
+    """Count recent fortune occurrences based on the computed history."""
+    hits: dict[tuple[str, str, str], int] = {}
+    for offset in range(1, RECENT_FORTUNE_WINDOW + 1):
+        prior_date = current_date - timedelta(days=offset)
+        if prior_date in history:
+            signature = _fortune_signature(history[prior_date])
+            hits[signature] = hits.get(signature, 0) + 1
+    return hits
+
+
+def _select_weighted_fortune(
+    *,
+    seed: int,
+    candidates: Sequence[Fortune],
+    recent_hits: dict[tuple[str, str, str], int],
+    last_signature: tuple[str, str, str] | None,
+) -> Fortune:
+    """Pick a weighted fortune while preferring less-recent entries."""
+    if not candidates:
+        raise RuntimeError("Fortune data is missing.")
+
+    rng = random.Random(seed)
+    shuffled_candidates = list(candidates)
+    rng.shuffle(shuffled_candidates)
+
+    unique_signatures = {_fortune_signature(candidate) for candidate in candidates}
+    preferred_candidates = shuffled_candidates
+    if (
+        last_signature
+        and len(unique_signatures) > 1
+        and any(_fortune_signature(c) != last_signature for c in shuffled_candidates)
+    ):
+        filtered = [
+            candidate
+            for candidate in shuffled_candidates
+            if _fortune_signature(candidate) != last_signature
+        ]
+        if filtered:
+            preferred_candidates = filtered
+
+    best_candidate = preferred_candidates[0]
+    best_rank = (
+        recent_hits.get(_fortune_signature(best_candidate), 0),
+        rng.random(),
+    )
+
+    for candidate in preferred_candidates[1:]:
+        signature = _fortune_signature(candidate)
+        rank = (recent_hits.get(signature, 0), rng.random())
+        if rank < best_rank:
+            best_rank = rank
+            best_candidate = candidate
+
+    return best_candidate
+
+
 def get_daily_fortune(for_date: date | None = None) -> Fortune:
     """Return a deterministic fortune for the provided date."""
 
-    available_fortunes = [*_community_fortune_pool(), *FORTUNE_COOKIES]
-
-    if not available_fortunes:
+    target_date = for_date or timezone.now().date()
+    candidates = _fortune_candidates()
+    if not candidates:
         raise RuntimeError("Fortune data is missing.")
 
-    target_date = for_date or timezone.now().date()
-    digest = hashlib.sha256(target_date.isoformat().encode("utf-8")).digest()
-    index = int.from_bytes(digest[:4], "big") % len(available_fortunes)
-    return available_fortunes[index]
+    history: dict[date, Fortune] = {}
+    anchor_date = date(target_date.year, 1, 1)
+    if anchor_date > target_date:
+        anchor_date = target_date - timedelta(days=RECENT_FORTUNE_WINDOW)
+
+    current_date = anchor_date
+
+    while current_date <= target_date:
+        recent_hits = _recent_hits_from_history(current_date, history)
+        yesterday = current_date - timedelta(days=1)
+        last_signature = (
+            _fortune_signature(history[yesterday]) if yesterday in history else None
+        )
+        fortune_choice = _select_weighted_fortune(
+            seed=_fortune_seed(current_date),
+            candidates=candidates,
+            recent_hits=recent_hits,
+            last_signature=last_signature,
+        )
+        history[current_date] = fortune_choice
+        current_date += timedelta(days=1)
+
+    return history[target_date]
 
 
 __all__ = ["Fortune", "FORTUNE_COOKIES", "get_daily_fortune"]

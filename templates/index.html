@@ -15,6 +15,9 @@
             </figcaption>
             <blockquote class="daily-fortune__text">&ldquo;{{ daily_fortune.text }}&rdquo;</blockquote>
             <p class="daily-fortune__attribution">- {{ daily_fortune.attribution }}</p>
+            {% if daily_fortune.submitted_by %}
+            <p class="daily-fortune__submitted">Submitted by {{ daily_fortune.submitted_by }}</p>
+            {% endif %}
         </figure>
         {% endif %}
         <section class="daily-fortune__suggestion" aria-labelledby="fortune-suggestion-heading">

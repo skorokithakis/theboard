@@ -815,6 +815,68 @@ class DailyFortuneTests(TestCase):
         self.assertEqual(result.text, suggestion.text)
         self.assertEqual(result.attribution, suggestion.attribution)
 
+    def test_community_fortunes_are_weighted_in_candidate_pool(self) -> None:
+        submitter = User.objects.create_user(username="weighted", password="test-pass")
+        models.QuoteSuggestion.objects.create(
+            text="Boost community flavor.",
+            attribution="Quote Weight",
+            submitted_by=submitter,
+            is_approved=True,
+        )
+        built_in = fortune.Fortune(
+            text="Base fortune.",
+            attribution="Built-in",
+            collection="Core",
+            package="core-1",
+        )
+        with mock.patch.object(fortune, "FORTUNE_COOKIES", (built_in,)):
+            candidates = fortune._fortune_candidates()
+
+        community_entries = [
+            entry for entry in candidates if entry.collection == "Community Submissions"
+        ]
+        builtin_entries = [
+            entry for entry in candidates if entry.collection != "Community Submissions"
+        ]
+
+        self.assertEqual(len(builtin_entries), 1)
+        self.assertEqual(len(community_entries), fortune.COMMUNITY_FORTUNE_WEIGHT)
+
+    def test_get_daily_fortune_avoids_recent_repeats_when_possible(self) -> None:
+        fortune_one = fortune.Fortune(
+            text="First pull.",
+            attribution="Rotation Test",
+            collection="Test",
+            package="rotation-1",
+        )
+        fortune_two = fortune.Fortune(
+            text="Second pull.",
+            attribution="Rotation Test",
+            collection="Test",
+            package="rotation-2",
+        )
+
+        with mock.patch.object(fortune, "FORTUNE_COOKIES", (fortune_one, fortune_two)):
+            result_today = fortune.get_daily_fortune(date(2024, 9, 1))
+            result_tomorrow = fortune.get_daily_fortune(date(2024, 9, 2))
+
+        self.assertNotEqual(result_today, result_tomorrow)
+
+    def test_community_fortune_includes_submitter_name(self) -> None:
+        submitter = User.objects.create_user(
+            username="namer", password="test-pass", first_name="Quote", last_name="Fan"
+        )
+        models.QuoteSuggestion.objects.create(
+            text="Community nod.",
+            attribution="Contributor",
+            submitted_by=submitter,
+            is_approved=True,
+        )
+        with mock.patch.object(fortune, "FORTUNE_COOKIES", ()):
+            result = fortune.get_daily_fortune(date(2024, 10, 1))
+
+        self.assertEqual(result.submitted_by, submitter.display_name)
+
 
 class QuoteSuggestionViewTests(TestCase):
     def setUp(self) -> None:

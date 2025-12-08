@@ -685,7 +685,7 @@ a:hover {
   text-transform: uppercase;
   letter-spacing: 0.4em;
   font-size: 0.8rem;
-  color: var(--brand);
+  color: var(--text);
   margin: 0;
 }
 
@@ -1277,7 +1277,7 @@ a:hover {
 
 .plant-terrarium__lead {
   margin: 0;
-  color: rgba(253, 247, 227, 0.82);
+  color: var(--text);
   line-height: 1.7;
 }
 
@@ -1316,7 +1316,7 @@ a:hover {
   display: block;
   margin-top: 0.25rem;
   font-weight: 600;
-  color: var(--text);
+  color: rgba(253, 247, 227, 0.95);
 }
 
 .plant-chip--label {
@@ -1972,7 +1972,7 @@ a:hover {
 .glorp-cat__lead {
   margin: 0;
   line-height: 1.7;
-  color: rgba(253, 247, 227, 0.82);
+  color: var(--text);
 }
 
 .glorp-cat__list {
@@ -2009,7 +2009,7 @@ a:hover {
   display: block;
   margin-top: 0.25rem;
   font-weight: 700;
-  color: var(--text);
+  color: rgba(253, 247, 227, 0.95);
 }
 
 .glorp-cat__diagram {
@@ -2723,13 +2723,13 @@ a:hover {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.85rem;
-  color: var(--muted-text);
+  color: rgba(253, 247, 227, 0.82);
 }
 
 .about-stat-card__value {
   margin: 0.1rem 0 0.35rem;
   font-size: 1.2rem;
-  color: var(--text);
+  color: #fffbef;
   font-weight: 700;
 }
 
@@ -2885,7 +2885,7 @@ a:hover {
 
 .about-preview__list {
   padding-left: 1.1rem;
-  color: rgba(253, 247, 227, 0.8);
+  color: var(--muted-text);
 }
 
 .about-preview__actions {
@@ -2918,7 +2918,7 @@ a:hover {
 
 .about-preview__badge p {
   margin: 0.45rem 0 0;
-  color: rgba(253, 247, 227, 0.78);
+  color: var(--text);
 }
 
 .logo-lab {
@@ -3010,7 +3010,7 @@ a:hover {
 .logo-chip__value {
   display: block;
   font-weight: 700;
-  color: var(--text);
+  color: rgba(253, 247, 227, 0.95);
   margin-top: 0.25rem;
 }
 
@@ -3098,7 +3098,7 @@ a:hover {
   text-align: center;
   padding: 1rem;
   background: radial-gradient(circle, rgba(10, 26, 35, 0.78), rgba(10, 26, 35, 0.92));
-  color: rgba(253, 247, 227, 0.82);
+  color: #fffbef;
   letter-spacing: 0.08em;
   font-size: 0.9rem;
   pointer-events: none;

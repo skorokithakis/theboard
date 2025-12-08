@@ -7,6 +7,11 @@ from . import views
 app_name = "main"
 urlpatterns = [
     path("", views.index, name="index"),
+    path(
+        "features/<int:pk>/vote/",
+        views.feature_vote_toggle,
+        name="feature-vote-toggle",
+    ),
     path("about/", views.about, name="about"),
     path(
         "plaintext-submission/",
@@ -18,6 +23,9 @@ urlpatterns = [
         views.plaintext_vote_toggle,
         name="plaintext-vote-toggle",
     ),
+    path("archive/", views.archive_index, name="archive-index"),
+    path("archive/about/", views.archive_about, name="archive-about"),
+    path("archive/scoreboard/", views.archive_scoreboard, name="archive-scoreboard"),
     path("scoreboard/", views.scoreboard, name="scoreboard"),
     path(
         "fortunes/suggest/",

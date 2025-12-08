@@ -71,6 +71,41 @@ def _profile_avatar_descriptor(user: BoardUser) -> dict[str, str]:
     }
 
 
+def _pending_features_with_vote_state(user: BoardUser) -> list[Feature]:
+    """Return pending features annotated with whether the user has voted."""
+    features = list(
+        Feature.objects.pending().ordered_by_popularity().select_related("creator")
+    )
+    voted_ids = _user_vote_ids(user)
+    for feature in features:
+        feature.user_has_voted = feature.id in voted_ids
+    return features
+
+
+def _fresh_board_context(
+    request: HttpRequest,
+    *,
+    submission_form: FeatureForm | None = None,
+    can_submit: bool | None = None,
+) -> dict[str, object]:
+    """Build the minimal context the reset homepage expects."""
+
+    form = submission_form or FeatureForm(allow_parent=False)
+    if can_submit is None:
+        can_submit = (
+            request.user.is_authenticated
+            and not Feature.user_has_reached_daily_limit(request.user)
+        )
+
+    return {
+        "features": _pending_features_with_vote_state(request.user),
+        "submission_form": form,
+        "turnstile_site_key": getattr(settings, "TURNSTILE_SITE_KEY", ""),
+        "can_submit": can_submit,
+        "daily_fortune": get_daily_fortune(),
+    }
+
+
 def _build_homepage_context(
     *, fortune_form: QuoteSuggestionForm | None = None
 ) -> dict[str, object]:
@@ -100,16 +135,69 @@ def _build_homepage_context(
     }
 
 
-@require_GET
+@require_http_methods(["GET", "HEAD", "POST"])
 def index(request: HttpRequest) -> HttpResponse:
-    """Render the marketing homepage."""
-    context = _build_homepage_context()
-    return render(request, "index.html", context)
+    """Render the pared-down board with just voting and submissions."""
+
+    Feature.expire_stale()
+
+    status_code = 200
+    submission_form = FeatureForm(
+        request.POST or None,
+        allow_parent=False,
+    )
+    can_submit = (
+        request.user.is_authenticated
+        and not Feature.user_has_reached_daily_limit(request.user)
+    )
+
+    if request.method == "POST":
+        if not request.user.is_authenticated:
+            messages.error(request, "Sign in to submit a feature.")
+            status_code = 403
+        elif not can_submit:
+            messages.error(request, "Daily submission limit reached.")
+            status_code = 429
+        else:
+            verification_success = True
+            if turnstile.is_enabled():
+                verification = turnstile.verify(
+                    request.POST.get("turnstile_token", ""),
+                    remote_ip=_client_ip(request),
+                )
+                verification_success = verification.success
+                if not verification.success:
+                    messages.error(
+                        request,
+                        "Captcha verification failed. Please try again.",
+                    )
+                    status_code = 400
+
+            if verification_success and submission_form.is_valid():
+                feature = submission_form.save(commit=False)
+                feature.creator = request.user
+                feature.save()
+                Vote.objects.create(user=request.user, feature=feature)
+                messages.success(request, "Feature submitted to the fresh board.")
+                return redirect("main:index")
+            elif verification_success:
+                status_code = 400
+
+    return render(
+        request,
+        "index.html",
+        _fresh_board_context(
+            request,
+            submission_form=submission_form,
+            can_submit=can_submit,
+        ),
+        status=status_code,
+    )
 
 
 @require_GET
 def about(request: HttpRequest) -> HttpResponse:
-    """Share the story and mechanics behind the board."""
+    """Share the reset state of the board and how to participate."""
 
     feature_stats = {
         "pending": Feature.objects.pending().count(),
@@ -170,16 +258,9 @@ def plaintext_submission(request: HttpRequest) -> HttpResponse:
             elif verification_success:
                 status_code = 400
 
-    vote_ids = _user_vote_ids(request.user)
-    features = list(
-        Feature.objects.pending().ordered_by_popularity().select_related("creator")
-    )
-    for feature in features:
-        feature.user_has_voted = feature.id in vote_ids
-
     context = {
         "submission_form": submission_form,
-        "features": features,
+        "features": _pending_features_with_vote_state(request.user),
         "turnstile_site_key": getattr(settings, "TURNSTILE_SITE_KEY", ""),
         "can_submit": can_submit,
     }
@@ -195,129 +276,21 @@ def plaintext_submission(request: HttpRequest) -> HttpResponse:
 def plaintext_vote_toggle(request: HttpRequest, pk: int) -> HttpResponse:
     """Toggle a vote from the plain submission page with captcha validation."""
 
-    Feature.expire_stale()
+    return _toggle_vote(request, pk, redirect_name="main:plaintext-submission")
 
-    if not request.user.is_authenticated:
-        messages.error(request, "Sign in to vote on features.")
-        return redirect("main:plaintext-submission")
 
-    try:
-        feature = Feature.objects.select_related("creator").get(pk=pk)
-    except Feature.DoesNotExist:
-        messages.error(request, "Feature not found.")
-        return redirect("main:plaintext-submission")
+@require_POST
+def feature_vote_toggle(request: HttpRequest, pk: int) -> HttpResponse:
+    """Toggle a vote from the simplified homepage."""
 
-    if feature.is_implemented or feature.is_expired:
-        messages.error(request, "This feature is no longer open for voting.")
-        return redirect("main:plaintext-submission")
-
-    if turnstile.is_enabled():
-        verification = turnstile.verify(
-            request.POST.get("turnstile_token", ""),
-            remote_ip=_client_ip(request),
-        )
-        if not verification.success:
-            messages.error(request, "Captcha verification failed. Please try again.")
-            return redirect("main:plaintext-submission")
-
-    vote, created = Vote.objects.get_or_create(user=request.user, feature=feature)
-    if created:
-        messages.success(request, "Vote added.")
-    else:
-        vote.delete()
-        messages.info(request, "Vote removed.")
-
-    return redirect("main:plaintext-submission")
+    return _toggle_vote(request, pk, redirect_name="main:index")
 
 
 @require_http_methods(["GET", "HEAD"])
 def scoreboard(request: HttpRequest) -> HttpResponse:
     """Display the scoreboard using backend-derived vote totals."""
 
-    rank_titles = {
-        1: "Crown Regent",
-        2: "Arcade Luminary",
-        3: "Lorekeeper",
-        4: "Glorp Whisperer",
-        5: "Idea Forger",
-        6: "Signal Runner",
-        7: "Pulse Collector",
-    }
-
-    live_vote_totals = (
-        Vote.objects.exclude(user=F("feature__creator"))
-        .filter(
-            feature__implemented_at__isnull=True,
-            feature__expired_at__isnull=True,
-        )
-        .values("feature__creator")
-        .annotate(total=Count("id"))
-    )
-    vote_totals_by_user: dict[int, int] = {}
-    for row in live_vote_totals:
-        creator_id = row["feature__creator"]
-        vote_totals_by_user[creator_id] = vote_totals_by_user.get(creator_id, 0) + int(
-            row["total"]
-        )
-
-    historical_votes = (
-        Feature.objects.filter(
-            Q(implemented_at__isnull=False) | Q(expired_at__isnull=False)
-        )
-        .annotate(
-            external_votes=Greatest(
-                Coalesce(F("votes"), Value(0)) - Value(1),
-                Value(0),
-            )
-        )
-        .values("creator")
-        .annotate(total=Sum("external_votes"))
-    )
-    for row in historical_votes:
-        creator_id = row["creator"]
-        external_total = int(row["total"] or 0)
-        if external_total == 0:
-            continue
-        vote_totals_by_user[creator_id] = (
-            vote_totals_by_user.get(creator_id, 0) + external_total
-        )
-
-    boot_user_id = (
-        BoardUser.objects.filter(username__iexact="boot")
-        .values_list("id", flat=True)
-        .first()
-    )
-    if boot_user_id:
-        vote_totals_by_user[boot_user_id] = (
-            vote_totals_by_user.get(boot_user_id, 0) + 500
-        )
-
-    leaderboard_users = BoardUser.objects.filter(id__in=vote_totals_by_user.keys())
-    user_lookup = {user.id: user for user in leaderboard_users}
-    ranked_entries = sorted(
-        [
-            {"user": user_lookup[user_id], "score": score}
-            for user_id, score in vote_totals_by_user.items()
-            if user_id in user_lookup
-        ],
-        key=lambda entry: (-entry["score"], entry["user"].username),
-    )
-
-    context = {
-        "leaderboard": [
-            {
-                "rank": idx,
-                "user": entry["user"],
-                "score": entry["score"],
-                "title": rank_titles.get(idx),
-            }
-            for idx, entry in enumerate(ranked_entries[:20], start=1)
-        ],
-        "rank_titles": rank_titles,
-        "user_score_total": vote_totals_by_user.get(request.user.id, 0)
-        if request.user.is_authenticated
-        else None,
-    }
+    context = _scoreboard_context(request)
     return render(request, "scoreboard.html", context)
 
 
@@ -325,6 +298,8 @@ def scoreboard(request: HttpRequest) -> HttpResponse:
 @require_POST
 def submit_quote_suggestion(request: HttpRequest) -> HttpResponse:
     """Accept a quote submission from an authenticated community member."""
+
+    Feature.expire_stale()
 
     form = QuoteSuggestionForm(request.POST)
     if form.is_valid():
@@ -341,8 +316,15 @@ def submit_quote_suggestion(request: HttpRequest) -> HttpResponse:
         request,
         "Please correct the issues with your quote submission.",
     )
-    context = _build_homepage_context(fortune_form=form)
-    return render(request, "index.html", context, status=400)
+    for error_list in form.errors.values():
+        for error in error_list:
+            messages.error(request, error)
+    return render(
+        request,
+        "index.html",
+        _fresh_board_context(request),
+        status=400,
+    )
 
 
 def profile_detail(request: HttpRequest, username: str | None = None) -> HttpResponse:
@@ -436,3 +418,170 @@ def profile_detail(request: HttpRequest, username: str | None = None) -> HttpRes
         "profile_avatar": _profile_avatar_descriptor(profile_user),
     }
     return render(request, "profiles/detail.html", context)
+
+
+@require_GET
+def archive_index(request: HttpRequest) -> HttpResponse:
+    """Read-only snapshot of the former homepage."""
+
+    context = _build_homepage_context()
+    context["archive_mode"] = True
+    return render(request, "archive/index.html", context)
+
+
+@require_GET
+def archive_about(request: HttpRequest) -> HttpResponse:
+    """Historical about page from before the reset."""
+
+    feature_stats = {
+        "pending": Feature.objects.pending().count(),
+        "implemented": Feature.objects.implemented().count(),
+        "graveyard": Feature.objects.expired().count(),
+    }
+    context = {
+        "next_iteration_at": get_next_iteration_at(),
+        "feature_stats": feature_stats,
+        "archive_mode": True,
+    }
+    return render(request, "archive/about.html", context)
+
+
+@require_GET
+def archive_scoreboard(request: HttpRequest) -> HttpResponse:
+    """Read-only archive of the legacy scoreboard."""
+
+    context = _scoreboard_context(request)
+    context["archive_mode"] = True
+    return render(request, "archive/scoreboard.html", context)
+
+
+def _toggle_vote(
+    request: HttpRequest,
+    feature_id: int,
+    *,
+    redirect_name: str,
+) -> HttpResponse:
+    """Shared vote toggle logic for the homepage and plaintext view."""
+
+    Feature.expire_stale()
+
+    if not request.user.is_authenticated:
+        messages.error(request, "Sign in to vote on features.")
+        return redirect(redirect_name)
+
+    try:
+        feature = Feature.objects.select_related("creator").get(pk=feature_id)
+    except Feature.DoesNotExist:
+        messages.error(request, "Feature not found.")
+        return redirect(redirect_name)
+
+    if feature.is_implemented or feature.is_expired:
+        messages.error(request, "This feature is no longer open for voting.")
+        return redirect(redirect_name)
+
+    if turnstile.is_enabled():
+        verification = turnstile.verify(
+            request.POST.get("turnstile_token", ""),
+            remote_ip=_client_ip(request),
+        )
+        if not verification.success:
+            messages.error(request, "Captcha verification failed. Please try again.")
+            return redirect(redirect_name)
+
+    vote, created = Vote.objects.get_or_create(user=request.user, feature=feature)
+    if created:
+        messages.success(request, "Vote added.")
+    else:
+        vote.delete()
+        messages.info(request, "Vote removed.")
+
+    return redirect(redirect_name)
+
+
+def _scoreboard_context(request: HttpRequest) -> dict[str, object]:
+    """Assemble scoreboard rankings for reuse by archive views."""
+
+    rank_titles = {
+        1: "Crown Regent",
+        2: "Arcade Luminary",
+        3: "Lorekeeper",
+        4: "Glorp Whisperer",
+        5: "Idea Forger",
+        6: "Signal Runner",
+        7: "Pulse Collector",
+    }
+
+    live_vote_totals = (
+        Vote.objects.exclude(user=F("feature__creator"))
+        .filter(
+            feature__implemented_at__isnull=True,
+            feature__expired_at__isnull=True,
+        )
+        .values("feature__creator")
+        .annotate(total=Count("id"))
+    )
+    vote_totals_by_user: dict[int, int] = {}
+    for row in live_vote_totals:
+        creator_id = row["feature__creator"]
+        vote_totals_by_user[creator_id] = vote_totals_by_user.get(creator_id, 0) + int(
+            row["total"]
+        )
+
+    historical_votes = (
+        Feature.objects.filter(
+            Q(implemented_at__isnull=False) | Q(expired_at__isnull=False)
+        )
+        .annotate(
+            external_votes=Greatest(
+                Coalesce(F("votes"), Value(0)) - Value(1),
+                Value(0),
+            )
+        )
+        .values("creator")
+        .annotate(total=Sum("external_votes"))
+    )
+    for row in historical_votes:
+        creator_id = row["creator"]
+        external_total = int(row["total"] or 0)
+        if external_total == 0:
+            continue
+        vote_totals_by_user[creator_id] = (
+            vote_totals_by_user.get(creator_id, 0) + external_total
+        )
+
+    boot_user_id = (
+        BoardUser.objects.filter(username__iexact="boot")
+        .values_list("id", flat=True)
+        .first()
+    )
+    if boot_user_id:
+        vote_totals_by_user[boot_user_id] = (
+            vote_totals_by_user.get(boot_user_id, 0) + 500
+        )
+
+    leaderboard_users = BoardUser.objects.filter(id__in=vote_totals_by_user.keys())
+    user_lookup = {user.id: user for user in leaderboard_users}
+    ranked_entries = sorted(
+        [
+            {"user": user_lookup[user_id], "score": score}
+            for user_id, score in vote_totals_by_user.items()
+            if user_id in user_lookup
+        ],
+        key=lambda entry: (-entry["score"], entry["user"].username),
+    )
+
+    return {
+        "leaderboard": [
+            {
+                "rank": idx,
+                "user": entry["user"],
+                "score": entry["score"],
+                "title": rank_titles.get(idx),
+            }
+            for idx, entry in enumerate(ranked_entries[:20], start=1)
+        ],
+        "rank_titles": rank_titles,
+        "user_score_total": vote_totals_by_user.get(request.user.id, 0)
+        if request.user.is_authenticated
+        else None,
+    }

@@ -4,6 +4,7 @@
 {% block title %}Scoreboard · {{ request.site.name }}{% endblock %}
 
 {% block content %}
+{% include "archive/_notice.html" %}
 <section class="scoreboard-hero" data-soundtrack="arcade">
     <div class="scoreboard-hero__copy">
         <p class="scoreboard-hero__eyebrow">Scoreboard VII</p>
@@ -11,9 +12,6 @@
         <p class="scoreboard-hero__lead">
             Scores are verified from live Board data: every point comes from votes other members give to your feature proposals. The top 20
             totals earn a place on the board while the top seven pick up ceremonial titles.
-        </p>
-        <p class="scoreboard-hero__lead">
-            Want to see the last era&apos;s table? Visit the <a href="{% url 'main:archive-scoreboard' %}">historical scoreboard archive</a>.
         </p>
         <div class="scoreboard-legend">
             <div class="scoreboard-legend__glow"></div>

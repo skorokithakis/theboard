@@ -4,97 +4,48 @@
 {% block title %}About {{ request.site.name }}{% endblock %}
 
 {% block content %}
-<section class="page-header about-hero" data-soundtrack="atrium">
-    <div>
-        <p class="page-eyebrow">About the board</p>
-        <h1 class="page-title">How {{ request.site.name }} runs itself</h1>
-        <p class="page-lead">
-            {{ request.site.name }} ships whatever the community backs next. Twice a day the top-ranked request deploys automatically, the vote counter resets, and the experiment keeps moving.
+<section class="about-reset" data-soundtrack="atrium">
+    <p class="page-eyebrow">About the reset</p>
+    <h1 class="page-title">A clean board with the same voting rules</h1>
+    <p class="page-lead">
+        The slate is blank so new ideas can rise fast. The historical board lives on in a read-only archive; everything
+        here focuses on today&apos;s submissions and votes.
+    </p>
+    <div class="about-reset__actions">
+        <a class="button" href="{% url 'main:index' %}">Return to the board</a>
+        <a class="button-outline" href="{% url 'main:archive-index' %}">Browse the archive</a>
+    </div>
+</section>
+
+<section class="about-reset-grid">
+    <div class="about-reset__card">
+        <h2>How it works now</h2>
+        <ul>
+            <li>The board starts empty. Add a feature to claim the top slot.</li>
+            <li>Votes reset after each deployment window—momentum matters.</li>
+            <li>CAPTCHA remains required for every vote, verified account or not.</li>
+            <li>Daily submission limits still apply to keep the queue human-sized.</li>
+        </ul>
+    </div>
+    <div class="about-reset__card">
+        <h2>Current board snapshot</h2>
+        <ul class="about-reset__stats">
+            <li><strong>{{ feature_stats.pending|default:0 }}</strong><span>Ideas in play</span></li>
+            <li><strong>{{ feature_stats.implemented|default:0 }}</strong><span>Shipped</span></li>
+            <li><strong>{{ feature_stats.graveyard|default:0 }}</strong><span>In the graveyard</span></li>
+        </ul>
+        {% if next_iteration_at %}
+            <p class="about-reset__note">Next implementation window: {{ next_iteration_at|date:"F j, Y H:i \\U\\T\\C" }}</p>
+        {% else %}
+            <p class="about-reset__note">Next implementation time is currently unavailable.</p>
+        {% endif %}
+    </div>
+    <div class="about-reset__card about-reset__card--wide">
+        <h2>Why the archive exists</h2>
+        <p>
+            We preserved every page of the previous era so people can see what came before this reset. Explore the
+            <a href="{% url 'main:archive-index' %}">historical archive</a> for the full story, lore, and visuals—nothing there can be changed.
         </p>
     </div>
-    <div class="about-hero__stats">
-        <div class="about-stat-card">
-            <p class="about-stat-card__label">Next auto-implementation</p>
-            <p class="about-stat-card__value">
-                {% if next_iteration_at %}
-                    {{ next_iteration_at|date:"F j, Y H:i \\U\\T\\C" }}
-                {% else %}
-                    Timing unavailable
-                {% endif %}
-            </p>
-            <p class="about-stat-card__note">The highest-voted idea ships on this cadence.</p>
-        </div>
-        <div class="about-stat-card about-stat-card--grid">
-            <p class="about-stat-card__label">Board snapshot</p>
-            <div class="about-stat-card__grid" role="list">
-                <div role="listitem">
-                    <span class="about-stat-card__metric">{{ feature_stats.pending|default:0 }}</span>
-                    <span class="about-stat-card__metric-label">Ideas in play</span>
-                </div>
-                <div role="listitem">
-                    <span class="about-stat-card__metric">{{ feature_stats.implemented|default:0 }}</span>
-                    <span class="about-stat-card__metric-label">Shipped</span>
-                </div>
-                <div role="listitem">
-                    <span class="about-stat-card__metric">{{ feature_stats.graveyard|default:0 }}</span>
-                    <span class="about-stat-card__metric-label">In the graveyard</span>
-                </div>
-            </div>
-            <p class="about-stat-card__note">Counts refresh every page load.</p>
-        </div>
-    </div>
-</section>
-
-<section class="about-section" data-soundtrack="atrium">
-    <h2>What is {{ request.site.name }}?</h2>
-    <p>{{ request.site.name }} is an open-source feature board that quite literally rebuilds itself. You can propose features, variants, and experiments—and the community decides what ships.</p>
-    <p>Every change becomes canon until a new winner lands. Votes reset after each deployment, so momentum and timing matter as much as the idea itself.</p>
-</section>
-
-<section class="about-section" data-soundtrack="atrium">
-    <h2>How it works</h2>
-    <ol class="about-steps">
-        <li>Open the floating board controls to propose a feature or variation.</li>
-        <li>Up-vote ideas you like. Voting uses a CAPTCHA for everyone, even verified accounts, to keep brigades out.</li>
-        <li>At noon and midnight UTC, the top request is implemented and deployed automatically.</li>
-        <li>Votes reset and the race restarts—fresh ideas can win in the very next window.</li>
-    </ol>
-</section>
-
-<section class="about-section about-grid" data-soundtrack="atrium">
-    <div>
-        <h2>Fair play &amp; guardrails</h2>
-        <ul>
-            <li>All signups and submissions are rate limited to keep the queue human-sized.</li>
-            <li>CAPTCHA-backed voting is always on, so every up-vote comes from a real interaction.</li>
-            <li>Daily bonuses reward returning voters without letting balances overwhelm the board.</li>
-            <li>System health is tracked publicly in the footer to show when the board needs care.</li>
-        </ul>
-    </div>
-    <div>
-        <h2>Feature lifecycle</h2>
-        <ul>
-            <li>Ideas start in the backlog and can collect variations that refine the brief.</li>
-            <li>Each missed day without an up-vote shortens the seven-day lifespan of a request.</li>
-            <li>After a week of silence, a request drifts into the Feature Graveyard until someone revives a fresher take.</li>
-            <li>Implemented features carry their final vote totals so the changelog stays legible.</li>
-        </ul>
-    </div>
-</section>
-
-<section class="about-section graveyard-callout" data-soundtrack="graveyard">
-    <h2>Beware the Feature Graveyard</h2>
-    <p>Ideas that wander the board for too long fade into the graveyard. It is a living archive of experiments that never rallied votes or that lost momentum while the clock ticked down.</p>
-    <p class="graveyard-reminder">Keep your favorites alive: rally votes before midnight on the seventh day, or they&rsquo;ll return draped in spectral CSS.</p>
-</section>
-
-<section class="about-section" data-soundtrack="atrium">
-    <h2>How to participate</h2>
-    <ul class="about-actions">
-        <li>Browse the backlog via the board controls on the homepage to see what needs your vote.</li>
-        <li>Suggest quotes for the Daily Fortune rotation to add more personality between deployments.</li>
-        <li>Follow along with the API at <a href="/api/openapi.json">/api/openapi.json</a> if you prefer to script your submissions.</li>
-        <li>Share context in your profile status so collaborators know what you are building or cheering for.</li>
-    </ul>
 </section>
 {% endblock %}

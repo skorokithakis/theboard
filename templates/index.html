@@ -4,460 +4,94 @@
 {% block title %}{{ request.site.name }}{% endblock %}
 
 {% block content %}
-<section class="page-header" data-soundtrack="atrium">
-    <div>
-        <h1 class="page-title">{{ request.site.name }}</h1>
-        <p class="page-lead"><i>Be careful what you wish for.</i></p>
-        {% if daily_fortune %}
-        <figure class="daily-fortune" role="status" aria-live="polite">
-            <figcaption class="daily-fortune__label">
-                Daily fortune &middot; {{ daily_fortune.collection }} ({{ daily_fortune.package }})
-            </figcaption>
-            <blockquote class="daily-fortune__text">&ldquo;{{ daily_fortune.text }}&rdquo;</blockquote>
-            <p class="daily-fortune__attribution">- {{ daily_fortune.attribution }}</p>
-            {% if daily_fortune.submitted_by %}
-            <p class="daily-fortune__submitted">Submitted by {{ daily_fortune.submitted_by }}</p>
-            {% endif %}
-        </figure>
-        {% endif %}
-        <section class="daily-fortune__suggestion" aria-labelledby="fortune-suggestion-heading">
-            <div>
-                <p class="daily-fortune__suggestion-eyebrow">Have a better quote?</p>
-                <h2 id="fortune-suggestion-heading">Suggest the next Quote of the Day</h2>
-                <p class="daily-fortune__suggestion-copy">
-                    Community-submitted quotes join the rotation after a quick moderation pass. Share something funny, motivating, or mischievous.
-                </p>
-            </div>
-            <div class="daily-fortune__suggestion-form">
-                {% if request.user.is_authenticated %}
-                <form action="{% url 'main:fortune-suggest' %}" method="post">
-                    {% csrf_token %}
-                    {% if fortune_suggestion_form.non_field_errors %}
-                    <p class="form-error">{{ fortune_suggestion_form.non_field_errors|striptags }}</p>
-                    {% endif %}
-                    <div class="form-field">
-                        {{ fortune_suggestion_form.text.label_tag }}
-                        {{ fortune_suggestion_form.text }}
-                        {% if fortune_suggestion_form.text.help_text %}
-                        <p class="form-help">{{ fortune_suggestion_form.text.help_text }}</p>
-                        {% endif %}
-                    {% if fortune_suggestion_form.text.errors %}
-                        {% for error in fortune_suggestion_form.text.errors %}
-                        <p class="form-error">{{ error }}</p>
-                        {% endfor %}
-                    {% endif %}
-                    </div>
-                    <div class="form-field">
-                        {{ fortune_suggestion_form.attribution.label_tag }}
-                        {{ fortune_suggestion_form.attribution }}
-                        {% if fortune_suggestion_form.attribution.help_text %}
-                        <p class="form-help">{{ fortune_suggestion_form.attribution.help_text }}</p>
-                        {% endif %}
-                    {% if fortune_suggestion_form.attribution.errors %}
-                        {% for error in fortune_suggestion_form.attribution.errors %}
-                        <p class="form-error">{{ error }}</p>
-                        {% endfor %}
-                    {% endif %}
-                    </div>
-                    <div class="form-actions">
-                        <button class="fortune-form__submit" type="submit">Submit quote</button>
-                    </div>
-                </form>
-                {% else %}
-                <p class="daily-fortune__suggestion-signin">
-                    Sign in through the board controls to submit a quote suggestion.
-                </p>
-                {% endif %}
-            </div>
-        </section>
-        {% if next_iteration_at %}
-        <p class="page-countdown" id="next-iteration-countdown" data-next-iteration="{{ next_iteration_at|date:'c' }}">Next iteration at {{ next_iteration_at|date:'F j, Y H:i \\U\\T\\C' }}</p>
+<section class="reset-hero" data-soundtrack="atrium">
+    <p class="reset-hero__eyebrow">Fresh slate</p>
+    <h1 class="reset-hero__title">{{ request.site.name }}</h1>
+    <p class="reset-hero__tagline">A blank page for the next wave of ideas. Add your feature and vote it up.</p>
+    <p class="reset-hero__archive">Looking for the old experience? Visit the <a href="{% url 'main:archive-index' %}">historical archive</a>.</p>
+</section>
+
+<section class="reset-board" aria-labelledby="reset-board-heading">
+    <div class="reset-board__panel">
+        <div class="reset-board__panel-header">
+            <p class="reset-board__eyebrow">Submit</p>
+            <h2 id="reset-board-heading">Add a feature to the fresh board</h2>
+            <p class="reset-board__hint">All submissions and votes still run through CAPTCHA to keep the signal clean.</p>
+        </div>
+        {% if not request.user.is_authenticated %}
+            <p class="reset-board__note">Sign in at <a href="/accounts/login/?next={{ request.path }}">/accounts/login/</a> to add a feature.</p>
+        {% elif not can_submit %}
+            <p class="reset-board__note">Daily submission limit reached. Come back after the next reset.</p>
         {% else %}
-        <p class="page-countdown" id="next-iteration-countdown">Next iteration timing unavailable.</p>
+            <form class="reset-form" method="post" action="{% url 'main:index' %}">
+                {% csrf_token %}
+                {% if submission_form.non_field_errors %}
+                    <p class="form-error">{{ submission_form.non_field_errors|striptags }}</p>
+                {% endif %}
+                <div class="form-field">
+                    {{ submission_form.title.label_tag }}
+                    {{ submission_form.title }}
+                    {% for error in submission_form.title.errors %}
+                        <p class="form-error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                <div class="form-field">
+                    {{ submission_form.description.label_tag }}
+                    {{ submission_form.description }}
+                    {% for error in submission_form.description.errors %}
+                        <p class="form-error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% if turnstile_site_key %}
+                    <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
+                {% else %}
+                    <p class="reset-board__note">Cloudflare Turnstile is disabled in this environment.</p>
+                {% endif %}
+                <div class="reset-form__actions">
+                    <button class="button" type="submit">Submit feature</button>
+                </div>
+            </form>
         {% endif %}
     </div>
-</section>
-
-<section class="companion-lab" aria-labelledby="companion-heading" data-soundtrack="arcade" data-shimeji-anchor data-shimeji-label="Desktop companion lab">
-    <div class="companion-lab__grid">
-        <div class="companion-lab__copy">
-            <p class="companion-lab__eyebrow">Desktop familiar</p>
-            <h2 id="companion-heading">Adopt a Shimeji-style board assistant</h2>
-            <p class="companion-lab__lead">
-                A tiny mascot now roams the viewport, perches on feature stacks, and chats about whatever part of the board you're visiting. It hitches a ride on buttons, follows your cursor, and nudges you toward the backlog when votes slow down.
-            </p>
-            <ul class="companion-lab__list">
-                <li>Walks the screen edges and hops between anchors like the terrarium, feature buttons, and scoreboard tiles.</li>
-                <li>Speaks in floating speech bubbles whenever you hover, click, or summon it near a section.</li>
-                <li>Responds to nearby elements with spark trails and a curious wobble when you linger.</li>
-                <li>Spend buddy coins on ribbons, snacks, or tools&mdash;they mirror your balance but never touch your real account.</li>
-            </ul>
-            <div class="companion-lab__actions">
-                <button class="button" type="button" data-shimeji-summon>Wake the companion</button>
-                <button class="button-outline" type="button" data-shimeji-open-shop>Gift shelf</button>
-                <button class="button-muted button-sm" type="button" data-shimeji-toggle>Pause wander</button>
-            </div>
+    <div class="reset-board__panel reset-board__panel--list">
+        <div class="reset-board__panel-header">
+            <p class="reset-board__eyebrow">Vote</p>
+            <h2>Help the next feature win</h2>
+            <p class="reset-board__hint">Votes reset after every deployment. Rally support while the board is clear.</p>
         </div>
-        <div class="companion-lab__stage" data-shimeji-anchor data-shimeji-label="Companion playground">
-            <div class="companion-lab__sky">
-                <span class="companion-lab__spark companion-lab__spark--one"></span>
-                <span class="companion-lab__spark companion-lab__spark--two"></span>
-                <span class="companion-lab__spark companion-lab__spark--three"></span>
-                <div class="companion-lab__radar" data-shimeji-radar>
-                    <div class="companion-lab__ring companion-lab__ring--one"></div>
-                    <div class="companion-lab__ring companion-lab__ring--two"></div>
-                    <div class="companion-lab__ring companion-lab__ring--three"></div>
-                    <div class="companion-lab__radar-label">Roaming</div>
-                </div>
+        {% if features %}
+            <div class="feature-stack">
+                {% for feature in features %}
+                    <article class="feature-card">
+                        <header class="feature-card__header">
+                            <h3 class="feature-card__title">{{ feature.title }}</h3>
+                            <p class="feature-card__meta">{{ feature.created_at|date:"F j, Y" }}</p>
+                        </header>
+                        <p class="feature-card__description">{{ feature.description }}</p>
+                        <div class="feature-card__footer">
+                            <div class="feature-card__votes">Votes: {{ feature.vote_total }}</div>
+                            <form method="post" action="{% url 'main:feature-vote-toggle' feature.id %}">
+                                {% csrf_token %}
+                                {% if turnstile_site_key %}
+                                    <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
+                                {% endif %}
+                                <button class="button-outline" type="submit">{% if feature.user_has_voted %}Remove vote{% else %}Vote up{% endif %}</button>
+                            </form>
+                        </div>
+                    </article>
+                {% endfor %}
             </div>
-            <div class="companion-lab__status">
-                <div class="companion-card">
-                    <p class="companion-card__eyebrow">Buddy mood</p>
-                    <p class="companion-card__stat" data-shimeji-mood>Curious</p>
-                    <p class="companion-card__hint">Speaks up when it spots interactive elements.</p>
-                </div>
-                <div class="companion-card companion-card--alt">
-                    <p class="companion-card__eyebrow">Buddy coins</p>
-                    <p class="companion-card__stat" data-shimeji-balance-display>—</p>
-                    <p class="companion-card__hint">A sandbox stash for gifts; your board balance stays untouched.</p>
-                </div>
-                <div class="companion-card">
-                    <p class="companion-card__eyebrow">Anchor lock</p>
-                    <p class="companion-card__stat" data-shimeji-anchor-label>Waiting for a ping</p>
-                    <p class="companion-card__hint">Tag any section with a pulse to pull the mascot toward it.</p>
-                </div>
-            </div>
-        </div>
+        {% else %}
+            <p class="reset-board__empty">No ideas yet. Plant the first one.</p>
+        {% endif %}
+        <p class="reset-board__note">Need the old interface? Head to the <a href="{% url 'main:archive-index' %}">archive snapshot</a>.</p>
     </div>
-    <div class="companion-lab__shelf" aria-label="Gift ideas for the companion">
-        <div class="companion-gift">
-            <p class="companion-gift__title">Star silk ribbon</p>
-            <p class="companion-gift__desc">Adds a luminous ribbon and boosts the buddy's confidence.</p>
-            <span class="companion-gift__cost">12 coins</span>
-        </div>
-        <div class="companion-gift">
-            <p class="companion-gift__title">Glowing mochi snack</p>
-            <p class="companion-gift__desc">Rewards good pathfinding; the buddy will sprint after eating.</p>
-            <span class="companion-gift__cost">9 coins</span>
-        </div>
-        <div class="companion-gift">
-            <p class="companion-gift__title">Signal lantern</p>
-            <p class="companion-gift__desc">Lets the mascot ping sections you mark with data anchors.</p>
-            <span class="companion-gift__cost">14 coins</span>
-        </div>
-        <div class="companion-gift">
-            <p class="companion-gift__title">Confetti thruster</p>
-            <p class="companion-gift__desc">Explodes with particles when a feature receives a vote.</p>
-            <span class="companion-gift__cost">7 coins</span>
-        </div>
-    </div>
-</section>
-
-<section class="plant-terrarium" aria-labelledby="plant-heading" data-soundtrack="greenhouse" data-plant-state="{{ terrarium_state.key }}" data-shimeji-anchor data-shimeji-label="Terrarium mist">
-    <div class="plant-terrarium__copy">
-        <p class="plant-terrarium__eyebrow">Sandspiel terrarium · {{ terrarium_state.headline }}</p>
-        <h2 id="plant-heading">Paint a falling-sand biome</h2>
-        <p class="plant-terrarium__lead">
-            Mist, light, and board health now feed a tiny sand simulation. Paint materials into the glass, then sling a neon paddle through the grains like a pocket brick breaker.
-        </p>
-        <p class="plant-terrarium__note">
-            {{ terrarium_state.note }}
-        </p>
-        <div class="plant-terrarium__chips" role="list">
-            <div class="plant-chip" role="listitem">
-                <span class="plant-chip__label">Light</span>
-                <span class="plant-chip__value">{{ terrarium_state.sun }}</span>
-            </div>
-            <div class="plant-chip" role="listitem">
-                <span class="plant-chip__label">Water</span>
-                <span class="plant-chip__value">{{ terrarium_state.water }}</span>
-            </div>
-            <div class="plant-chip" role="listitem">
-                <span class="plant-chip__label">Mood</span>
-                <span class="plant-chip__value">{{ terrarium_state.mood }}</span>
-            </div>
-            <div class="plant-chip plant-chip--label" role="listitem">
-                <span class="plant-chip__label">Beacon feature</span>
-                <span class="plant-chip__value">{{ terrarium_state.label|default:"Sprouting idea"|truncatechars:28 }}</span>
-            </div>
-        </div>
-    </div>
-    <div class="plant-terrarium__art" role="img" aria-label="{{ terrarium_state.aria_label }}">
-        <div class="sand-terrarium" data-sand-terrarium data-plant-state="{{ terrarium_state.key }}">
-            <div class="sand-terrarium__header">
-                <div class="sand-terrarium__meta">
-                    <span class="sand-terrarium__eyebrow">Live sandbox</span>
-                    <span class="sand-terrarium__title">{{ terrarium_state.label|default:"Sprouting idea"|truncatechars:28 }}</span>
-                </div>
-                <div class="sand-terrarium__toggles" role="group" aria-label="Brush size">
-                    <button type="button" class="sand-toggle" data-sand-brush="1" aria-pressed="false">Fine</button>
-                    <button type="button" class="sand-toggle" data-sand-brush="2" aria-pressed="true">Medium</button>
-                    <button type="button" class="sand-toggle" data-sand-brush="3" aria-pressed="false">Flood</button>
-                </div>
-            </div>
-            <div class="sand-terrarium__frame">
-                <div class="sand-terrarium__controls" role="list" aria-label="Materials">
-                    <button class="sand-chip" type="button" data-sand-material="sand" data-color="#e6be82" aria-pressed="true" role="listitem">Sand</button>
-                    <button class="sand-chip" type="button" data-sand-material="stone" data-color="#8fa7bc" aria-pressed="false" role="listitem">Stone</button>
-                    <button class="sand-chip" type="button" data-sand-material="glass" data-color="#c0e2ff" aria-pressed="false" role="listitem">Glass</button>
-                    <button class="sand-chip" type="button" data-sand-material="wood" data-color="#c07f4f" aria-pressed="false" role="listitem">Wood</button>
-                    <button class="sand-chip" type="button" data-sand-material="water" data-color="#5fb8ff" aria-pressed="false" role="listitem">Water</button>
-                    <button class="sand-chip" type="button" data-sand-material="steam" data-color="#cdd9de" aria-pressed="false" role="listitem">Steam</button>
-                    <button class="sand-chip" type="button" data-sand-material="fire" data-color="#ff7044" aria-pressed="false" role="listitem">Fire</button>
-                    <button class="sand-chip" type="button" data-sand-material="bacteria" data-color="#b6ff6c" aria-pressed="false" role="listitem">Bacteria</button>
-                    <button class="sand-chip" type="button" data-sand-material="plant" data-color="#62f1af" aria-pressed="false" role="listitem">Plant</button>
-                </div>
-                <div class="sand-terrarium__status" data-sand-status>Painting with sand · medium brush</div>
-                <div class="sand-invaders" data-sand-invaders>
-                    <div class="sand-invaders__copy">
-                        <p class="sand-invaders__eyebrow">Optional mode</p>
-                        <p class="sand-invaders__title">Sand Invaders</p>
-                        <p class="sand-invaders__hint" data-sand-invaders-status>Cosmic steel is dormant. Enable the mode to invite geometric visitors.</p>
-                    </div>
-                <div class="sand-invaders__controls">
-                    <button type="button" class="sand-toggle sand-toggle--ghost" data-sand-invaders-toggle aria-pressed="false">Enable</button>
-                    <button type="button" class="sand-chip sand-chip--mini" data-sand-invaders-spawn disabled>Call a wave</button>
-                </div>
-            </div>
-            <div class="sand-breaker" data-sand-breaker>
-                <div class="sand-breaker__copy">
-                    <p class="sand-breaker__eyebrow">Fusion mini-game</p>
-                    <p class="sand-breaker__title">Brick Breaker terrarium</p>
-                    <p class="sand-breaker__hint" data-breaker-status>Enable the paddle to ricochet a plasma orb through your sand stack. Use your pointer or ← → to steer; space to serve.</p>
-                </div>
-                <div class="sand-breaker__controls">
-                    <button type="button" class="sand-toggle sand-toggle--ghost" data-breaker-toggle aria-pressed="false">Enable paddle</button>
-                    <button type="button" class="sand-chip sand-chip--mini" data-breaker-serve disabled>Serve orb</button>
-                </div>
-            </div>
-            <div class="sand-terrarium__canvas-wrap">
-                <canvas data-sand-canvas width="150" height="180" aria-label="Falling sand terrarium canvas"></canvas>
-                <div class="sand-terrarium__hint">
-                    Click or touch to paint materials. Launch the breaker orb to carve through whatever you build.
-                </div>
-            </div>
-            <div class="sand-terrarium__actions">
-                    <button type="button" class="sand-action" data-sand-action="mist">Mist</button>
-                    <button type="button" class="sand-action" data-sand-action="seed">Seed sand</button>
-                    <button type="button" class="sand-action" data-sand-action="burn">Spark</button>
-                    <button type="button" class="sand-action sand-action--clear" data-sand-action="clear">Reset glass</button>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="glorp-cat" aria-labelledby="glorp-cat-heading" data-soundtrack="graveyard" data-shimeji-anchor data-shimeji-label="Glorp cat habitat">
-    <div class="glorp-cat__grid">
-        <div class="glorp-cat__copy">
-            <p class="glorp-cat__eyebrow">Backlog familiar</p>
-            <h2 id="glorp-cat-heading">Meet the Glorp Cat</h2>
-            <p class="glorp-cat__lead">
-                A bioluminescent housecat now naps inside a containment orb to keep watch over feature requests.
-                The glorp ripples when votes land, and the purr softens any backlog panic.
-            </p>
-            <ul class="glorp-cat__list">
-                <li>Cosmic resin, perpetual purr cycle, and a suspicious fondness for ship logs.</li>
-                <li>Glass gives it the best view of new ideas—and keeps the glorp splashes contained.</li>
-                <li>Approach with snacks, not bug reports.</li>
-            </ul>
-            <div class="glorp-cat__stats" role="list">
-                <div class="glorp-cat__stat" role="listitem">
-                    <span class="glorp-cat__stat-label">Mood</span>
-                    <span class="glorp-cat__stat-value">Viscous purr</span>
-                </div>
-                <div class="glorp-cat__stat" role="listitem">
-                    <span class="glorp-cat__stat-label">Glorp density</span>
-                    <span class="glorp-cat__stat-value">7.2 lumens</span>
-                </div>
-                <div class="glorp-cat__stat" role="listitem">
-                    <span class="glorp-cat__stat-label">Patrol route</span>
-                    <span class="glorp-cat__stat-value">Feature wall perimeter</span>
-                </div>
-            </div>
-            <figure class="glorp-cat__diagram" aria-labelledby="glorp-cat-diagram-title">
-                <figcaption class="glorp-cat__diagram-title" id="glorp-cat-diagram-title">Containment sketch</figcaption>
-                <pre class="glorp-cat__diagram-art" aria-hidden="true">      /\\_/\\
-  ___( o o  )___
- /    \\_^_/    \\
-|  |  /   \\  |  |
-|  | /|_|_|\\ |  |
- \\_/  \\___/  \\_/
-   \\   \\_/   /
-    `-.   .-'
-       \\./
-   ~~~~~~~~~</pre>
-                <p class="glorp-cat__diagram-note">ASCII snapshot of a glorp cat lounging in the tank for maintenance logs.</p>
-            </figure>
-        </div>
-        <div class="glorp-cat__scene" role="img" aria-label="A neon glorp cat floating inside a shimmering glass orb.">
-            <div class="glorp-cat__halo"></div>
-            <div class="glorp-cat__bubble">
-                <span class="glorp-cat__sparkle glorp-cat__sparkle--one"></span>
-                <span class="glorp-cat__sparkle glorp-cat__sparkle--two"></span>
-                <span class="glorp-cat__sparkle glorp-cat__sparkle--three"></span>
-                <div class="glorp-cat__cat">
-                    <span class="glorp-cat__tail"></span>
-                    <span class="glorp-cat__ear glorp-cat__ear--left"></span>
-                    <span class="glorp-cat__ear glorp-cat__ear--right"></span>
-                    <span class="glorp-cat__face">
-                        <span class="glorp-cat__eye glorp-cat__eye--left"></span>
-                        <span class="glorp-cat__eye glorp-cat__eye--right"></span>
-                        <span class="glorp-cat__nose"></span>
-                        <span class="glorp-cat__whisker glorp-cat__whisker--one"></span>
-                        <span class="glorp-cat__whisker glorp-cat__whisker--two"></span>
-                        <span class="glorp-cat__whisker glorp-cat__whisker--three"></span>
-                        <span class="glorp-cat__whisker glorp-cat__whisker--four"></span>
-                    </span>
-                    <span class="glorp-cat__chest"></span>
-                </div>
-                <span class="glorp-cat__drip glorp-cat__drip--left"></span>
-                <span class="glorp-cat__drip glorp-cat__drip--right"></span>
-                <div class="glorp-cat__pool"></div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="about-preview" data-soundtrack="atrium">
-    <div class="about-preview__copy">
-        <p class="about-preview__eyebrow">Want the lore?</p>
-        <h2>Explore how the board works</h2>
-        <p>We moved the full backstory and rules into a dedicated About page so you can quickly learn how deployments, voting guardrails, and the graveyard behave.</p>
-        <ul class="about-preview__list">
-            <li>Top-voted features deploy automatically at noon and midnight UTC.</li>
-            <li>Every vote runs through a CAPTCHA to keep the signal clean.</li>
-            <li>Requests that lose momentum drift into a spectral graveyard.</li>
-        </ul>
-        <div class="about-preview__actions">
-            <a class="button" href="{% url 'main:about' %}">Visit the About page</a>
-        </div>
-    </div>
-    <div class="about-preview__badge" aria-hidden="true">
-        <span class="about-preview__badge-title">New</span>
-        <p>Dedicated About page with the full story, guardrails, and rituals.</p>
-    </div>
-</section>
-
-<section class="logo-lab" aria-labelledby="logo-lab-heading" data-soundtrack="arcade" data-logo-lab data-shimeji-anchor data-shimeji-label="LOGO terminal">
-    <div class="logo-lab__grid">
-        <div class="logo-lab__copy">
-            <p class="logo-lab__eyebrow">Turtle terminal</p>
-            <h2 id="logo-lab-heading">Run LOGO on the homepage</h2>
-            <p>Write LOGO commands to nudge the turtle across a glassy stage. The origin sits in the center, positive <code>Y</code> goes up, and every line you draw layers into the canvas.</p>
-            <div class="logo-lab__chips" role="list">
-                <div class="logo-chip" role="listitem">
-                    <span class="logo-chip__label">Origin</span>
-                    <span class="logo-chip__value">(0, 0) at center</span>
-                </div>
-                <div class="logo-chip" role="listitem">
-                    <span class="logo-chip__label">Heading</span>
-                    <span class="logo-chip__value">0&deg; faces north</span>
-                </div>
-                <div class="logo-chip" role="listitem">
-                    <span class="logo-chip__label">Pen</span>
-                    <span class="logo-chip__value">Down &middot; 3px &middot; Gold</span>
-                </div>
-            </div>
-            <div class="logo-cheatsheet" aria-label="LOGO quick reference">
-                <div class="logo-cheatsheet__row"><span>FD n / BK n</span><span>Move forward/back</span></div>
-                <div class="logo-cheatsheet__row"><span>RT n / LT n</span><span>Rotate right/left</span></div>
-                <div class="logo-cheatsheet__row"><span>PU / PD</span><span>Lift or drop the pen</span></div>
-                <div class="logo-cheatsheet__row"><span>SETXY x y</span><span>Teleport to a point</span></div>
-                <div class="logo-cheatsheet__row"><span>PENCOLOR r g b</span><span>Set stroke color</span></div>
-                <div class="logo-cheatsheet__row"><span>PENWIDTH n</span><span>Change stroke weight</span></div>
-                <div class="logo-cheatsheet__row"><span>REPEAT n [ &hellip; ]</span><span>Loop a block</span></div>
-                <div class="logo-cheatsheet__row"><span>HOME / CLEAR</span><span>Reset position or canvas</span></div>
-            </div>
-            <div class="logo-presets" role="group" aria-label="Load a preset LOGO program">
-                <button class="logo-presets__button button-outline button-sm" type="button" data-logo-preset="starburst">Starburst</button>
-                <button class="logo-presets__button button-outline button-sm" type="button" data-logo-preset="rosette">Rosette fan</button>
-                <button class="logo-presets__button button-outline button-sm" type="button" data-logo-preset="spiral">Spiral loom</button>
-            </div>
-        </div>
-        <div class="logo-lab__console">
-            <div class="logo-stage" data-logo-stage>
-                <canvas width="720" height="480" data-logo-canvas aria-label="LOGO drawing canvas"></canvas>
-                <div class="logo-stage__overlay" data-logo-overlay>
-                    <p>Use LOGO to guide the turtle. Ctrl+Enter runs your program.</p>
-                </div>
-                <div class="logo-stage__turtle" data-logo-turtle aria-hidden="true">
-                    <span class="logo-stage__turtle-shell"></span>
-                    <span class="logo-stage__turtle-head"></span>
-                </div>
-            </div>
-            <label class="logo-console__label" for="logo-program">Program</label>
-            <textarea id="logo-program" name="logo-program" rows="10" data-logo-program spellcheck="false" aria-describedby="logo-status" placeholder="REPEAT 6 [ FD 140 RT 60 ]&#10;RT 20&#10;REPEAT 18 [ FD 80 RT 20 ]"></textarea>
-            <div class="logo-console__actions">
-                <button class="button button-sm" type="button" data-logo-run>Run</button>
-                <button class="button-outline button-sm" type="button" data-logo-clear>Clear canvas</button>
-                <button class="button-muted button-sm" type="button" data-logo-home>Center turtle</button>
-            </div>
-            <p class="logo-console__status" id="logo-status" data-logo-status role="status" aria-live="polite">Ready. Pen down with a metallic gold ink. The turtle faces north.</p>
-        </div>
-    </div>
-</section>
-
-{% if feature_buttons %}
-<section class="feature-button-wall" data-soundtrack="arcade" data-shimeji-anchor data-shimeji-label="Feature button wall">
-    <div class="feature-button-wall__heading">
-        <h2>Feature Button Wall</h2>
-        <p>Every fresh idea earns its own 88x31 pixel badge. Scroll through the grid to see the latest ambitions.</p>
-    </div>
-    <div class="feature-button-grid" role="list" aria-label="Feature buttons generated from the current backlog">
-        {% for feature in feature_buttons %}
-        <div class="feature-button" role="img" aria-label="{{ feature.title }}" title="{{ feature.description }}">
-            <span class="feature-button__title">{{ feature.title|truncatechars:18 }}</span>
-            <span class="feature-button__desc">{{ feature.description|truncatechars:22 }}</span>
-            <span class="feature-button__scanlines" aria-hidden="true"></span>
-        </div>
-        {% endfor %}
-    </div>
-</section>
-{% endif %}
-
-<section class="breaker-section" aria-labelledby="brick-breaker-heading" data-soundtrack="arcade" data-shimeji-anchor data-shimeji-label="Brick breaker arcade">
-    <div class="breaker-grid">
-        <div class="breaker-copy">
-            <p class="breaker-pretitle">Interactive backboard</p>
-            <h2 id="brick-breaker-heading">Art Deco Brick Breaker</h2>
-            <p>Every button in the backlog becomes a glass-brick badge. Keep the paddle gilded, launch the obsidian orb, and chip away at the stack—two good hits will shatter any feature.</p>
-            <ul class="breaker-instructions">
-                <li><span>Space</span> fires the ball from the paddle.</li>
-                <li><span>Left / Right</span> move the paddle with eased momentum.</li>
-                <li>The ball ricochets off the display borders&mdash;use them to line up tricky shots.</li>
-            </ul>
-            <p class="breaker-note">Buttons bruise on the first impact and collapse on the second. The feed below keeps score of every casualty.</p>
-        </div>
-        <div class="breaker-game">
-            <div class="breaker-stage" data-breaker-stage>
-                <canvas id="art-deco-brick-breaker" width="960" height="520" aria-describedby="brick-breaker-heading" tabindex="0"></canvas>
-                <div class="breaker-stage__overlay" data-breaker-overlay>
-                    <p data-breaker-overlay-text>Press space to launch the gilded sphere.</p>
-                </div>
-            </div>
-            <div class="breaker-hud" aria-live="polite">
-                <p><span>Buttons remaining</span><strong data-breaker-remaining>0</strong></p>
-                <p><span>Shots fired</span><strong data-breaker-shots>0</strong></p>
-                <p><span>Combo streak</span><strong data-breaker-streak>0</strong></p>
-                <p><span>Last break</span><strong data-breaker-last>&mdash;</strong></p>
-            </div>
-            <div class="breaker-feed-wrapper">
-                <h3>Broadcast log</h3>
-                <ul class="breaker-feed" data-breaker-feed aria-live="polite" aria-atomic="false">
-                    <li>Awaiting first volley...</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-    <p class="breaker-empty" data-breaker-empty hidden>No buttons remain to break. Add a feature request to restock the wall.</p>
 </section>
 {% endblock %}
 
 {% block extra_scripts %}
     {{ block.super }}
-    {{ feature_button_payload|json_script:"feature-button-data" }}
-    <script src="{% static 'js/sand-terrarium.js' %}" defer></script>
-    <script src="{% static 'js/logo-lab.js' %}" defer></script>
-    <script src="{% static 'js/brickbreaker.js' %}" defer></script>
+    {% if turnstile_site_key %}
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    {% endif %}
 {% endblock %}

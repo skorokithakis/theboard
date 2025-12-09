@@ -21,6 +21,7 @@
     data-shimeji-username="{{ request.user.username|default_if_none:'' }}"
     data-shimeji-balance="{{ request.user.balance|default_if_none:0 }}"
     data-shimeji-auth="{{ request.user.is_authenticated|yesno:'true,false' }}"
+    data-graveyard-url="{% url 'main:graveyard' %}"
     {% if settings.TURNSTILE_ENABLED %}data-turnstile-sitekey="{{ settings.TURNSTILE_SITE_KEY }}"{% endif %}>
     <header class="site-header">
         <div class="container header-inner">
@@ -31,6 +32,10 @@
                         class="header-nav__link{% if url_name == 'about' %} header-nav__link--active{% endif %}"
                         {% if url_name == 'about' %}aria-current="page"{% endif %}
                         href="{% url 'main:about' %}">About</a>
+                    <a
+                        class="header-nav__link{% if url_name == 'graveyard' %} header-nav__link--active{% endif %}"
+                        {% if url_name == 'graveyard' %}aria-current="page"{% endif %}
+                        href="{% url 'main:graveyard' %}">Graveyard</a>
                     <a
                         class="header-nav__link{% if url_name == 'archive-index' or url_name == 'archive-about' or url_name == 'archive-scoreboard' %} header-nav__link--active{% endif %}"
                         {% if url_name == 'archive-index' or url_name == 'archive-about' or url_name == 'archive-scoreboard' %}aria-current="page"{% endif %}

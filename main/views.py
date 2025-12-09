@@ -226,6 +226,43 @@ def about(request: HttpRequest) -> HttpResponse:
     return render(request, "about.html", context)
 
 
+@require_GET
+def graveyard(request: HttpRequest) -> HttpResponse:
+    """Render the Feature Graveyard as a dedicated page."""
+
+    Feature.expire_stale()
+
+    graves = list(
+        Feature.objects.expired()
+        .with_vote_totals()
+        .select_related("creator")
+        .order_by("-expired_at", "-created_at")
+    )
+    peak_votes = max((feature.vote_total for feature in graves), default=0)
+
+    def _scale(votes: int) -> float:
+        if peak_votes <= 0:
+            return 1.0
+        normalized = votes / peak_votes
+        scaled = 0.9 + normalized * 0.9
+        return round(min(max(scaled, 0.85), 1.65), 2)
+
+    tombstones = [
+        {"feature": feature, "scale": _scale(feature.vote_total)} for feature in graves
+    ]
+
+    return render(
+        request,
+        "graveyard.html",
+        {
+            "tombstones": tombstones,
+            "peak_votes": peak_votes,
+            "total_features": len(tombstones),
+            "next_iteration_at": get_next_iteration_at(),
+        },
+    )
+
+
 @require_http_methods(["GET", "HEAD", "POST"])
 def plaintext_submission(request: HttpRequest) -> HttpResponse:
     """Provide a minimal, styling-free path to submit and vote on features."""

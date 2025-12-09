@@ -78,6 +78,7 @@
     enabled: true,
     lastPlayedAt: 0,
   };
+  var GRAVEYARD_URL = "/graveyard/";
   var WINTER_MONTHS = { 0: true, 10: true, 11: true };
   var SNOWFLAKE_LAYER_CLASS = "snowfall-layer";
   var MELT_CLASS = "is-melting";
@@ -95,6 +96,9 @@
 
   function initialize() {
     injectCSS();
+    if (document.body && document.body.dataset && document.body.dataset.graveyardUrl) {
+      GRAVEYARD_URL = document.body.dataset.graveyardUrl;
+    }
     createLauncher();
     createModal();
     createFeatureDetailModal();
@@ -1372,18 +1376,13 @@
     var graveyardButton = document.createElement("button");
     graveyardButton.type = "button";
     graveyardButton.className = "tb-btn-spooky";
-    graveyardButton.textContent = "Visit graveyard";
-    graveyardButton.disabled = STATE.graveyardFeatures.length === 0;
-    if (graveyardButton.disabled) {
-      graveyardButton.setAttribute("aria-disabled", "true");
-      graveyardButton.title = "No expired features yet.";
-    } else {
-      graveyardButton.removeAttribute("aria-disabled");
-      graveyardButton.title = "Pay respects to retired ideas.";
-      graveyardButton.addEventListener("click", function (event) {
-        openGraveyardModal(event.currentTarget);
-      });
-    }
+    graveyardButton.textContent = "Enter graveyard";
+    graveyardButton.title = STATE.graveyardFeatures.length
+      ? "Pay respects to retired ideas on the dedicated page."
+      : "Even without tombstones, the undead Easter eggs linger.";
+    graveyardButton.addEventListener("click", function () {
+      window.location.href = GRAVEYARD_URL;
+    });
     buttonGroup.appendChild(graveyardButton);
 
     var refreshButton = document.createElement("button");

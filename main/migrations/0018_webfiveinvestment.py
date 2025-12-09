@@ -6,22 +6,48 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0017_delete_scorerecord'),
+        ("main", "0017_delete_scorerecord"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='WebFiveInvestment',
+            name="WebFiveInvestment",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('amount', models.PositiveIntegerField(help_text='Number of coins committed to the Web 5.0 acceleration fund.')),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='Timestamp marking when this Web 5.0 investment was locked in.')),
-                ('user', models.ForeignKey(help_text='Member fueling the Web 5.0 treasury with their balance.', on_delete=django.db.models.deletion.CASCADE, related_name='web5_investments', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "amount",
+                    models.PositiveIntegerField(
+                        help_text="Number of coins committed to the Web 5.0 acceleration fund."
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="Timestamp marking when this Web 5.0 investment was locked in.",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        help_text="Member fueling the Web 5.0 treasury with their balance.",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="web5_investments",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
+                "ordering": ["-created_at"],
             },
         ),
     ]

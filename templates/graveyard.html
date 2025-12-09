@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Feature Graveyard{% endblock %}
+
+{% block content %}
+<section class="graveyard-page" data-soundtrack="graveyard">
+    <header class="graveyard-hero">
+        <p class="graveyard-hero__eyebrow">Abandoned, but not forgotten</p>
+        <h1 class="graveyard-hero__title">Feature Graveyard</h1>
+        <p class="graveyard-hero__lede">A Neo-Gothic resting place for ideas that lost the vote. The stones grow with every ballot they once earned, and the soil rustles with Easter Zombies guarding the ruins.</p>
+        <div class="graveyard-hero__meta" role="list">
+            <div class="graveyard-hero__stat" role="listitem">
+                <span class="graveyard-hero__stat-label">Interred requests</span>
+                <span class="graveyard-hero__stat-value">{{ total_features }}</span>
+            </div>
+            <div class="graveyard-hero__stat" role="listitem">
+                <span class="graveyard-hero__stat-label">Peak lifetime votes</span>
+                <span class="graveyard-hero__stat-value">{% if peak_votes %}{{ peak_votes }}{% else %}0{% endif %}</span>
+            </div>
+            <div class="graveyard-hero__stat" role="listitem">
+                <span class="graveyard-hero__stat-label">Next reckoning</span>
+                <span class="graveyard-hero__stat-value">
+                    {% if next_iteration_at %}{{ next_iteration_at|date:"F j, Y, g:i a T" }}{% else %}Pending{% endif %}
+                </span>
+            </div>
+        </div>
+        <div class="graveyard-zombies" aria-hidden="true">
+            <div class="graveyard-zombie" data-zombie="one"><span class="graveyard-zombie__face">🥚</span><span class="graveyard-zombie__quip">brainz?</span></div>
+            <div class="graveyard-zombie" data-zombie="two"><span class="graveyard-zombie__face">🥚</span><span class="graveyard-zombie__quip">peepocalypse</span></div>
+            <div class="graveyard-zombie" data-zombie="three"><span class="graveyard-zombie__face">🥚</span><span class="graveyard-zombie__quip">doomed brunch</span></div>
+        </div>
+    </header>
+
+    <section class="graveyard-field" aria-labelledby="graveyard-heading">
+        <div class="graveyard-dither" aria-hidden="true"></div>
+        <div class="graveyard-fog" aria-hidden="true"></div>
+        <div class="graveyard-field__header">
+            <p class="graveyard-field__eyebrow">Pay respects</p>
+            <h2 id="graveyard-heading" class="graveyard-field__title">Tombstones sized by their former votes</h2>
+            <p class="graveyard-field__blurb">Each stone scales with its vote tally. Tap a slab to read its epitaph and remember why the idea drifted back underground.</p>
+        </div>
+        {% if tombstones %}
+            <div class="graveyard-grid" role="list">
+                {% for tombstone in tombstones %}
+                    {% with feature=tombstone.feature %}
+                    <article
+                        class="graveyard-tombstone"
+                        role="listitem"
+                        style="--tombstone-scale: {{ tombstone.scale }};"
+                        aria-label="{{ feature.title }}">
+                        <div class="graveyard-tombstone__stone">
+                            <div class="graveyard-tombstone__arch">
+                                <span class="graveyard-tombstone__crest">✟</span>
+                                <span class="graveyard-tombstone__votes">{{ feature.vote_total|default:0 }} votes</span>
+                            </div>
+                            <div class="graveyard-tombstone__inscription">
+                                <h3 class="graveyard-tombstone__title">{{ feature.title }}</h3>
+                                <p class="graveyard-tombstone__epitaph">{{ feature.description|truncatechars:160 }}</p>
+                                <p class="graveyard-tombstone__meta">
+                                    <span>Entombed {{ feature.expired_at|date:"F j, Y" }}</span>
+                                    <span class="graveyard-tombstone__dot">•</span>
+                                    <span>by {{ feature.creator.display_name }}</span>
+                                </p>
+                            </div>
+                            <div class="graveyard-tombstone__shadow"></div>
+                        </div>
+                    </article>
+                    {% endwith %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="graveyard-empty">
+                <p class="graveyard-empty__title">No stones stand yet.</p>
+                <p class="graveyard-empty__body">The zombies are disappointed, but the board is spotless. Keep voting so nothing wanders in.</p>
+            </div>
+        {% endif %}
+    </section>
+</section>
+{% endblock %}

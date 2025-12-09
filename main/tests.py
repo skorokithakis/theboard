@@ -993,6 +993,56 @@ class QuoteSuggestionViewTests(TestCase):
         )
 
 
+class GraveyardViewTests(TestCase):
+    def setUp(self) -> None:
+        self.owner = User.objects.create_user(username="keeper", password="test-pass")
+
+    def _static_override(self):
+        storage_settings = {
+            **settings.STORAGES,
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            },
+        }
+        return override_settings(
+            STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage",
+            STORAGES=storage_settings,
+        )
+
+    def test_graveyard_page_scales_tombstones_by_votes(self) -> None:
+        heavy = models.Feature.objects.create(
+            title="Many votes",
+            description="Popular but doomed",
+            creator=self.owner,
+            expired_at=timezone.now(),
+            votes=12,
+        )
+        light = models.Feature.objects.create(
+            title="Few votes",
+            description="Barely noticed",
+            creator=self.owner,
+            expired_at=timezone.now(),
+            votes=3,
+        )
+
+        with self._static_override():
+            response = self.client.get(reverse("main:graveyard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, heavy.title)
+        self.assertContains(response, light.title)
+        self.assertContains(response, "--tombstone-scale: 1.65")
+        self.assertContains(response, "--tombstone-scale: 1.12")
+        self.assertEqual(response.context["total_features"], 2)
+
+    def test_graveyard_page_shows_empty_state(self) -> None:
+        with self._static_override():
+            response = self.client.get(reverse("main:graveyard"))
+
+        self.assertContains(response, "No stones stand yet.")
+        self.assertEqual(response.context["total_features"], 0)
+
+
 class ScoreboardViewTests(TestCase):
     def setUp(self) -> None:
         self.user = User.objects.create_user(username="scorer", password="test-pass")

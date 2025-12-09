@@ -204,6 +204,14 @@
                     {% endif %}
                 </dd>
             </div>
+            <div class="profile-balance__row">
+                <dt>Web 5.0 invested</dt>
+                <dd>{{ web5_totals.user_total|default:0 }} coins</dd>
+            </div>
+            <div class="profile-balance__row">
+                <dt>Initiative treasury</dt>
+                <dd>{{ web5_totals.global_total|default:0 }} coins</dd>
+            </div>
         </dl>
         {% if can_edit_profile %}
         <p class="profile-balance__note">

@@ -7,6 +7,7 @@ from . import views
 app_name = "main"
 urlpatterns = [
     path("", views.index, name="index"),
+    path("invest/web5/", views.web5_invest, name="web5-invest"),
     path(
         "features/<int:pk>/vote/",
         views.feature_vote_toggle,

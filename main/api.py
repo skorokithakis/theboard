@@ -9,8 +9,8 @@ from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.core.cache import caches
 from django.core.cache.backends.base import InvalidCacheBackendError
-from django.db import connections
-from django.db.models import Count, Prefetch, Q
+from django.db import connections, transaction
+from django.db.models import Count, F, Prefetch, Q
 from django.db.utils import OperationalError
 from django.http import HttpRequest
 from ninja import NinjaAPI
@@ -71,6 +71,7 @@ def _serialize_user(user: models.User) -> dict[str, Any]:
         "status": user.status,
         "is_superuser": user.is_superuser,
         "balance": user.balance,
+        "web5_invested": models.WebFiveInvestment.objects.total_for_user(user),
         "last_daily_bonus_at": bonus["last_awarded_at"],
         "next_daily_bonus_at": bonus["next_available_at"],
         "daily_bonus_available": bonus["available"],
@@ -130,6 +131,19 @@ def _client_ip(request: HttpRequest) -> str | None:
     if forwarded:
         return forwarded.split(",")[0].strip()
     return request.META.get("REMOTE_ADDR")
+
+
+def _web5_totals(user) -> dict[str, int]:
+    """Return aggregate Web 5.0 investment totals for API responses."""
+    return {
+        "total_committed": models.WebFiveInvestment.objects.total_committed(),
+        "user_committed": models.WebFiveInvestment.objects.total_for_user(user),
+        "balance": (
+            getattr(user, "balance", 0)
+            if getattr(user, "is_authenticated", False)
+            else 0
+        ),
+    }
 
 
 @api.get(
@@ -557,6 +571,50 @@ def current_user(request: HttpRequest) -> dict[str, Any]:
     return {
         "user": _serialize_user(request.user),
         "can_submit": can_submit,
+    }
+
+
+@api.get(
+    "/web5",
+    response=schemas.Web5StatusResponse,
+    operation_id="api_web5_status",
+)
+def web5_status(request: HttpRequest) -> dict[str, Any]:
+    """Return the latest Web 5.0 treasury totals."""
+    return _web5_totals(request.user)
+
+
+@api.post(
+    "/web5/invest",
+    response=schemas.Web5InvestmentResponse,
+    auth=session_auth,
+    operation_id="api_web5_invest",
+)
+def web5_invest(
+    request: HttpRequest, data: schemas.Web5InvestmentInput
+) -> dict[str, Any]:
+    """Invest a slice of the user's balance into Web 5.0."""
+    amount = int(data.amount)
+    if amount < 1:
+        raise HttpError(400, "Invest at least 1 coin.")
+
+    with transaction.atomic():
+        investor = (
+            models.User.objects.select_for_update()
+            .only("id", "balance")
+            .get(pk=request.user.pk)
+        )
+        if investor.balance < amount:
+            raise HttpError(400, "Not enough balance to invest that much.")
+
+        models.User.objects.filter(pk=investor.pk).update(balance=F("balance") - amount)
+        models.WebFiveInvestment.objects.create(user=investor, amount=amount)
+        investor.refresh_from_db(fields=["balance"])
+
+    totals = _web5_totals(investor)
+    return {
+        "message": f"Invested {amount} coins into Web 5.0.",
+        **totals,
     }
 
 

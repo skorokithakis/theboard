@@ -6028,6 +6028,153 @@ select {
   color: var(--muted-text);
 }
 
+.web5-section {
+  border: 3px solid var(--border);
+  border-radius: 18px;
+  background: radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.08) 0, transparent 25%), radial-gradient(circle at 88% 12%, rgba(255, 255, 255, 0.06) 0, transparent 22%), linear-gradient(135deg, var(--surface) 0%, var(--surface-alt) 100%);
+  box-shadow: 12px 12px 0 var(--border);
+  padding: 1.75rem;
+  margin-bottom: 1.75rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.web5-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba(255, 226, 133, 0.12), transparent 36%);
+  pointer-events: none;
+}
+
+.web5-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  position: relative;
+  z-index: 1;
+}
+
+.web5-copy {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.web5-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.85rem;
+  color: var(--muted-text);
+  margin: 0;
+}
+
+.web5-title {
+  margin: 0;
+  font-size: clamp(2rem, 3.8vw, 2.6rem);
+  line-height: 1.05;
+}
+
+.web5-intro {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.web5-promises {
+  margin: 0;
+  padding: 0.5rem 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+  background: var(--surface);
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+}
+
+.web5-promises li {
+  line-height: 1.5;
+}
+
+.web5-promises strong {
+  color: var(--text);
+}
+
+.web5-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+.web5-stat {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  box-shadow: 6px 6px 0 var(--border);
+}
+
+.web5-stat__label {
+  margin: 0;
+  color: var(--muted-text);
+  font-size: 0.9rem;
+}
+
+.web5-stat__value {
+  margin: 0.2rem 0 0 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.web5-action {
+  background: var(--card-bg);
+  border: 3px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 10px 10px 0 var(--border);
+  padding: 1.25rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.web5-action__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--muted-text);
+  margin: 0;
+}
+
+.web5-action__lede {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.web5-action__note {
+  margin: 0;
+  color: var(--muted-text);
+}
+
+.web5-action__locked {
+  margin: 0;
+  font-weight: 700;
+}
+
+.web5-form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.web5-form__label {
+  font-weight: 700;
+}
+
+.web5-form__help {
+  margin: 0;
+  color: var(--muted-text);
+}
+
+.web5-form__submit {
+  width: 100%;
+  justify-content: center;
+}
+
 .reset-board {
   display: grid;
   gap: 1.5rem;

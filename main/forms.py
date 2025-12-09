@@ -93,6 +93,43 @@ class QuoteSuggestionForm(forms.ModelForm):
         return attribution
 
 
+class WebFiveInvestmentForm(forms.Form):
+    """Form for contributing coins to the Web 5.0 fund."""
+
+    amount = forms.IntegerField(
+        min_value=1,
+        label=_("Invest coins"),
+        widget=forms.NumberInput(
+            attrs={
+                "class": "input",
+                "min": "1",
+                "inputmode": "numeric",
+            }
+        ),
+        help_text=_("Choose how much of your balance to commit."),
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+        balance = getattr(user, "balance", None)
+        if balance is not None:
+            self.fields["amount"].widget.attrs["max"] = str(max(balance, 1))
+            self.fields["amount"].help_text = _(
+                "Available balance: %(balance)s coins."
+            ) % {"balance": balance}
+
+    def clean_amount(self) -> int:
+        amount = int(self.cleaned_data.get("amount") or 0)
+        if amount < 1:
+            raise forms.ValidationError(_("Invest at least 1 coin."))
+        if not getattr(self.user, "is_authenticated", False):
+            raise forms.ValidationError(_("Sign in to invest."))
+        if amount > getattr(self.user, "balance", 0):
+            raise forms.ValidationError(_("Not enough coins in your treasury."))
+        return amount
+
+
 class SignUpForm(forms.ModelForm):
     """Registration form that captures username and password."""
 

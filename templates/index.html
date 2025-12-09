@@ -11,6 +11,58 @@
     <p class="reset-hero__archive">Looking for the old experience? Visit the <a href="{% url 'main:archive-index' %}">historical archive</a>.</p>
 </section>
 
+<section class="web5-section" aria-labelledby="web5-heading">
+    <div class="web5-grid">
+        <div class="web5-copy">
+            <p class="web5-eyebrow">Web 5.0 acceleration</p>
+            <h2 id="web5-heading" class="web5-title">Invest in the fifth dimension of the internet</h2>
+            <p class="web5-intro">Web 5.0 is where sensory internet, autonomous agents, and shared ownership collide. We are building a sentient network that remembers your intent, rewards your curiosity, and routes value the moment inspiration strikes.</p>
+            <ul class="web5-promises">
+                <li><strong>Omni-presence:</strong> identity, data, and assets follow you between worlds—no logins, no friction.</li>
+                <li><strong>Instant upside:</strong> every idea backed on The Board earns stake in the Web 5.0 lattice the second it lands.</li>
+                <li><strong>Trustless growth:</strong> transparent treasury, automated rewards, and auditable momentum for every supporter.</li>
+                <li><strong>Hype you can hold:</strong> early investors get front-row access to drops, partner launches, and surprise multipliers.</li>
+            </ul>
+            <div class="web5-stats" role="status" aria-live="polite">
+                <div class="web5-stat">
+                    <p class="web5-stat__label">Total war chest</p>
+                    <p class="web5-stat__value">{{ web5_totals.total_committed|default:0 }}c</p>
+                </div>
+                <div class="web5-stat">
+                    <p class="web5-stat__label">Your contribution</p>
+                    <p class="web5-stat__value">{{ web5_totals.user_committed|default:0 }}c</p>
+                </div>
+                <div class="web5-stat">
+                    <p class="web5-stat__label">Ready to deploy</p>
+                    <p class="web5-stat__value">{{ request.user.balance|default:0 }}c</p>
+                </div>
+            </div>
+        </div>
+        <div class="web5-action">
+            <p class="web5-action__eyebrow">Fuel the initiative</p>
+            <p class="web5-action__lede">Turn your balance into momentum. Every coin pushes Web 5.0 closer to launch.</p>
+            {% if request.user.is_authenticated %}
+                <form method="post" action="{% url 'main:web5-invest' %}" class="web5-form">
+                    {% csrf_token %}
+                    <label class="web5-form__label" for="{{ web5_investment_form.amount.id_for_label }}">Invest coins</label>
+                    {{ web5_investment_form.amount }}
+                    {% if web5_investment_form.amount.help_text %}
+                        <p class="web5-form__help">{{ web5_investment_form.amount.help_text }}</p>
+                    {% endif %}
+                    {% for error in web5_investment_form.amount.errors %}
+                        <p class="form-error">{{ error }}</p>
+                    {% endfor %}
+                    <button type="submit" class="button web5-form__submit">Invest in Web 5.0</button>
+                </form>
+                <p class="web5-action__note">Every contribution is logged forever. No takesies-backsies—only forward motion.</p>
+            {% else %}
+                <p class="web5-action__locked">Sign in to deploy your balance into Web 5.0.</p>
+                <p class="web5-action__note">Members get instant perks and a live ledger of their backing history.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
 <section class="reset-board" aria-labelledby="reset-board-heading">
     <div class="reset-board__panel">
         <div class="reset-board__panel-header">

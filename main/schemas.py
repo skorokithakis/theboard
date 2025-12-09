@@ -16,6 +16,7 @@ class UserSchema(Schema):
     status: str | None = None
     is_superuser: bool
     balance: int
+    web5_invested: int
     last_daily_bonus_at: datetime | None = None
     next_daily_bonus_at: datetime | None = None
     daily_bonus_available: bool
@@ -155,6 +156,29 @@ class SignupResponse(Schema):
     user: UserSchema
     daily_bonus_awarded: bool
     daily_bonus_amount: int
+
+
+class Web5InvestmentInput(Schema):
+    """Input payload for Web 5.0 investment."""
+
+    amount: int
+
+
+class Web5InvestmentResponse(Schema):
+    """Response after investing in Web 5.0."""
+
+    message: str
+    total_committed: int
+    user_committed: int
+    balance: int
+
+
+class Web5StatusResponse(Schema):
+    """Read-only snapshot of Web 5.0 fund totals."""
+
+    total_committed: int
+    user_committed: int
+    balance: int
 
 
 class CurrentUserResponse(Schema):

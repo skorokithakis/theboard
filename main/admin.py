@@ -162,3 +162,13 @@ class QuoteSuggestionAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
     @admin.display(description="Quote")
     def display_excerpt(self, obj: models.QuoteSuggestion) -> str:
         return obj.text[:80] + ("…" if len(obj.text) > 80 else "")
+
+
+@admin.register(models.WebFiveInvestment)
+class WebFiveInvestmentAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
+    """Admin listing for Web 5.0 treasury contributions."""
+
+    list_display = ("user", "amount", "created_at")
+    list_filter = ("created_at",)
+    search_fields = ("user__username",)
+    autocomplete_fields = ("user",)

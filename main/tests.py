@@ -762,6 +762,7 @@ class FeatureBoardTests(TestCase):
         self.assertTrue(data["daily_bonus_awarded"])
         self.assertEqual(data["user"]["balance"], economy.DAILY_LOGIN_BONUS)
         self.assertEqual(data["daily_bonus_amount"], economy.DAILY_LOGIN_BONUS)
+        self.assertIn("web5_invested", data["user"])
 
         later_same_day = morning + timedelta(hours=3)
         with mock.patch("main.economy.timezone.now", return_value=later_same_day):
@@ -775,6 +776,64 @@ class FeatureBoardTests(TestCase):
         self.owner.refresh_from_db()
         self.assertEqual(self.owner.balance, economy.DAILY_LOGIN_BONUS)
         self.assertFalse(data["daily_bonus_awarded"])
+
+    def test_web5_investment_view_records_contribution(self) -> None:
+        self.owner.balance = 120
+        self.owner.last_daily_bonus_at = timezone.now()
+        self.owner.save(update_fields=["balance", "last_daily_bonus_at"])
+        self.client.login(username=self.owner.username, password="test-pass-1")
+
+        with self._static_override():
+            response = self.client.post(
+                reverse("main:web5-invest"),
+                {"amount": 70},
+                follow=True,
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.owner.refresh_from_db()
+        self.assertEqual(self.owner.balance, 50)
+        self.assertEqual(models.WebFiveInvestment.objects.count(), 1)
+        self.assertEqual(
+            models.WebFiveInvestment.objects.total_committed(),
+            70,
+        )
+
+    def test_web5_investment_view_prevents_overspend(self) -> None:
+        self.owner.balance = 15
+        self.owner.last_daily_bonus_at = timezone.now()
+        self.owner.save(update_fields=["balance", "last_daily_bonus_at"])
+        self.client.login(username=self.owner.username, password="test-pass-1")
+
+        with self._static_override():
+            response = self.client.post(
+                reverse("main:web5-invest"),
+                {"amount": 50},
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.owner.refresh_from_db()
+        self.assertEqual(self.owner.balance, 15)
+        self.assertEqual(models.WebFiveInvestment.objects.count(), 0)
+
+    def test_web5_investment_api_endpoint_deducts_balance(self) -> None:
+        self.owner.balance = 90
+        self.owner.last_daily_bonus_at = timezone.now()
+        self.owner.save(update_fields=["balance", "last_daily_bonus_at"])
+        self.client.login(username=self.owner.username, password="test-pass-1")
+
+        response = self.client.post(
+            "/api/web5/invest",
+            {"amount": 45},
+            content_type="application/json",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.owner.refresh_from_db()
+        self.assertEqual(self.owner.balance, 45)
+        self.assertEqual(data["user_committed"], 45)
+        self.assertEqual(data["total_committed"], 45)
 
 
 class DailyFortuneTests(TestCase):

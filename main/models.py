@@ -391,3 +391,48 @@ class QuoteSuggestion(models.Model):
         elif not self.is_approved:
             self.approved_at = None
         super().save(*args, **kwargs)
+
+
+class WebFiveInvestmentQuerySet(models.QuerySet):
+    """Aggregations for Web 5.0 investments."""
+
+    def total_committed(self) -> int:
+        """Return the total coins committed across all investors."""
+        total = self.aggregate(total=models.Sum("amount")).get("total") or 0
+        return int(total)
+
+    def total_for_user(self, user: User | None) -> int:
+        """Return how much a member has personally invested."""
+        if not getattr(user, "is_authenticated", False):
+            return 0
+        total = (
+            self.filter(user=user).aggregate(total=models.Sum("amount")).get("total")
+            or 0
+        )
+        return int(total)
+
+
+class WebFiveInvestment(models.Model):
+    """Records of coins funneled into the Web 5.0 initiative."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="web5_investments",
+        on_delete=models.CASCADE,
+        help_text="Member fueling the Web 5.0 treasury with their balance.",
+    )
+    amount = models.PositiveIntegerField(
+        help_text="Number of coins committed to the Web 5.0 acceleration fund.",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Timestamp marking when this Web 5.0 investment was locked in.",
+    )
+
+    objects = WebFiveInvestmentQuerySet.as_manager()
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.user} invested {self.amount}c in Web 5.0"

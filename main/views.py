@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.db import transaction
 from django.db.models import Count, F, Q, Sum, Value
 from django.db.models.functions import Coalesce, Greatest
 from django.http import Http404, HttpRequest, HttpResponse
@@ -16,9 +17,14 @@ from django.views.decorators.http import require_GET, require_POST, require_http
 from django.core.exceptions import PermissionDenied
 
 from .economy import daily_bonus_status
-from .forms import FeatureForm, ProfileForm, QuoteSuggestionForm
+from .forms import (
+    FeatureForm,
+    ProfileForm,
+    QuoteSuggestionForm,
+    WebFiveInvestmentForm,
+)
 from .fortune import get_daily_fortune
-from .models import Feature, QuoteSuggestion, User as BoardUser, Vote
+from .models import Feature, QuoteSuggestion, User as BoardUser, Vote, WebFiveInvestment
 from .terrarium import build_terrarium_state
 from . import turnstile
 from .utils import get_next_iteration_at
@@ -87,6 +93,7 @@ def _fresh_board_context(
     *,
     submission_form: FeatureForm | None = None,
     can_submit: bool | None = None,
+    investment_form: WebFiveInvestmentForm | None = None,
 ) -> dict[str, object]:
     """Build the minimal context the reset homepage expects."""
 
@@ -103,6 +110,14 @@ def _fresh_board_context(
         "turnstile_site_key": getattr(settings, "TURNSTILE_SITE_KEY", ""),
         "can_submit": can_submit,
         "daily_fortune": get_daily_fortune(),
+        "web5_investment_form": investment_form
+        or WebFiveInvestmentForm(
+            user=request.user if request.user.is_authenticated else None
+        ),
+        "web5_totals": {
+            "total_committed": WebFiveInvestment.objects.total_committed(),
+            "user_committed": WebFiveInvestment.objects.total_for_user(request.user),
+        },
     }
 
 
@@ -286,6 +301,68 @@ def feature_vote_toggle(request: HttpRequest, pk: int) -> HttpResponse:
     return _toggle_vote(request, pk, redirect_name="main:index")
 
 
+@login_required
+@require_POST
+def web5_invest(request: HttpRequest) -> HttpResponse:
+    """Deduct coins from a user's balance to fund the Web 5.0 initiative."""
+
+    investment_form = WebFiveInvestmentForm(request.POST, user=request.user)
+    status_code = 200
+
+    if investment_form.is_valid():
+        amount = investment_form.cleaned_data["amount"]
+        with transaction.atomic():
+            investor = (
+                User.objects.select_for_update()
+                .only("id", "balance")
+                .get(pk=request.user.pk)
+            )
+            if investor.balance < amount:
+                investment_form.add_error(
+                    "amount", "You do not have enough coins after recalculating."
+                )
+                status_code = 400
+            else:
+                User.objects.filter(pk=investor.pk).update(
+                    balance=F("balance") - amount
+                )
+                WebFiveInvestment.objects.create(user=investor, amount=amount)
+                investor.refresh_from_db(fields=["balance"])
+
+        if not investment_form.errors:
+            total_committed = WebFiveInvestment.objects.total_committed()
+            user_total = WebFiveInvestment.objects.total_for_user(request.user)
+            messages.success(
+                request,
+                (
+                    f"Locked in {amount} coins for Web 5.0. "
+                    f"The initiative now commands {total_committed} coins; "
+                    f"you've personally fueled {user_total}."
+                ),
+            )
+            return redirect("main:index")
+    else:
+        status_code = 400
+
+    if investment_form.errors:
+        messages.error(
+            request,
+            investment_form.errors.get(
+                "amount", ["Unable to process your investment."]
+            )[0],
+        )
+
+    return render(
+        request,
+        "index.html",
+        _fresh_board_context(
+            request,
+            investment_form=investment_form,
+        ),
+        status=status_code,
+    )
+
+
 @require_http_methods(["GET", "HEAD"])
 def scoreboard(request: HttpRequest) -> HttpResponse:
     """Display the scoreboard using backend-derived vote totals."""
@@ -402,6 +479,10 @@ def profile_detail(request: HttpRequest, username: str | None = None) -> HttpRes
         .order_by("-expired_at", "-created_at")
     )
     daily_bonus = daily_bonus_status(profile_user)
+    web5_totals = {
+        "user_total": WebFiveInvestment.objects.total_for_user(profile_user),
+        "global_total": WebFiveInvestment.objects.total_committed(),
+    }
 
     context = {
         "profile_user": profile_user,
@@ -416,6 +497,7 @@ def profile_detail(request: HttpRequest, username: str | None = None) -> HttpRes
         "rejected_features": rejected_features,
         "daily_bonus": daily_bonus,
         "profile_avatar": _profile_avatar_descriptor(profile_user),
+        "web5_totals": web5_totals,
     }
     return render(request, "profiles/detail.html", context)
 

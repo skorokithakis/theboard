@@ -6028,6 +6028,142 @@ select {
   color: var(--muted-text);
 }
 
+.penguin-cam {
+  position: relative;
+  border: 3px solid var(--border);
+  border-radius: 18px;
+  background: radial-gradient(circle at 16% 20%, rgba(112, 203, 255, 0.24) 0, transparent 36%), radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.18) 0, transparent 30%), linear-gradient(135deg, #f3fbff 0%, #e2f3ff 35%, #fefefe 100%);
+  box-shadow: 12px 12px 0 var(--border);
+  padding: 1.75rem;
+  margin-bottom: 1.75rem;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.penguin-cam::after {
+  content: "";
+  position: absolute;
+  inset: -25% 10% auto 12%;
+  height: 55%;
+  background: radial-gradient(circle at 20% 20%, rgba(14, 65, 94, 0.18), transparent 45%), radial-gradient(circle at 80% 24%, rgba(13, 209, 178, 0.22), transparent 36%), linear-gradient(90deg, rgba(14, 65, 94, 0.14), rgba(13, 209, 178, 0.16));
+  filter: blur(22px);
+  opacity: 0.8;
+  z-index: 0;
+}
+
+.penguin-cam__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.penguin-cam__copy {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.penguin-cam__eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.85rem;
+  color: #0a3c57;
+}
+
+.penguin-cam__title {
+  margin: 0;
+  font-size: clamp(1.9rem, 3.6vw, 2.3rem);
+  line-height: 1.1;
+  color: var(--text);
+}
+
+.penguin-cam__lede {
+  margin: 0;
+  color: #0f2430;
+  font-size: 1.02rem;
+}
+
+.penguin-cam__highlights {
+  margin: 0;
+  padding: 0.75rem 1.2rem;
+  list-style: none;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px dashed var(--border);
+  border-radius: 14px;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.penguin-cam__highlights strong {
+  color: #0a3c57;
+}
+
+.penguin-cam__cta {
+  margin: 0;
+  font-weight: 700;
+  color: #0a3c57;
+}
+
+.penguin-cam__cta a {
+  color: inherit;
+  border-bottom: 2px solid #0a3c57;
+  padding-bottom: 2px;
+}
+
+.penguin-cam__media {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.penguin-cam__frame {
+  position: relative;
+  border: 3px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.6)), linear-gradient(140deg, rgba(10, 60, 87, 0.25), rgba(13, 209, 178, 0.18));
+  aspect-ratio: 16 / 9;
+  box-shadow: 10px 10px 0 var(--border);
+}
+
+.penguin-cam__badge {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  background: rgba(10, 60, 87, 0.9);
+  color: #f8fbff;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  z-index: 2;
+  box-shadow: 0 10px 18px rgba(10, 60, 87, 0.18);
+}
+
+.penguin-cam__embed {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.penguin-cam__embed iframe,
+.penguin-cam__embed video {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.penguin-cam__fallback {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #0f2430;
+}
+
 .web5-section {
   border: 3px solid var(--border);
   border-radius: 18px;

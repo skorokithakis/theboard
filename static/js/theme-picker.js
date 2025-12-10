@@ -3,7 +3,7 @@
 
   var STORAGE_KEY = "theboard:theme";
   var AUTO = "auto";
-  var THEMES = ["spring", "summer", "fall", "winter"];
+  var THEMES = ["spring", "summer", "fall", "winter", "neon"];
   var SOUTHERN_TIMEZONE_HINTS = [
     "Australia/",
     "Pacific/Auckland",

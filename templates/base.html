@@ -62,6 +62,7 @@
                         <option value="summer">Summer</option>
                         <option value="fall">Fall</option>
                         <option value="winter">Winter</option>
+                        <option value="neon">Neon 80s</option>
                     </select>
                 </div>
                 <button class="audio-toggle" type="button" data-audio-toggle aria-pressed="false" aria-live="polite">
@@ -72,6 +73,19 @@
             </div>
         </div>
     </header>
+    <div class="neon-marquee" aria-hidden="true">
+        <div class="neon-marquee__glow"></div>
+        <div class="neon-marquee__track">
+            <span>★ Needs more 80s &middot; Neon grid online &middot; Marquee mania unlocked &middot; Sparkle shields up</span>
+            <span>★ Needs more 80s &middot; Neon grid online &middot; Marquee mania unlocked &middot; Sparkle shields up</span>
+            <span>★ Needs more 80s &middot; Neon grid online &middot; Marquee mania unlocked &middot; Sparkle shields up</span>
+        </div>
+        <div class="neon-marquee__track neon-marquee__track--reverse">
+            <span>✦ Vote, glow, repeat &middot; Vaporwave dreams &middot; Add a feature &middot; Pump the jams</span>
+            <span>✦ Vote, glow, repeat &middot; Vaporwave dreams &middot; Add a feature &middot; Pump the jams</span>
+            <span>✦ Vote, glow, repeat &middot; Vaporwave dreams &middot; Add a feature &middot; Pump the jams</span>
+        </div>
+    </div>
     <main class="site-main container">
         {% if messages %}
             <div class="flash-messages">

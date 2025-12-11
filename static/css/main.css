@@ -72,7 +72,6 @@ body::before {
   z-index: -1;
 }
 
-body.theme-summer,
 body.theme-lava {
   --background: #fff5e6;
   --background-alt: #ffe6bf;
@@ -89,7 +88,6 @@ body.theme-lava {
   color: var(--text);
 }
 
-body.theme-summer::before,
 body.theme-lava::before {
   background-image:
     radial-gradient(circle at 30% 28%, rgba(255, 179, 71, 0.14), transparent 45%),
@@ -106,7 +104,6 @@ body.theme-lava::before {
   mix-blend-mode: screen;
 }
 
-body.theme-summer::after,
 body.theme-lava::after {
   content: "";
   position: fixed;
@@ -131,7 +128,6 @@ body.theme-lava::after {
   z-index: -2;
 }
 
-body.theme-summer .is-melting,
 body.theme-lava .is-melting {
   position: relative;
   animation: meltDrip var(--melt-duration, 18s) ease-in-out infinite alternate;
@@ -141,12 +137,11 @@ body.theme-lava .is-melting {
   will-change: transform;
 }
 
-body.theme-summer .is-melting,
 body.theme-lava .is-melting {
   --melt-distance: 7px;
 }
 
-body.theme-summer {
+body.theme-lava {
   overflow-x: hidden;
 }
 
@@ -301,6 +296,55 @@ body.theme-winter::after {
   z-index: -2;
 }
 
+body.theme-winter-red {
+  --background: #f7e8ed;
+  --background-alt: #edd7df;
+  --surface: #fff5f8;
+  --surface-alt: #f3e0e6;
+  --card-bg: #fff8fa;
+  --input-bg: #f9edf2;
+  --muted-text: #3c1d28;
+  --accent: #ff9ab6;
+  --brand: #ffd6e1;
+  background-color: var(--background);
+  background-image:
+    radial-gradient(circle at 18% 22%, rgba(255, 154, 182, 0.2), rgba(46, 12, 22, 0) 40%),
+    radial-gradient(circle at 82% 28%, rgba(255, 214, 225, 0.22), rgba(46, 16, 24, 0) 44%),
+    linear-gradient(180deg, rgba(46, 12, 22, 0.94), rgba(60, 16, 26, 0.96));
+}
+
+body.theme-winter-red::before {
+  background-image:
+    radial-gradient(circle at 28% 16%, rgba(255, 214, 225, 0.24), transparent 46%),
+    radial-gradient(circle at 70% 62%, rgba(255, 154, 182, 0.24), transparent 44%),
+    repeating-conic-gradient(
+      from 2deg,
+      rgba(255, 214, 225, 0.12) 0deg 12deg,
+      rgba(255, 154, 182, 0.12) 12deg 20deg,
+      rgba(46, 12, 22, 0.22) 20deg 24deg
+    );
+  opacity: 0.85;
+  mix-blend-mode: screen;
+}
+
+body.theme-winter-red::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 16% 24%, rgba(255, 154, 182, 0.26), rgba(255, 154, 182, 0) 42%),
+    radial-gradient(circle at 84% 18%, rgba(255, 214, 225, 0.24), rgba(255, 214, 225, 0) 46%),
+    repeating-linear-gradient(
+      100deg,
+      rgba(255, 154, 182, 0.14),
+      rgba(255, 214, 225, 0.12) 16px,
+      rgba(46, 12, 22, 0) 44px
+    );
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -2;
+}
+
 @keyframes lavaFlow {
   0% {
     background-position: 0 0, 0 32%, 16% 48%, 0 72%, 0 0;
@@ -362,12 +406,17 @@ body.theme-winter::after {
   opacity: 0.7;
 }
 
-body.theme-winter .snowfall-layer {
+body.theme-winter .snowfall-layer,
+body.theme-winter-red .snowfall-layer {
   opacity: 0.9;
 }
 
 body.theme-winter .snowflake {
   filter: drop-shadow(0 4px 10px rgba(139, 211, 255, 0.35));
+}
+
+body.theme-winter-red .snowflake {
+  filter: drop-shadow(0 4px 10px rgba(255, 154, 182, 0.35));
 }
 
 .snowflake::after {
@@ -5515,7 +5564,7 @@ a:hover {
 }
 
 body,
-body.theme-summer,
+body.theme-winter-red,
 body.theme-spring,
 body.theme-fall,
 body.theme-winter,
@@ -5535,8 +5584,8 @@ body.theme-neon {
 
 body::before,
 body::after,
-body.theme-summer::before,
-body.theme-summer::after,
+body.theme-winter-red::before,
+body.theme-winter-red::after,
 body.theme-spring::before,
 body.theme-spring::after,
 body.theme-fall::before,

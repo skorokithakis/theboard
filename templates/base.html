@@ -16,7 +16,7 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body
-    class="theme-summer"
+    class="theme-winter-red"
     data-shimeji-user="{{ request.user.display_name|default_if_none:'' }}"
     data-shimeji-username="{{ request.user.username|default_if_none:'' }}"
     data-shimeji-balance="{{ request.user.balance|default_if_none:0 }}"
@@ -59,7 +59,7 @@
                     <select class="theme-switcher__select" id="theme-select" data-theme-select aria-label="Select theme">
                         <option value="auto" selected>Seasonal</option>
                         <option value="spring">Spring</option>
-                        <option value="summer">Summer</option>
+                        <option value="winter-red">Winter but Red</option>
                         <option value="fall">Fall</option>
                         <option value="winter">Winter</option>
                         <option value="neon">Neon 80s</option>

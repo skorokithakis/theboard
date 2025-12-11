@@ -32,6 +32,10 @@
   --lava-glow: #ffb347;
   --lava-flare: #ff3f3c;
   --lava-shadow: rgba(0, 0, 0, 0.45);
+  --depth-perspective: 1400px;
+  --depth-shadow-strong: rgba(5, 11, 18, 0.65);
+  --depth-glow: rgba(255, 226, 74, 0.35);
+  --depth-glare: rgba(14, 209, 178, 0.35);
 }
 
 * {
@@ -52,6 +56,7 @@ body {
   position: relative;
   letter-spacing: 0.01em;
   z-index: 0;
+  perspective: var(--depth-perspective);
 }
 
 body::before {
@@ -7108,6 +7113,231 @@ select {
 .graveyard-empty__body {
   margin: 0;
   color: rgba(255, 255, 255, 0.72);
+}
+
+/* Tridimensional interactive experience */
+
+.interact-3d {
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --glint-x: 0px;
+  --glint-y: 0px;
+  --depth-strut: 10px;
+  position: relative;
+  transform-style: preserve-3d;
+  transform: translateZ(0);
+  transition: transform 0.28s ease, box-shadow 0.28s ease, filter 0.24s ease,
+    background-position 0.24s ease;
+  will-change: transform, box-shadow, filter;
+  isolation: isolate;
+}
+
+.interact-3d::before,
+.interact-3d::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.24s ease;
+}
+
+.interact-3d::before {
+  background: radial-gradient(circle at calc(50% + var(--glint-x)) calc(50% + var(--glint-y)),
+      var(--depth-glare),
+      transparent 48%);
+  filter: blur(10px) saturate(1.2);
+  transform: translateZ(-6px);
+}
+
+.interact-3d::after {
+  inset: 6px;
+  background: linear-gradient(135deg, rgba(255, 226, 74, 0.12), rgba(14, 209, 178, 0.18));
+  transform: translateZ(-12px);
+  box-shadow: inset 0 0 0 1px rgba(243, 201, 105, 0.15);
+}
+
+.interact-3d.is-tilting,
+.interact-3d:focus-visible {
+  transform: rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateZ(var(--depth-strut));
+  box-shadow: 0 18px 34px -20px var(--depth-shadow-strong), 0 10px 26px -18px rgba(243, 201, 105, 0.55);
+}
+
+.interact-3d:hover {
+  filter: saturate(1.1);
+}
+
+.interact-3d:hover::before,
+.interact-3d:hover::after {
+  opacity: 1;
+}
+
+.interact-3d:active {
+  transform: rotateX(calc(var(--tilt-x) * 0.5)) rotateY(calc(var(--tilt-y) * 0.5))
+    translateZ(calc(var(--depth-strut) * 0.35)) translateY(1px);
+  box-shadow: 0 10px 18px -12px var(--depth-shadow-strong),
+    0 0 0 1px rgba(255, 226, 74, 0.4);
+}
+
+button.interact-3d,
+.button.interact-3d,
+.button-outline.interact-3d,
+input.interact-3d,
+select.interact-3d,
+textarea.interact-3d {
+  box-shadow: 0 12px 22px -18px var(--shadow), 0 0 0 1px rgba(243, 201, 105, 0.35);
+  background-image:
+    linear-gradient(135deg, rgba(255, 226, 74, 0.14), rgba(14, 209, 178, 0.2)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
+  background-size: 180% 180%, auto;
+  background-position: 60% 40%;
+}
+
+form.interact-3d {
+  --depth-strut: 8px;
+}
+
+input.interact-3d:focus,
+select.interact-3d:focus,
+textarea.interact-3d:focus {
+  box-shadow: 0 16px 30px -16px var(--shadow), 0 0 0 3px rgba(14, 209, 178, 0.45),
+    0 0 0 1px rgba(255, 226, 74, 0.5);
+  background-position: 40% 60%;
+}
+
+a.interact-3d {
+  text-decoration-color: rgba(255, 226, 74, 0.55);
+  text-decoration-thickness: 0.14em;
+  text-underline-offset: 0.2em;
+  color: inherit;
+  box-shadow: 0 6px 18px -18px var(--depth-shadow-strong);
+}
+
+summary.interact-3d {
+  list-style: none;
+}
+
+summary.interact-3d::-webkit-details-marker {
+  display: none;
+}
+
+.is-shaking {
+  animation: screenShake 0.4s ease;
+}
+
+.vfx-burst {
+  position: fixed;
+  width: 16vmin;
+  height: 16vmin;
+  pointer-events: none;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%) scale(0.65);
+  opacity: 0;
+  background:
+    radial-gradient(circle at 30% 30%, hsla(var(--burst-hue, 42), 90%, 70%, 0.85), transparent 50%),
+    radial-gradient(circle at 70% 70%, hsla(calc(var(--burst-hue, 42) + 60), 90%, 75%, 0.85), transparent 56%),
+    radial-gradient(circle at 50% 50%, hsla(calc(var(--burst-hue, 42) + 180), 82%, 70%, 0.8), transparent 42%);
+  filter: blur(1px) saturate(1.4) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.4));
+  mix-blend-mode: screen;
+  z-index: 20;
+  border-radius: 50%;
+}
+
+.vfx-burst.is-active {
+  animation: burstPop 0.7s ease-out forwards, emberFloat 0.85s ease-out;
+  transform: translate(-50%, -50%) scale(var(--burst-scale, 1));
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 226, 74, 0.7) rgba(12, 20, 27, 0.65);
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: linear-gradient(180deg, rgba(12, 20, 27, 0.95), rgba(18, 38, 48, 0.85));
+  border: 1px solid rgba(243, 201, 105, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -4px 10px rgba(0, 0, 0, 0.35);
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(14, 209, 178, 0.9), rgba(255, 226, 74, 0.95));
+  border: 2px solid rgba(12, 20, 27, 0.75);
+  border-radius: 10px;
+  box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(255, 226, 74, 1), rgba(14, 209, 178, 1));
+}
+
+*::-webkit-scrollbar-corner {
+  background: rgba(8, 15, 20, 0.65);
+}
+
+@keyframes burstPop {
+  0% {
+    opacity: 0.85;
+    transform: translate(-50%, -50%) scale(0.35);
+  }
+  60% {
+    opacity: 0.95;
+    transform: translate(calc(-50% - 6px), calc(-50% + 8px)) scale(1.35);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.8);
+  }
+}
+
+@keyframes emberFloat {
+  0% {
+    filter: blur(1px) saturate(1.4);
+  }
+  100% {
+    filter: blur(2px) saturate(1.6);
+  }
+}
+
+@keyframes screenShake {
+  0% {
+    transform: translate3d(2px, -2px, 0) rotateZ(-0.4deg);
+  }
+  25% {
+    transform: translate3d(-4px, 3px, 0) rotateZ(0.6deg);
+  }
+  50% {
+    transform: translate3d(3px, 2px, 0) rotateZ(-0.5deg);
+  }
+  75% {
+    transform: translate3d(-2px, -3px, 0) rotateZ(0.4deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotateZ(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interact-3d {
+    transition: transform 0.12s ease, box-shadow 0.18s ease, filter 0.12s ease;
+  }
+
+  .interact-3d::before,
+  .interact-3d::after,
+  .vfx-burst {
+    display: none;
+  }
+
+  .is-shaking {
+    animation: none;
+  }
 }
 
 @keyframes graveyard-zombie-shamble {

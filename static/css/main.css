@@ -6663,6 +6663,7 @@ select {
   border-radius: 12px;
   padding: 1rem;
   box-shadow: 6px 6px 0 var(--border);
+  overflow: hidden;
 }
 
 .feature-card__header {
@@ -6687,15 +6688,42 @@ select {
 }
 
 .feature-card__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+@media (min-width: 640px) {
+  .feature-card__footer {
+    grid-template-columns: auto 1fr;
+  }
 }
 
 .feature-card__votes {
   font-weight: 700;
+}
+
+.feature-card__vote-form {
+  display: grid;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.feature-card__vote-form .cf-turnstile {
+  max-width: 100%;
+  width: 100%;
+}
+
+.feature-card__vote-form .button-outline {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+
+.reset-board .cf-turnstile {
+  max-width: 100%;
+  width: 100%;
 }
 
 .reset-board__empty {

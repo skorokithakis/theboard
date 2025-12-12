@@ -4,6 +4,83 @@
 {% block title %}{{ request.site.name }}{% endblock %}
 
 {% block content %}
+<section class="reset-board" aria-labelledby="reset-board-heading">
+    <div class="reset-board__panel">
+        <div class="reset-board__panel-header">
+            <p class="reset-board__eyebrow">Submit</p>
+            <h2 id="reset-board-heading">Add a feature to the fresh board</h2>
+            <p class="reset-board__hint">All submissions and votes still run through CAPTCHA to keep the signal clean.</p>
+        </div>
+        {% if not request.user.is_authenticated %}
+            <p class="reset-board__note">Sign in at <a href="/accounts/login/?next={{ request.path }}">/accounts/login/</a> to add a feature.</p>
+        {% elif not can_submit %}
+            <p class="reset-board__note">Daily submission limit reached. Come back after the next reset.</p>
+        {% else %}
+            <form class="reset-form" method="post" action="{% url 'main:index' %}">
+                {% csrf_token %}
+                {% if submission_form.non_field_errors %}
+                    <p class="form-error">{{ submission_form.non_field_errors|striptags }}</p>
+                {% endif %}
+                <div class="form-field">
+                    {{ submission_form.title.label_tag }}
+                    {{ submission_form.title }}
+                    {% for error in submission_form.title.errors %}
+                        <p class="form-error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                <div class="form-field">
+                    {{ submission_form.description.label_tag }}
+                    {{ submission_form.description }}
+                    {% for error in submission_form.description.errors %}
+                        <p class="form-error">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% if turnstile_site_key %}
+                    <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
+                {% else %}
+                    <p class="reset-board__note">Cloudflare Turnstile is disabled in this environment.</p>
+                {% endif %}
+                <div class="reset-form__actions">
+                    <button class="button" type="submit">Submit feature</button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+    <div class="reset-board__panel reset-board__panel--list">
+        <div class="reset-board__panel-header">
+            <p class="reset-board__eyebrow">Vote</p>
+            <h2>Help the next feature win</h2>
+            <p class="reset-board__hint">Votes reset after every deployment. Rally support while the board is clear.</p>
+        </div>
+        {% if features %}
+            <div class="feature-stack">
+                {% for feature in features %}
+                    <article class="feature-card">
+                        <header class="feature-card__header">
+                            <h3 class="feature-card__title">{{ feature.title }}</h3>
+                            <p class="feature-card__meta">{{ feature.created_at|date:"F j, Y" }}</p>
+                        </header>
+                        <p class="feature-card__description">{{ feature.description }}</p>
+                        <div class="feature-card__footer">
+                            <div class="feature-card__votes">Votes: {{ feature.vote_total }}</div>
+                            <form class="feature-card__vote-form" method="post" action="{% url 'main:feature-vote-toggle' feature.id %}">
+                                {% csrf_token %}
+                                {% if turnstile_site_key %}
+                                    <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
+                                {% endif %}
+                                <button class="button-outline" type="submit">{% if feature.user_has_voted %}Remove vote{% else %}Vote up{% endif %}</button>
+                            </form>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="reset-board__empty">No ideas yet. Plant the first one.</p>
+        {% endif %}
+        <p class="reset-board__note">Need the old interface? Head to the <a href="{% url 'main:archive-index' %}">archive snapshot</a>.</p>
+    </div>
+</section>
+
 <section class="reset-hero" data-soundtrack="atrium">
     <p class="reset-hero__eyebrow">Fresh slate</p>
     <h1 class="reset-hero__title">{{ request.site.name }}</h1>
@@ -85,83 +162,6 @@
                 <p class="web5-action__note">Members get instant perks and a live ledger of their backing history.</p>
             {% endif %}
         </div>
-    </div>
-</section>
-
-<section class="reset-board" aria-labelledby="reset-board-heading">
-    <div class="reset-board__panel">
-        <div class="reset-board__panel-header">
-            <p class="reset-board__eyebrow">Submit</p>
-            <h2 id="reset-board-heading">Add a feature to the fresh board</h2>
-            <p class="reset-board__hint">All submissions and votes still run through CAPTCHA to keep the signal clean.</p>
-        </div>
-        {% if not request.user.is_authenticated %}
-            <p class="reset-board__note">Sign in at <a href="/accounts/login/?next={{ request.path }}">/accounts/login/</a> to add a feature.</p>
-        {% elif not can_submit %}
-            <p class="reset-board__note">Daily submission limit reached. Come back after the next reset.</p>
-        {% else %}
-            <form class="reset-form" method="post" action="{% url 'main:index' %}">
-                {% csrf_token %}
-                {% if submission_form.non_field_errors %}
-                    <p class="form-error">{{ submission_form.non_field_errors|striptags }}</p>
-                {% endif %}
-                <div class="form-field">
-                    {{ submission_form.title.label_tag }}
-                    {{ submission_form.title }}
-                    {% for error in submission_form.title.errors %}
-                        <p class="form-error">{{ error }}</p>
-                    {% endfor %}
-                </div>
-                <div class="form-field">
-                    {{ submission_form.description.label_tag }}
-                    {{ submission_form.description }}
-                    {% for error in submission_form.description.errors %}
-                        <p class="form-error">{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% if turnstile_site_key %}
-                    <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
-                {% else %}
-                    <p class="reset-board__note">Cloudflare Turnstile is disabled in this environment.</p>
-                {% endif %}
-                <div class="reset-form__actions">
-                    <button class="button" type="submit">Submit feature</button>
-                </div>
-            </form>
-        {% endif %}
-    </div>
-    <div class="reset-board__panel reset-board__panel--list">
-        <div class="reset-board__panel-header">
-            <p class="reset-board__eyebrow">Vote</p>
-            <h2>Help the next feature win</h2>
-            <p class="reset-board__hint">Votes reset after every deployment. Rally support while the board is clear.</p>
-        </div>
-        {% if features %}
-            <div class="feature-stack">
-                {% for feature in features %}
-                    <article class="feature-card">
-                        <header class="feature-card__header">
-                            <h3 class="feature-card__title">{{ feature.title }}</h3>
-                            <p class="feature-card__meta">{{ feature.created_at|date:"F j, Y" }}</p>
-                        </header>
-                        <p class="feature-card__description">{{ feature.description }}</p>
-                        <div class="feature-card__footer">
-                            <div class="feature-card__votes">Votes: {{ feature.vote_total }}</div>
-                            <form method="post" action="{% url 'main:feature-vote-toggle' feature.id %}">
-                                {% csrf_token %}
-                                {% if turnstile_site_key %}
-                                    <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
-                                {% endif %}
-                                <button class="button-outline" type="submit">{% if feature.user_has_voted %}Remove vote{% else %}Vote up{% endif %}</button>
-                            </form>
-                        </div>
-                    </article>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p class="reset-board__empty">No ideas yet. Plant the first one.</p>
-        {% endif %}
-        <p class="reset-board__note">Need the old interface? Head to the <a href="{% url 'main:archive-index' %}">archive snapshot</a>.</p>
     </div>
 </section>
 {% endblock %}

@@ -704,3 +704,26 @@ def _scoreboard_context(request: HttpRequest) -> dict[str, object]:
         if request.user.is_authenticated
         else None,
     }
+
+
+def page_not_found(
+    request: HttpRequest, exception: Exception | None = None
+) -> HttpResponse:
+    """Render a friendly 404 page with quick board shortcuts."""
+
+    suggested_features = list(
+        Feature.objects.pending()
+        .with_vote_totals()
+        .select_related("creator")
+        .order_by("-total_votes", "-created_at")[:3]
+    )
+
+    return render(
+        request,
+        "404.html",
+        {
+            "request_path": request.path,
+            "suggested_features": suggested_features,
+        },
+        status=404,
+    )

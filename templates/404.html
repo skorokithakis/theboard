@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}404 · {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="not-found">
+    <div class="not-found__message">
+        <p class="not-found__eyebrow">Signal lost</p>
+        <h1 class="not-found__title">This route isn't on the board.</h1>
+        <p class="not-found__lede">We couldn't map "{{ request_path }}" to anything living on the board, but the feature stream is still alive and voting-ready.</p>
+        <div class="not-found__chips" aria-label="Status indicators">
+            <span class="not-found__chip">404</span>
+            <span class="not-found__chip">Board online</span>
+            <span class="not-found__chip">Voting stays live</span>
+        </div>
+        <div class="not-found__actions">
+            <a class="button" href="{% url 'main:index' %}">Return to the board</a>
+            <a class="button-outline" href="{% url 'main:plaintext-submission' %}">Submit a feature</a>
+        </div>
+    </div>
+    <div class="not-found__panel" aria-labelledby="reroute-heading">
+        <div class="not-found__panel-inner">
+            <div class="not-found__radar" aria-hidden="true">
+                <div class="not-found__ring not-found__ring--one"></div>
+                <div class="not-found__ring not-found__ring--two"></div>
+                <div class="not-found__ring not-found__ring--three"></div>
+                <div class="not-found__sweep"></div>
+                <div class="not-found__ping">404</div>
+            </div>
+            <div class="not-found__callouts">
+                <p id="reroute-heading" class="not-found__callout-title">Try a nearby path</p>
+                <ul class="not-found__callout-list">
+                    <li><a href="{% url 'main:about' %}">How the board works</a></li>
+                    <li><a href="{% url 'main:scoreboard' %}">Scoreboard and rankings</a></li>
+                    <li><a href="{% url 'main:archive-index' %}">Archive snapshot</a></li>
+                    <li><a href="{% url 'main:graveyard' %}">Feature graveyard</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if suggested_features %}
+<section class="not-found__features" aria-labelledby="feature-suggestions-heading">
+    <div class="not-found__features-header">
+        <p class="not-found__eyebrow">Live signals</p>
+        <h2 id="feature-suggestions-heading" class="not-found__title-small">Open features you can vote on</h2>
+        <p class="not-found__lede-small">Jump back in and push a feature over the line.</p>
+    </div>
+    <div class="not-found__feature-grid">
+        {% for feature in suggested_features %}
+            <article class="not-found__feature-card">
+                <header class="not-found__feature-head">
+                    <p class="not-found__feature-votes">Votes: {{ feature.vote_total }}</p>
+                    <p class="not-found__feature-meta">By {{ feature.creator.display_name|default:feature.creator.username }}</p>
+                </header>
+                <h3 class="not-found__feature-title">{{ feature.title }}</h3>
+                <p class="not-found__feature-desc">{{ feature.description|truncatechars:160 }}</p>
+                <a class="not-found__feature-link" href="{% url 'main:index' %}">Return to board to vote</a>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

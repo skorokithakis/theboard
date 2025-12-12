@@ -27,3 +27,5 @@ urlpatterns = [
     path("api/", api.urls),
     path("healthz/", health_api.urls),
 ]
+
+handler404 = "main.views.page_not_found"

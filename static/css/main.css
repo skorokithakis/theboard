@@ -5930,6 +5930,22 @@ a:hover {
   .neon-marquee::after {
     animation: none;
   }
+
+  body[data-theme="neon"][data-theme-source="manual"] .neon-marquee__track {
+    animation: neonMarquee 18s linear infinite;
+  }
+
+  body[data-theme="neon"][data-theme-source="manual"] .neon-marquee__track--reverse {
+    animation: neonMarquee 22s linear infinite reverse;
+  }
+
+  body[data-theme="neon"][data-theme-source="manual"] .neon-marquee__glow {
+    animation: neonGlow 16s ease-in-out infinite;
+  }
+
+  body[data-theme="neon"][data-theme-source="manual"] .neon-marquee::after {
+    animation: sparkleDrift 22s linear infinite;
+  }
 }
 
 @media (max-width: 720px) {

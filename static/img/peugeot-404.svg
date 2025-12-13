@@ -1,0 +1,44 @@
+<svg width="360" height="200" viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Illustration of a Peugeot 404 wagon</title>
+  <desc id="desc">A stylized blue Peugeot 404 wagon with a 404 plate cruising on a dark road.</desc>
+  <defs>
+    <linearGradient id="bodyPaint" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2b76b5" />
+      <stop offset="55%" stop-color="#1d4f7a" />
+      <stop offset="100%" stop-color="#193a56" />
+    </linearGradient>
+    <linearGradient id="glass" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#c7deff" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#8db0d8" stop-opacity="0.8" />
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="360" height="200" rx="18" fill="#0b1221" />
+  <rect x="12" y="140" width="336" height="32" rx="10" fill="#0f1c2c" stroke="#152942" stroke-width="3" />
+  <rect x="48" y="116" width="264" height="14" rx="6" fill="#12253c" />
+  <path d="M78 120 L280 120 C292 120 307 115 312 106 L322 84 C325 78 331 74 338 74 L344 74 L344 94 C344 99 342 103 338 104 L322 109 C320 110 319 111 318 113 L312 126 C309 132 302 136 295 136 L66 136 C58 136 52 131 50 124 L40 88 C38 81 32 76 24 76 L16 76 L16 70 L48 70 C56 70 62 75 64 82 L68 100 C69 106 74 110 80 110 L94 110 L102 84 C104 76 111 70 119 70 L242 70 C249 70 255 74 258 80 L266 96 C268 101 273 104 278 104 L298 104 C301 104 304 102 305 99 L310 86 C313 78 320 72 328 70 L332 70 C338 70 342 74 340 78 L332 94 C330 98 326 100 322 100 L309 100" fill="url(#bodyPaint)" stroke="#0b1727" stroke-width="3" stroke-linejoin="round" />
+  <path d="M118 74 H248 L266 98 H130 Z" fill="url(#glass)" stroke="#123355" stroke-width="2" />
+  <path d="M90 112 H144 L148 96 H102 Z" fill="#e6f1ff" stroke="#123355" stroke-width="2" />
+  <path d="M204 112 H254 L246 96 H206 Z" fill="#d7e8ff" stroke="#123355" stroke-width="2" />
+  <rect x="152" y="86" width="44" height="28" rx="4" fill="url(#glass)" stroke="#123355" stroke-width="2" />
+  <path d="M74 122 L86 122 L90 118 L80 118 Z" fill="#cfd9e6" />
+  <path d="M276 122 L288 122 L292 118 L282 118 Z" fill="#cfd9e6" />
+  <rect x="152" y="118" width="52" height="8" rx="4" fill="#0f1c2c" opacity="0.7" />
+  <rect x="222" y="126" width="32" height="8" rx="3" fill="#0f1c2c" opacity="0.9" />
+  <rect x="106" y="126" width="32" height="8" rx="3" fill="#0f1c2c" opacity="0.9" />
+  <rect x="166" y="132" width="28" height="6" rx="3" fill="#0f1c2c" />
+  <rect x="174" y="102" width="12" height="6" rx="2" fill="#0f1c2c" />
+  <circle cx="108" cy="140" r="24" fill="#0b1221" stroke="#111f33" stroke-width="6" />
+  <circle cx="236" cy="140" r="24" fill="#0b1221" stroke="#111f33" stroke-width="6" />
+  <circle cx="108" cy="140" r="10" fill="#b0c4d8" stroke="#6f8aa6" stroke-width="3" />
+  <circle cx="236" cy="140" r="10" fill="#b0c4d8" stroke="#6f8aa6" stroke-width="3" />
+  <rect x="112" y="144" width="8" height="4" rx="2" fill="#e6f1ff" />
+  <rect x="240" y="144" width="8" height="4" rx="2" fill="#e6f1ff" />
+  <rect x="256" y="114" width="18" height="12" rx="3" fill="#f5d14c" stroke="#b88b16" stroke-width="2" />
+  <rect x="72" y="114" width="18" height="12" rx="3" fill="#f5d14c" stroke="#b88b16" stroke-width="2" />
+  <rect x="172" y="122" width="32" height="14" rx="4" fill="#e6f1ff" stroke="#0f1c2c" stroke-width="2" />
+  <text x="188" y="133" font-family="Arial, sans-serif" font-size="12" font-weight="700" text-anchor="middle" fill="#0f1c2c" letter-spacing="0.28em">404</text>
+  <circle cx="40" cy="52" r="6" fill="#ffe24a" />
+  <circle cx="314" cy="44" r="10" fill="#0ed1b2" opacity="0.8" />
+  <path d="M40 44 C44 38 52 36 58 40 L82 56" stroke="#0ed1b2" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 6" opacity="0.6" />
+  <path d="M320 56 C310 60 298 60 288 52 L276 44" stroke="#ffe24a" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="6 6" opacity="0.55" />
+</svg>

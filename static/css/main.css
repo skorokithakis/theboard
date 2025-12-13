@@ -7500,6 +7500,12 @@ summary.interact-3d::-webkit-details-marker {
   display: grid;
   gap: 1rem;
   place-items: center;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  align-items: center;
+}
+
+.not-found__panel-inner > * {
+  width: 100%;
 }
 
 .not-found__radar {
@@ -7555,6 +7561,71 @@ summary.interact-3d::-webkit-details-marker {
   text-transform: uppercase;
   box-shadow: 0 0 28px rgba(255, 226, 74, 0.35);
   animation: pulsePing 3s ease-in-out infinite;
+}
+
+.not-found__peugeot {
+  position: relative;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #0f1c2c 0%, #1a2d46 40%, #1f3b57 100%);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  padding: 1rem;
+  color: #dce5f3;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  display: grid;
+  gap: 0.35rem;
+  text-align: center;
+  overflow: hidden;
+}
+
+.not-found__peugeot::after {
+  content: "";
+  position: absolute;
+  inset: -40% auto auto -10%;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(14, 209, 178, 0.18) 0%, rgba(14, 209, 178, 0) 70%);
+  opacity: 0.9;
+  pointer-events: none;
+  filter: blur(10px);
+}
+
+.not-found__peugeot-label {
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ffe24a;
+}
+
+.not-found__peugeot-illustration {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  display: block;
+  filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.4));
+}
+
+.not-found__peugeot-plate {
+  margin: -0.25rem auto 0.35rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  background: #f7f9fc;
+  color: #0f1c2c;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25), inset 0 0 0 2px #0f1c2c;
+  width: fit-content;
+  position: relative;
+  z-index: 1;
+}
+
+.not-found__peugeot-copy {
+  margin: 0;
+  color: #c4d0e4;
+  position: relative;
+  z-index: 1;
 }
 
 .not-found__callouts {

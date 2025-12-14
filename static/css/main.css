@@ -7827,6 +7827,477 @@ summary.interact-3d::-webkit-details-marker {
   }
 }
 
+.map-hero {
+  margin: 3rem 0 2rem;
+  padding: 2.5rem;
+  border: 2px solid rgba(243, 201, 105, 0.35);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 18% 24%, rgba(14, 209, 178, 0.12), transparent 34%),
+    radial-gradient(circle at 82% 40%, rgba(243, 201, 105, 0.12), transparent 32%),
+    linear-gradient(135deg, rgba(10, 27, 35, 0.95), rgba(13, 32, 41, 0.92));
+  box-shadow: 0 25px 60px -35px rgba(0, 0, 0, 0.78);
+  position: relative;
+  overflow: hidden;
+}
+
+.map-hero::before,
+.map-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.map-hero::before {
+  background-image:
+    linear-gradient(120deg, rgba(243, 201, 105, 0.25), transparent 55%),
+    linear-gradient(-120deg, rgba(14, 209, 178, 0.25), transparent 60%);
+  opacity: 0.25;
+}
+
+.map-hero::after {
+  background-image: radial-gradient(circle at 12% 88%, rgba(14, 209, 178, 0.18), transparent 32%);
+  mix-blend-mode: screen;
+}
+
+.map-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.map-hero__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(255, 253, 246, 0.1);
+  border: 1px solid rgba(243, 201, 105, 0.35);
+  color: rgba(253, 247, 227, 0.92);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.fantasy-sitemap {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  gap: 1.75rem;
+  align-items: start;
+  margin-bottom: 4rem;
+}
+
+.fantasy-sitemap__canvas {
+  position: relative;
+  background: radial-gradient(circle at 24% 18%, rgba(243, 201, 105, 0.08), transparent 38%),
+    linear-gradient(180deg, rgba(255, 253, 246, 0.85), rgba(250, 241, 214, 0.95));
+  border: 2px solid rgba(14, 14, 20, 0.2);
+  box-shadow: 0 25px 60px -40px rgba(0, 0, 0, 0.8);
+  border-radius: 26px;
+  overflow: hidden;
+}
+
+.map-surface {
+  position: relative;
+  min-height: 620px;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.map-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 16% 24%, rgba(70, 135, 110, 0.18), transparent 36%),
+    radial-gradient(circle at 64% 74%, rgba(199, 163, 104, 0.24), transparent 45%),
+    linear-gradient(145deg, rgba(250, 241, 214, 0.95), rgba(245, 231, 202, 0.95));
+  opacity: 0.95;
+}
+
+.map-surface__grain {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(12, 20, 26, 0.06), rgba(12, 20, 26, 0.06) 1px, transparent 1px, transparent 24px),
+    repeating-linear-gradient(0deg, rgba(12, 20, 26, 0.05), rgba(12, 20, 26, 0.05) 1px, transparent 1px, transparent 28px);
+  mix-blend-mode: multiply;
+  opacity: 0.6;
+}
+
+.map-feature {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Layered shapes to create a fantasy map without external assets. */
+.map-feature--sea {
+  inset: 6% 2% 8% 58%;
+  background: radial-gradient(circle at 50% 40%, rgba(46, 123, 139, 0.8), rgba(30, 82, 99, 0.92)),
+    radial-gradient(circle at 30% 60%, rgba(18, 60, 73, 0.8), transparent 62%);
+  border-radius: 42% 58% 48% 52%;
+  filter: drop-shadow(0 0 24px rgba(18, 60, 73, 0.35));
+  opacity: 0.9;
+}
+
+.map-feature--tide {
+  inset: 10% 6% 12% 64%;
+  background: repeating-radial-gradient(circle at 40% 46%, rgba(231, 249, 255, 0.22), transparent 12px, transparent 22px);
+  border-radius: 52% 48% 56% 44%;
+  opacity: 0.55;
+  mix-blend-mode: screen;
+}
+
+.map-feature--mountains {
+  inset: 12% 44% 48% 18%;
+  background:
+    radial-gradient(closest-side at 18% 82%, rgba(46, 52, 58, 0.9), transparent 60%),
+    radial-gradient(closest-side at 38% 78%, rgba(34, 42, 46, 0.85), transparent 58%),
+    radial-gradient(closest-side at 58% 84%, rgba(22, 35, 34, 0.9), transparent 52%),
+    radial-gradient(closest-side at 72% 68%, rgba(30, 45, 44, 0.85), transparent 60%),
+    radial-gradient(closest-side at 52% 62%, rgba(44, 66, 64, 0.8), transparent 62%);
+  filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.32));
+  opacity: 0.82;
+}
+
+.map-feature--hills {
+  inset: 40% 52% 20% 16%;
+  background:
+    radial-gradient(closest-side at 20% 40%, rgba(177, 148, 90, 0.35), transparent 58%),
+    radial-gradient(closest-side at 40% 62%, rgba(133, 112, 71, 0.35), transparent 64%),
+    radial-gradient(closest-side at 62% 42%, rgba(167, 136, 84, 0.35), transparent 62%),
+    radial-gradient(closest-side at 72% 70%, rgba(133, 112, 71, 0.35), transparent 60%);
+  filter: blur(0.2px);
+}
+
+.map-feature--forest {
+  inset: 52% 18% 18% 40%;
+  background:
+    radial-gradient(closest-side at 14% 38%, rgba(46, 102, 74, 0.8), transparent 60%),
+    radial-gradient(closest-side at 32% 56%, rgba(52, 124, 88, 0.75), transparent 62%),
+    radial-gradient(closest-side at 46% 42%, rgba(36, 86, 63, 0.85), transparent 62%),
+    radial-gradient(closest-side at 64% 52%, rgba(42, 116, 80, 0.8), transparent 64%),
+    radial-gradient(closest-side at 82% 44%, rgba(22, 63, 46, 0.85), transparent 60%);
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.26));
+}
+
+.map-feature--river {
+  inset: 12% 42% 6% 34%;
+  background:
+    radial-gradient(circle at 30% 8%, rgba(47, 135, 146, 0.86), transparent 16%),
+    linear-gradient(120deg, rgba(47, 135, 146, 0.86) 0%, rgba(34, 102, 112, 0.92) 40%, rgba(41, 128, 135, 0.7) 100%);
+  border-radius: 42% 56% 54% 36%;
+  filter: blur(1.2px);
+  opacity: 0.85;
+  transform: rotate(-6deg);
+}
+
+.map-feature--river-branch {
+  inset: 24% 38% 50% 44%;
+  background: linear-gradient(82deg, rgba(47, 135, 146, 0.72) 0%, rgba(34, 102, 112, 0.9) 60%, transparent 100%);
+  border-radius: 32% 68% 56% 44%;
+  filter: blur(1px);
+  opacity: 0.85;
+  transform: rotate(6deg);
+}
+
+.map-feature--islands {
+  inset: 18% 10% 54% 70%;
+  background:
+    radial-gradient(closest-side at 30% 40%, rgba(238, 226, 182, 0.95), transparent 60%),
+    radial-gradient(closest-side at 62% 50%, rgba(224, 211, 170, 0.9), transparent 60%),
+    radial-gradient(closest-side at 82% 26%, rgba(238, 226, 182, 0.9), transparent 50%);
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.18));
+}
+
+.map-feature--compass {
+  width: 120px;
+  height: 120px;
+  bottom: 4%;
+  right: 4%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(12, 20, 26, 0.1), transparent 60%),
+    conic-gradient(
+      rgba(14, 14, 20, 0.12) 0deg 45deg,
+      rgba(243, 201, 105, 0.72) 45deg 90deg,
+      rgba(14, 14, 20, 0.12) 90deg 135deg,
+      rgba(14, 209, 178, 0.72) 135deg 180deg,
+      rgba(14, 14, 20, 0.12) 180deg 225deg,
+      rgba(243, 201, 105, 0.72) 225deg 270deg,
+      rgba(14, 14, 20, 0.12) 270deg 315deg,
+      rgba(14, 209, 178, 0.72) 315deg 360deg
+    );
+  border-radius: 50%;
+  opacity: 0.8;
+  filter: drop-shadow(0 12px 14px rgba(0, 0, 0, 0.32));
+}
+
+.map-banner {
+  position: absolute;
+  left: 14%;
+  top: 10%;
+  padding: 0.6rem 1.2rem;
+  background: rgba(14, 14, 20, 0.12);
+  border: 1px solid rgba(14, 14, 20, 0.18);
+  border-radius: 18px;
+  box-shadow: 6px 6px 0 rgba(14, 14, 20, 0.2);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.map-banner__label {
+  font-family: "IM Fell English", "Times New Roman", serif;
+  letter-spacing: 0.12em;
+  color: rgba(14, 14, 20, 0.82);
+  text-transform: uppercase;
+}
+
+.map-banner__shadow {
+  position: absolute;
+  inset: 6px 8px -10px -6px;
+  background: radial-gradient(circle at 18% 18%, rgba(243, 201, 105, 0.25), transparent 45%);
+  z-index: -1;
+  border-radius: 18px;
+}
+
+.map-marker-layer {
+  position: absolute;
+  inset: 6% 4%;
+  z-index: 4;
+}
+
+.map-marker {
+  --marker-color: #0e5c40;
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%) rotate(var(--tilt, -1deg));
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.7rem 0.9rem 0.8rem;
+  background: rgba(255, 253, 246, 0.92);
+  border: 2px solid rgba(14, 14, 20, 0.12);
+  border-radius: 16px;
+  text-align: center;
+  color: var(--text);
+  min-width: 160px;
+  box-shadow: 0 14px 20px -12px rgba(0, 0, 0, 0.4);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.map-marker__ring {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 2px dashed rgba(14, 14, 20, 0.18);
+  margin: 0 auto;
+  position: relative;
+}
+
+.map-marker__pin {
+  position: absolute;
+  inset: 5px;
+  border-radius: 50% 50% 50% 50% / 46% 46% 54% 54%;
+  background: radial-gradient(circle at 32% 32%, #fff3c6, var(--marker-color));
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+}
+
+.map-marker__label {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.map-marker__summary {
+  font-size: 0.92rem;
+  color: rgba(14, 14, 20, 0.72);
+  line-height: 1.4;
+}
+
+.map-marker:hover,
+.map-marker:focus-visible {
+  transform: translate(-50%, -50%) scale(1.02);
+  box-shadow: 0 18px 32px -16px rgba(0, 0, 0, 0.46);
+  border-color: var(--marker-color);
+  outline: none;
+}
+
+.map-marker--capital {
+  --marker-color: #b6532f;
+  --tilt: -1deg;
+}
+
+.map-marker--grove {
+  --marker-color: #2f8f6b;
+  --tilt: 1deg;
+}
+
+.map-marker--ruins {
+  --marker-color: #7a4d32;
+  --tilt: -2deg;
+}
+
+.map-marker--outpost {
+  --marker-color: #2a5f8a;
+  --tilt: 0deg;
+}
+
+.map-marker--fortress {
+  --marker-color: #8533a2;
+  --tilt: 1deg;
+}
+
+.map-marker--village {
+  --marker-color: #d6862d;
+}
+
+.map-marker--library {
+  --marker-color: #365c93;
+}
+
+.map-marker--tower {
+  --marker-color: #3e2d7a;
+}
+
+.map-marker--hamlet {
+  --marker-color: #3b7f5c;
+}
+
+.map-ledger {
+  background: linear-gradient(180deg, rgba(10, 27, 35, 0.96), rgba(8, 21, 28, 0.94));
+  border: 2px solid rgba(243, 201, 105, 0.35);
+  border-radius: 24px;
+  padding: 1.75rem;
+  box-shadow: 0 20px 60px -40px rgba(0, 0, 0, 0.75);
+  position: relative;
+  overflow: hidden;
+}
+
+.map-ledger::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 28% 16%, rgba(243, 201, 105, 0.14), transparent 42%);
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.map-ledger__title {
+  margin: 0 0 0.5rem;
+}
+
+.map-ledger__intro {
+  margin-top: 0;
+  color: rgba(253, 247, 227, 0.82);
+}
+
+.map-ledger__list {
+  list-style: none;
+  margin: 1.25rem 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.map-ledger__item {
+  position: relative;
+}
+
+.map-ledger__link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(243, 201, 105, 0.28);
+  border-radius: 14px;
+  background: rgba(255, 253, 246, 0.04);
+  color: rgba(253, 247, 227, 0.92);
+  transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+}
+
+.map-ledger__link:hover,
+.map-ledger__link:focus-visible {
+  transform: translateY(-3px);
+  border-color: rgba(14, 209, 178, 0.5);
+  background: rgba(14, 209, 178, 0.08);
+  outline: none;
+}
+
+.map-ledger__name {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.map-ledger__summary {
+  color: rgba(253, 247, 227, 0.8);
+  line-height: 1.4;
+}
+
+.map-ledger__legend {
+  border-top: 1px solid rgba(243, 201, 105, 0.28);
+  padding-top: 1rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.legend-key {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.legend-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 2px solid rgba(243, 201, 105, 0.4);
+  background: linear-gradient(135deg, rgba(243, 201, 105, 0.28), transparent 60%);
+  position: relative;
+  display: inline-block;
+}
+
+.legend-swatch::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 8px;
+  background: var(--swatch-color, rgba(14, 209, 178, 0.42));
+}
+
+.legend-swatch--capital {
+  --swatch-color: rgba(182, 83, 47, 0.5);
+}
+
+.legend-swatch--fortress {
+  --swatch-color: rgba(133, 51, 162, 0.48);
+}
+
+.legend-swatch--grove {
+  --swatch-color: rgba(47, 143, 107, 0.5);
+}
+
+.map-ledger__note {
+  margin: 0.4rem 0 0;
+  color: rgba(253, 247, 227, 0.78);
+  line-height: 1.5;
+}
+
+@media (max-width: 1040px) {
+  .fantasy-sitemap {
+    grid-template-columns: 1fr;
+  }
+
+  .map-surface {
+    min-height: 540px;
+  }
+}
+
 @media (max-width: 720px) {
   .reset-hero,
   .reset-board__panel,
@@ -7837,5 +8308,22 @@ summary.interact-3d::-webkit-details-marker {
 
   .feature-card__footer {
     align-items: flex-start;
+  }
+
+  .map-hero {
+    padding: 1.75rem;
+  }
+
+  .map-marker {
+    min-width: 140px;
+  }
+
+  .map-hero__pill {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .map-surface {
+    min-height: 480px;
   }
 }

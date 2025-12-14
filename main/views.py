@@ -13,6 +13,7 @@ from django.db.models import Count, F, Q, Sum, Value
 from django.db.models.functions import Coalesce, Greatest
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.core.exceptions import PermissionDenied
 
@@ -224,6 +225,92 @@ def about(request: HttpRequest) -> HttpResponse:
         "feature_stats": feature_stats,
     }
     return render(request, "about.html", context)
+
+
+@require_GET
+def sitemap(request: HttpRequest) -> HttpResponse:
+    """Render a fantasy-styled sitemap that links to every page."""
+
+    destinations = [
+        {
+            "name": "Atrium of Ideas",
+            "url": reverse("main:index"),
+            "kind": "capital",
+            "x": 26,
+            "y": 46,
+            "summary": "Live board for submissions and votes.",
+        },
+        {
+            "name": "Storyteller's Grove",
+            "url": reverse("main:about"),
+            "kind": "grove",
+            "x": 40,
+            "y": 26,
+            "summary": "How the reset works and what's changed.",
+        },
+        {
+            "name": "Fallen Valley",
+            "url": reverse("main:graveyard"),
+            "kind": "ruins",
+            "x": 18,
+            "y": 70,
+            "summary": "Where expired ideas rest.",
+        },
+        {
+            "name": "Plaintext Outpost",
+            "url": reverse("main:plaintext-submission"),
+            "kind": "outpost",
+            "x": 44,
+            "y": 64,
+            "summary": "Text-only submissions with the same voting rules.",
+        },
+        {
+            "name": "Scorekeep Arena",
+            "url": reverse("main:scoreboard"),
+            "kind": "fortress",
+            "x": 60,
+            "y": 36,
+            "summary": "Leaderboard of prolific idea forgers.",
+        },
+        {
+            "name": "Profile Roost",
+            "url": reverse("main:profile"),
+            "kind": "village",
+            "x": 54,
+            "y": 58,
+            "summary": "Your status, submissions, and lore.",
+        },
+        {
+            "name": "Archive Keep",
+            "url": reverse("main:archive-index"),
+            "kind": "library",
+            "x": 72,
+            "y": 54,
+            "summary": "Historical board preserved in amber.",
+        },
+        {
+            "name": "Chronicle Tower",
+            "url": reverse("main:archive-about"),
+            "kind": "tower",
+            "x": 82,
+            "y": 30,
+            "summary": "The old world's about page.",
+        },
+        {
+            "name": "Legacy Score Dunes",
+            "url": reverse("main:archive-scoreboard"),
+            "kind": "hamlet",
+            "x": 68,
+            "y": 22,
+            "summary": "Frozen-in-time leaderboard.",
+        },
+    ]
+
+    return render(
+        request,
+        "sitemap.html",
+        {"destinations": destinations},
+    )
 
 
 @require_GET

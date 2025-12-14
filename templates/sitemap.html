@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Fantasy Sitemap | {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="map-hero" data-soundtrack="greenhouse">
+    <p class="page-eyebrow">Cartographer's Note</p>
+    <h1 class="page-title">The Board, charted as a mythic realm</h1>
+    <p class="page-lead">
+        Every corner of {{ request.site.name }} lives on this hand-drawn parchment. Follow the rivers, cross the hills,
+        and tap any landmark to travel to its page.
+    </p>
+    <div class="map-hero__meta">
+        <span class="map-hero__pill">CAPTCHA wards still guard every vote.</span>
+        <span class="map-hero__pill">One deploy a day—choose your path wisely.</span>
+    </div>
+</section>
+
+<section class="fantasy-sitemap" aria-labelledby="fantasy-sitemap-heading">
+    <div class="fantasy-sitemap__canvas">
+        <h2 id="fantasy-sitemap-heading" class="visually-hidden">Illustrated sitemap</h2>
+        <div class="map-surface">
+            <div class="map-surface__grain" aria-hidden="true"></div>
+            <div class="map-feature map-feature--sea" aria-hidden="true"></div>
+            <div class="map-feature map-feature--tide" aria-hidden="true"></div>
+            <div class="map-feature map-feature--mountains" aria-hidden="true"></div>
+            <div class="map-feature map-feature--hills" aria-hidden="true"></div>
+            <div class="map-feature map-feature--forest" aria-hidden="true"></div>
+            <div class="map-feature map-feature--river" aria-hidden="true"></div>
+            <div class="map-feature map-feature--river-branch" aria-hidden="true"></div>
+            <div class="map-feature map-feature--islands" aria-hidden="true"></div>
+            <div class="map-feature map-feature--compass" aria-hidden="true"></div>
+            <div class="map-banner" aria-hidden="true">
+                <span class="map-banner__label">Sitemap</span>
+                <span class="map-banner__shadow"></span>
+            </div>
+            <div class="map-marker-layer">
+                {% for destination in destinations %}
+                    <a
+                        class="map-marker map-marker--{{ destination.kind }}"
+                        href="{{ destination.url }}"
+                        style="--x: {{ destination.x }}%; --y: {{ destination.y }}%;"
+                        aria-label="{{ destination.name }}: {{ destination.summary }}">
+                        <span class="map-marker__ring"></span>
+                        <span class="map-marker__pin"></span>
+                        <span class="map-marker__label">{{ destination.name }}</span>
+                        <span class="map-marker__summary">{{ destination.summary }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <aside class="map-ledger" aria-label="Destinations list">
+        <h2 class="map-ledger__title">Legend &amp; quick hops</h2>
+        <p class="map-ledger__intro">Prefer the written guide? Follow these links instead of the parchment.</p>
+        <ul class="map-ledger__list">
+            {% for destination in destinations %}
+                <li class="map-ledger__item">
+                    <a class="map-ledger__link map-ledger__link--{{ destination.kind }}" href="{{ destination.url }}">
+                        <span class="map-ledger__name">{{ destination.name }}</span>
+                        <span class="map-ledger__summary">{{ destination.summary }}</span>
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+        <div class="map-ledger__legend">
+            <div class="legend-key">
+                <span class="legend-swatch legend-swatch--capital"></span>
+                <div>
+                    <strong>Capitals</strong>
+                    <p>Hubs like the live board or archive keep.</p>
+                </div>
+            </div>
+            <div class="legend-key">
+                <span class="legend-swatch legend-swatch--fortress"></span>
+                <div>
+                    <strong>Strongholds</strong>
+                    <p>Competitive arenas such as the scoreboards.</p>
+                </div>
+            </div>
+            <div class="legend-key">
+                <span class="legend-swatch legend-swatch--grove"></span>
+                <div>
+                    <strong>Groves &amp; outposts</strong>
+                    <p>Story, plaintext paths, and personal profiles.</p>
+                </div>
+            </div>
+            <p class="map-ledger__note">Rivers, hills, and forests only color the journey—every marker is clickable.</p>
+        </div>
+    </aside>
+</section>
+{% endblock %}

@@ -14,6 +14,7 @@ urlpatterns = [
         name="feature-vote-toggle",
     ),
     path("about/", views.about, name="about"),
+    path("sitemap/", views.sitemap, name="sitemap"),
     path("graveyard/", views.graveyard, name="graveyard"),
     path(
         "plaintext-submission/",

@@ -41,6 +41,10 @@
                         {% if url_name == 'archive-index' or url_name == 'archive-about' or url_name == 'archive-scoreboard' %}aria-current="page"{% endif %}
                         href="{% url 'main:archive-index' %}">Archive</a>
                     <a
+                        class="header-nav__link{% if url_name == 'sitemap' %} header-nav__link--active{% endif %}"
+                        {% if url_name == 'sitemap' %}aria-current="page"{% endif %}
+                        href="{% url 'main:sitemap' %}">Sitemap</a>
+                    <a
                         class="header-nav__link{% if url_name == 'scoreboard' %} header-nav__link--active{% endif %}"
                         {% if url_name == 'scoreboard' %}aria-current="page"{% endif %}
                         href="{% url 'main:scoreboard' %}">Scoreboard</a>

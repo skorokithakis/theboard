@@ -1,93 +1,79 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Fantasy Sitemap | {{ request.site.name }}{% endblock %}
+{% block title %}3D Sitemap | {{ request.site.name }}{% endblock %}
+
+{% block extra_head %}
+    <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+{% endblock %}
 
 {% block content %}
 <section class="map-hero" data-soundtrack="greenhouse">
-    <p class="page-eyebrow">Cartographer's Note</p>
-    <h1 class="page-title">The Board, charted as a mythic realm</h1>
+    <p class="page-eyebrow">Navigation Constellation</p>
+    <h1 class="page-title">The Board, charted as a 3D orbit</h1>
     <p class="page-lead">
-        Every corner of {{ request.site.name }} lives on this hand-drawn parchment. Follow the rivers, cross the hills,
-        and tap any landmark to travel to its page.
+        The sitemap is now an interactive force-orbit rendered with D3.js. Drag to tilt the sphere, hover a beacon to
+        preview the stop, or click to warp there instantly.
     </p>
     <div class="map-hero__meta">
+        <span class="map-hero__pill">Force-directed nodes, eased in 3D</span>
         <span class="map-hero__pill">CAPTCHA wards still guard every vote.</span>
         <span class="map-hero__pill">One deploy a day—choose your path wisely.</span>
     </div>
 </section>
 
-<section class="fantasy-sitemap" aria-labelledby="fantasy-sitemap-heading">
-    <div class="fantasy-sitemap__canvas">
-        <h2 id="fantasy-sitemap-heading" class="visually-hidden">Illustrated sitemap</h2>
-        <div class="map-surface">
-            <div class="map-surface__grain" aria-hidden="true"></div>
-            <div class="map-feature map-feature--sea" aria-hidden="true"></div>
-            <div class="map-feature map-feature--tide" aria-hidden="true"></div>
-            <div class="map-feature map-feature--mountains" aria-hidden="true"></div>
-            <div class="map-feature map-feature--hills" aria-hidden="true"></div>
-            <div class="map-feature map-feature--forest" aria-hidden="true"></div>
-            <div class="map-feature map-feature--river" aria-hidden="true"></div>
-            <div class="map-feature map-feature--river-branch" aria-hidden="true"></div>
-            <div class="map-feature map-feature--islands" aria-hidden="true"></div>
-            <div class="map-feature map-feature--compass" aria-hidden="true"></div>
-            <div class="map-banner" aria-hidden="true">
-                <span class="map-banner__label">Sitemap</span>
-                <span class="map-banner__shadow"></span>
-            </div>
-            <div class="map-marker-layer">
-                {% for destination in destinations %}
-                    <a
-                        class="map-marker map-marker--{{ destination.kind }}"
-                        href="{{ destination.url }}"
-                        style="--x: {{ destination.x }}%; --y: {{ destination.y }}%;"
-                        aria-label="{{ destination.name }}: {{ destination.summary }}">
-                        <span class="map-marker__ring"></span>
-                        <span class="map-marker__pin"></span>
-                        <span class="map-marker__label">{{ destination.name }}</span>
-                        <span class="map-marker__summary">{{ destination.summary }}</span>
-                    </a>
-                {% endfor %}
+<section class="orbital-sitemap" aria-labelledby="fantasy-sitemap-heading">
+    <div class="sitemap-globe" data-sitemap-stage tabindex="0" aria-label="Interactive 3D sitemap sphere">
+        <h2 id="fantasy-sitemap-heading" class="visually-hidden">3D sitemap with force-directed orbits</h2>
+        <div class="sitemap-globe__halo" aria-hidden="true"></div>
+        <div class="sitemap-grid" aria-hidden="true">
+            <span class="sitemap-grid__ring"></span>
+            <span class="sitemap-grid__ring sitemap-grid__ring--inner"></span>
+            <span class="sitemap-grid__ring sitemap-grid__ring--outer"></span>
+            <span class="sitemap-grid__axis"></span>
+            <span class="sitemap-grid__axis sitemap-grid__axis--y"></span>
+        </div>
+        <svg class="sitemap-globe__svg" id="sitemap-orbit" role="presentation"></svg>
+        <div class="sitemap-globe__hud">
+            <p class="sitemap-globe__hint">Drag or use arrow keys to tilt. Click a beacon to open its page.</p>
+            <div class="sitemap-globe__badges">
+                <span class="sitemap-chip sitemap-chip--accent">Chart: Force-directed orbit</span>
+                <span class="sitemap-chip sitemap-chip--muted">Depth reacts to pointer + time</span>
             </div>
         </div>
     </div>
-    <aside class="map-ledger" aria-label="Destinations list">
-        <h2 class="map-ledger__title">Legend &amp; quick hops</h2>
-        <p class="map-ledger__intro">Prefer the written guide? Follow these links instead of the parchment.</p>
-        <ul class="map-ledger__list">
-            {% for destination in destinations %}
-                <li class="map-ledger__item">
-                    <a class="map-ledger__link map-ledger__link--{{ destination.kind }}" href="{{ destination.url }}">
-                        <span class="map-ledger__name">{{ destination.name }}</span>
-                        <span class="map-ledger__summary">{{ destination.summary }}</span>
-                    </a>
-                </li>
-            {% endfor %}
-        </ul>
-        <div class="map-ledger__legend">
-            <div class="legend-key">
-                <span class="legend-swatch legend-swatch--capital"></span>
-                <div>
-                    <strong>Capitals</strong>
-                    <p>Hubs like the live board or archive keep.</p>
-                </div>
+    <aside class="sitemap-panel">
+        <div class="sitemap-detail" data-sitemap-detail>
+            <p class="sitemap-detail__eyebrow">Selected location</p>
+            <h3 class="sitemap-detail__title" data-sitemap-title>{{ destinations.0.name|default:"Atrium of Ideas" }}</h3>
+            <p class="sitemap-detail__summary" data-sitemap-summary>{{ destinations.0.summary|default:"" }}</p>
+            <div class="sitemap-detail__meta">
+                <span class="sitemap-chip" data-sitemap-kind>{{ destinations.0.kind|default:"capital" }}</span>
+                <span class="sitemap-chip sitemap-chip--muted" data-sitemap-distance>Stable orbit</span>
             </div>
-            <div class="legend-key">
-                <span class="legend-swatch legend-swatch--fortress"></span>
-                <div>
-                    <strong>Strongholds</strong>
-                    <p>Competitive arenas such as the scoreboards.</p>
-                </div>
-            </div>
-            <div class="legend-key">
-                <span class="legend-swatch legend-swatch--grove"></span>
-                <div>
-                    <strong>Groves &amp; outposts</strong>
-                    <p>Story, plaintext paths, and personal profiles.</p>
-                </div>
-            </div>
-            <p class="map-ledger__note">Rivers, hills, and forests only color the journey—every marker is clickable.</p>
+            <a class="button sitemap-detail__cta" data-sitemap-link href="{{ destinations.0.url|default:'/' }}">
+                Visit this page
+            </a>
+        </div>
+        <div class="map-ledger" aria-label="Destinations list">
+            <h2 class="map-ledger__title">Prefer a list?</h2>
+            <p class="map-ledger__intro">Every beacon also shows up here for quick navigation.</p>
+            <ul class="map-ledger__list">
+                {% for destination in destinations %}
+                    <li class="map-ledger__item">
+                        <a class="map-ledger__link map-ledger__link--{{ destination.kind }}" href="{{ destination.url }}">
+                            <span class="map-ledger__name">{{ destination.name }}</span>
+                            <span class="map-ledger__summary">{{ destination.summary }}</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
         </div>
     </aside>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ destinations|json_script:"sitemap-data" }}
+    <script src="{% static 'js/sitemap-3d.js' %}" defer></script>
 {% endblock %}

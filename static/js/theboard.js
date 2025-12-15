@@ -268,7 +268,7 @@
 
   function shouldShowSnow(theme) {
     if (theme) {
-      return theme === "winter";
+      return theme === "winter" || theme === "winter-red";
     }
     return WINTER_MONTHS[new Date().getMonth()];
   }

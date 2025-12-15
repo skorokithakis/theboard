@@ -345,6 +345,63 @@ body.theme-winter-red::after {
   z-index: -2;
 }
 
+body.theme-summer {
+  --background: #fff3da;
+  --background-alt: #ffe7ba;
+  --surface: #fff9f0;
+  --surface-alt: #ffe4b5;
+  --card-bg: #fff7e3;
+  --input-bg: #fff1d4;
+  --muted-text: #2c2a1c;
+  --accent: #21c8e6;
+  --accent-dark: #0fa3b9;
+  --brand: #ffc659;
+  --brand-dark: #e0aa3f;
+  background-color: var(--background);
+  background-image:
+    radial-gradient(circle at 22% 20%, rgba(255, 198, 89, 0.22), rgba(38, 28, 16, 0) 32%),
+    radial-gradient(circle at 74% 18%, rgba(33, 200, 230, 0.22), rgba(14, 26, 27, 0) 44%),
+    radial-gradient(circle at 40% 78%, rgba(255, 160, 122, 0.2), rgba(28, 24, 20, 0) 46%),
+    linear-gradient(180deg, rgba(18, 26, 22, 0.9), rgba(24, 36, 30, 0.95));
+}
+
+body.theme-summer::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 16% 32%, rgba(255, 198, 89, 0.28), transparent 48%),
+    radial-gradient(circle at 82% 46%, rgba(33, 200, 230, 0.24), transparent 42%),
+    repeating-conic-gradient(
+      from 6deg,
+      rgba(255, 198, 89, 0.12) 0deg 12deg,
+      rgba(33, 200, 230, 0.12) 12deg 22deg,
+      rgba(14, 26, 27, 0.18) 22deg 28deg
+    );
+  opacity: 0.72;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+body.theme-summer::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 24% 22%, rgba(255, 160, 122, 0.22), rgba(255, 160, 122, 0) 44%),
+    radial-gradient(circle at 78% 62%, rgba(33, 200, 230, 0.22), rgba(33, 200, 230, 0) 48%),
+    repeating-linear-gradient(
+      105deg,
+      rgba(255, 198, 89, 0.16),
+      rgba(14, 26, 27, 0) 32px,
+      rgba(33, 200, 230, 0.14) 32px,
+      rgba(28, 24, 20, 0) 64px
+    );
+  opacity: 0.48;
+  pointer-events: none;
+  z-index: -2;
+}
+
 @keyframes lavaFlow {
   0% {
     background-position: 0 0, 0 32%, 16% 48%, 0 72%, 0 0;
@@ -435,6 +492,324 @@ body.theme-winter-red .snowflake {
   100% {
     transform: translate3d(var(--snow-drift, 0px), 120vh, 0) scale(var(--snow-scale, 1)) rotate(var(--snow-rotation-end, 360deg));
   }
+}
+
+.seasonal-vfx {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+  mix-blend-mode: screen;
+}
+
+.seasonal-vfx__sprite {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--sprite-size, 42px);
+  height: var(--sprite-size, 42px);
+  opacity: var(--sprite-opacity, 0.82);
+  filter: drop-shadow(0 8px 20px rgba(10, 16, 24, 0.25));
+  transform: translate(-50%, -50%) translate(var(--drift-x, 0px), var(--drift-y-start, 0px))
+    scale(var(--sprite-scale, 1))
+    rotate(var(--rotation-start, 0deg));
+  animation: vfxFloat var(--float-duration, 18s) ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s);
+  will-change: transform, opacity;
+}
+
+@keyframes vfxFloat {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translate(var(--drift-x, 0px), calc(var(--drift-y-start, 0px) + 12px))
+      scale(var(--sprite-scale, 1))
+      rotate(var(--rotation-start, 0deg));
+  }
+  12% {
+    opacity: var(--sprite-opacity, 0.82);
+  }
+  48% {
+    transform: translate(-50%, -50%) translate(calc(var(--drift-x, 0px) * 0.6), calc(var(--drift-y-start, 0px) - var(--lift, 36px)))
+      scale(calc(var(--sprite-scale, 1) * 1.04))
+      rotate(calc(var(--rotation-start, 0deg) + var(--rotation-span, 60deg)));
+  }
+  88% {
+    opacity: var(--sprite-opacity, 0.82);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) translate(calc(var(--drift-x, 0px) * -0.35), calc(var(--drift-y-start, 0px) - var(--lift, 64px)))
+      scale(calc(var(--sprite-scale, 1) * 1.02))
+      rotate(calc(var(--rotation-start, 0deg) + var(--rotation-span, 120deg)));
+  }
+}
+
+@keyframes vfxGlow {
+  0% {
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.24)) brightness(1);
+  }
+  50% {
+    filter: drop-shadow(0 10px 24px rgba(255, 122, 31, 0.4)) brightness(1.15) saturate(1.08);
+  }
+  100% {
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.24)) brightness(1);
+  }
+}
+
+@keyframes vfxPulse {
+  0% {
+    box-shadow: 0 0 16px rgba(255, 226, 74, 0.3), 0 0 32px rgba(14, 209, 178, 0.2);
+    opacity: var(--sprite-opacity, 0.82);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(255, 226, 74, 0.45), 0 0 42px rgba(14, 209, 178, 0.35);
+    opacity: calc(var(--sprite-opacity, 0.82) + 0.08);
+  }
+  100% {
+    box-shadow: 0 0 16px rgba(255, 226, 74, 0.3), 0 0 32px rgba(14, 209, 178, 0.2);
+    opacity: var(--sprite-opacity, 0.82);
+  }
+}
+
+@keyframes vfxNeonPulse {
+  0% {
+    box-shadow: 0 0 18px rgba(255, 107, 214, 0.42), 0 0 28px rgba(104, 245, 255, 0.35);
+    opacity: var(--sprite-opacity, 0.9);
+  }
+  50% {
+    box-shadow: 0 0 32px rgba(255, 107, 214, 0.65), 0 0 46px rgba(104, 245, 255, 0.5);
+    opacity: calc(var(--sprite-opacity, 0.9) + 0.08);
+  }
+  100% {
+    box-shadow: 0 0 18px rgba(255, 107, 214, 0.42), 0 0 28px rgba(104, 245, 255, 0.35);
+    opacity: var(--sprite-opacity, 0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .seasonal-vfx {
+    display: none;
+  }
+
+  .seasonal-vfx__sprite {
+    animation: none;
+  }
+}
+
+.seasonal-vfx__sprite--frost-shard {
+  --sprite-size: 46px;
+  --lift: 56px;
+  background:
+    radial-gradient(circle at 30% 28%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0) 55%),
+    conic-gradient(from 12deg, rgba(139, 211, 255, 0.92), rgba(108, 191, 255, 0.85), rgba(255, 255, 255, 0.94), rgba(139, 211, 255, 0.9));
+  clip-path: polygon(50% 0%, 68% 30%, 100% 35%, 74% 56%, 82% 90%, 50% 74%, 18% 90%, 26% 56%, 0 35%, 32% 30%);
+  box-shadow: 0 12px 28px rgba(20, 32, 54, 0.35), 0 0 32px rgba(139, 211, 255, 0.32);
+}
+
+.seasonal-vfx__sprite--winter-ember {
+  --sprite-size: 28px;
+  --sprite-opacity: 0.72;
+  --lift: 44px;
+  background:
+    radial-gradient(circle at 48% 30%, rgba(255, 122, 31, 0.95), rgba(255, 63, 60, 0.9) 62%, rgba(59, 13, 8, 0.65));
+  border-radius: 40% 60% 45% 55%;
+  box-shadow: 0 0 22px rgba(255, 122, 31, 0.4), 0 10px 18px rgba(0, 0, 0, 0.18);
+  animation:
+    vfxFloat var(--float-duration, 18s) ease-in-out infinite,
+    vfxGlow 3.6s ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s), calc(var(--float-delay, 0s) * 0.4);
+}
+
+.seasonal-vfx__sprite--reindeer-charm {
+  --sprite-size: 54px;
+  --sprite-opacity: 0.86;
+  --lift: 46px;
+  background: radial-gradient(circle at 50% 24%, #ffe4ed 0 20%, #c67b4d 20% 48%, #8b4b2b 48% 74%, #5c2e1d 74%);
+  border-radius: 52% 48% 50% 52%;
+  box-shadow: 0 8px 18px rgba(40, 16, 8, 0.25), 0 0 24px rgba(255, 154, 182, 0.22);
+}
+
+.seasonal-vfx__sprite--reindeer-charm::before {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 16px;
+  background: linear-gradient(180deg, rgba(255, 214, 225, 0.85), rgba(146, 72, 36, 0.85));
+  border-radius: 40% 40% 0 0;
+  top: -8px;
+  left: 10px;
+  transform: rotate(-16deg);
+  box-shadow:
+    24px -2px 0 rgba(255, 214, 225, 0.9),
+    24px -2px 0 6px rgba(146, 72, 36, 0.45);
+}
+
+.seasonal-vfx__sprite--reindeer-charm::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle at 50% 50%, #ff4f6f, #b31f37 80%);
+  border-radius: 999px;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 12px rgba(255, 79, 111, 0.45);
+}
+
+.seasonal-vfx__sprite--snow-buddy {
+  --sprite-size: 50px;
+  --sprite-opacity: 0.76;
+  --lift: 38px;
+  background: radial-gradient(circle at 50% 65%, #fefefe 0 36%, #dfe7ff 36% 70%, #bfcde9 70%);
+  border-radius: 50%;
+  box-shadow: 0 8px 18px rgba(36, 48, 70, 0.28), 0 0 18px rgba(255, 214, 225, 0.28);
+}
+
+.seasonal-vfx__sprite--snow-buddy::before {
+  content: "";
+  position: absolute;
+  width: 58%;
+  height: 58%;
+  background: radial-gradient(circle at 50% 60%, #ffffff 0 60%, #e6eeff 60%);
+  border-radius: 50%;
+  top: -12px;
+  left: 21%;
+  box-shadow: 0 0 0 2px rgba(255, 214, 225, 0.45), 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.seasonal-vfx__sprite--snow-buddy::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(circle at 40% 40%, #ff9ab6, #ff4f6f 70%);
+  border-radius: 50%;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow:
+    0 -14px 0 -2px #1e293b,
+    6px -12px 0 -3px #1e293b,
+    -6px -12px 0 -3px #1e293b;
+}
+
+.seasonal-vfx__sprite--spring-leaf {
+  --sprite-size: 44px;
+  --sprite-opacity: 0.8;
+  --lift: 52px;
+  background: radial-gradient(circle at 24% 24%, rgba(104, 237, 174, 0.9), rgba(88, 202, 162, 0.75) 52%, rgba(36, 104, 76, 0.3));
+  clip-path: ellipse(45% 60% at 50% 50%);
+  box-shadow: 0 10px 20px rgba(20, 72, 52, 0.25), 0 0 20px rgba(104, 237, 174, 0.24);
+}
+
+.seasonal-vfx__sprite--spring-leaf::after {
+  content: "";
+  position: absolute;
+  width: 60%;
+  height: 4px;
+  background: linear-gradient(90deg, rgba(36, 104, 76, 0.7), rgba(104, 237, 174, 0.9));
+  top: 50%;
+  left: 20%;
+  transform: translateY(-50%) rotate(-18deg);
+  border-radius: 999px;
+  opacity: 0.8;
+}
+
+.seasonal-vfx__sprite--spring-helix {
+  --sprite-size: 24px;
+  --sprite-opacity: 0.78;
+  --lift: 64px;
+  background: repeating-linear-gradient(
+    140deg,
+    rgba(104, 237, 174, 0.9) 0 6px,
+    rgba(36, 104, 76, 0.6) 6px 12px
+  );
+  border-radius: 20px;
+  box-shadow: 0 0 16px rgba(104, 237, 174, 0.35);
+  animation:
+    vfxFloat var(--float-duration, 18s) ease-in-out infinite,
+    vfxPulse 4s ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s), calc(var(--float-delay, 0s) * 0.25);
+}
+
+.seasonal-vfx__sprite--summer-sun {
+  --sprite-size: 56px;
+  --sprite-opacity: 0.88;
+  --lift: 52px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 214, 105, 0.98), rgba(255, 146, 66, 0.95) 55%, rgba(255, 79, 111, 0.65));
+  border-radius: 50%;
+  box-shadow: 0 0 24px rgba(255, 198, 89, 0.6), 0 0 36px rgba(255, 79, 111, 0.4);
+  animation:
+    vfxFloat var(--float-duration, 18s) ease-in-out infinite,
+    vfxGlow 3.2s ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s), calc(var(--float-delay, 0s) * 0.3);
+}
+
+.seasonal-vfx__sprite--summer-floaty {
+  --sprite-size: 48px;
+  --sprite-opacity: 0.78;
+  --lift: 44px;
+  background: conic-gradient(
+    from 30deg,
+    #ffce73 0 25%,
+    #21c8e6 25% 48%,
+    #ff4f6f 48% 72%,
+    #ffe8b5 72% 100%
+  );
+  border-radius: 50%;
+  box-shadow: 0 8px 16px rgba(14, 26, 27, 0.18), 0 0 18px rgba(33, 200, 230, 0.32);
+}
+
+.seasonal-vfx__sprite--fall-leaf {
+  --sprite-size: 48px;
+  --sprite-opacity: 0.82;
+  --lift: 58px;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 207, 154, 0.9), rgba(224, 122, 64, 0.85) 55%, rgba(59, 24, 8, 0.35));
+  clip-path: polygon(50% 0%, 68% 20%, 90% 38%, 74% 64%, 86% 100%, 50% 82%, 14% 100%, 26% 64%, 10% 38%, 32% 20%);
+  box-shadow: 0 10px 22px rgba(36, 18, 8, 0.25), 0 0 22px rgba(247, 162, 89, 0.24);
+}
+
+.seasonal-vfx__sprite--fall-mote {
+  --sprite-size: 26px;
+  --sprite-opacity: 0.7;
+  --lift: 36px;
+  background: radial-gradient(circle at 50% 50%, rgba(114, 57, 18, 0.7), rgba(247, 162, 89, 0.6) 60%, rgba(255, 207, 154, 0.42));
+  border-radius: 50%;
+  filter: blur(0.3px) drop-shadow(0 8px 12px rgba(0, 0, 0, 0.2));
+}
+
+.seasonal-vfx__sprite--neon-pulse {
+  --sprite-size: 48px;
+  --sprite-opacity: 0.9;
+  --lift: 52px;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255, 107, 214, 0.9), rgba(255, 107, 214, 0) 55%),
+    radial-gradient(circle at 70% 70%, rgba(104, 245, 255, 0.88), rgba(104, 245, 255, 0) 60%),
+    radial-gradient(circle at 50% 50%, rgba(251, 226, 109, 0.8), rgba(251, 226, 109, 0) 48%);
+  border-radius: 50%;
+  animation:
+    vfxFloat var(--float-duration, 18s) ease-in-out infinite,
+    vfxNeonPulse 3s ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s), calc(var(--float-delay, 0s) * 0.35);
+}
+
+.seasonal-vfx__sprite--neon-beam {
+  --sprite-size: 18px;
+  --sprite-opacity: 0.76;
+  --lift: 60px;
+  width: var(--beam-length, 200px);
+  height: 12px;
+  background: linear-gradient(90deg, rgba(104, 245, 255, 0), rgba(104, 245, 255, 0.8), rgba(255, 107, 214, 0));
+  border-radius: 99px;
+  box-shadow: 0 0 18px rgba(104, 245, 255, 0.35);
+  transform: translate(-50%, -50%) rotate(var(--rotation-start, 0deg));
+  animation:
+    vfxFloat var(--float-duration, 18s) ease-in-out infinite,
+    vfxNeonPulse 3.6s ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s), calc(var(--float-delay, 0s) * 0.2);
 }
 
 h1,
@@ -5566,6 +5941,7 @@ a:hover {
 body,
 body.theme-winter-red,
 body.theme-spring,
+body.theme-summer,
 body.theme-fall,
 body.theme-winter,
 body.theme-lava,
@@ -5588,6 +5964,8 @@ body.theme-winter-red::before,
 body.theme-winter-red::after,
 body.theme-spring::before,
 body.theme-spring::after,
+body.theme-summer::before,
+body.theme-summer::after,
 body.theme-fall::before,
 body.theme-fall::after,
 body.theme-winter::before,

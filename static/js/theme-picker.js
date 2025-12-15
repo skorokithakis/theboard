@@ -3,7 +3,7 @@
 
   var STORAGE_KEY = "theboard:theme";
   var AUTO = "auto";
-  var THEMES = ["spring", "winter-red", "fall", "winter", "neon"];
+  var THEMES = ["spring", "summer", "winter-red", "fall", "winter", "neon"];
   var SOUTHERN_TIMEZONE_HINTS = [
     "Australia/",
     "Pacific/Auckland",
@@ -133,13 +133,13 @@
       if (month >= 8 && month <= 10) {
         return "spring";
       }
-      return "winter-red";
+      return "summer";
     }
     if (month >= 2 && month <= 4) {
       return "spring";
     }
     if (month >= 5 && month <= 7) {
-      return "winter-red";
+      return "summer";
     }
     if (month >= 8 && month <= 10) {
       return "fall";

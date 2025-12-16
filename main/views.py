@@ -31,6 +31,7 @@ from . import turnstile
 from .utils import get_next_iteration_at
 
 User = get_user_model()
+WEB5_HALF_LIFE_RELEASE_TARGET = 1_000_000_000
 
 
 def _client_ip(request: HttpRequest) -> str | None:
@@ -156,15 +157,27 @@ def _web5_context(
 ) -> dict[str, object]:
     """Collect Web 5.0 investment context without polluting other pages."""
 
+    total_committed = WebFiveInvestment.objects.total_committed()
+    user_committed = WebFiveInvestment.objects.total_for_user(request.user)
+    hl3_remaining = max(WEB5_HALF_LIFE_RELEASE_TARGET - total_committed, 0)
+    hl3_progress = (
+        min(total_committed / WEB5_HALF_LIFE_RELEASE_TARGET * 100, 100)
+        if WEB5_HALF_LIFE_RELEASE_TARGET
+        else 0
+    )
+
     return {
         "web5_investment_form": investment_form
         or WebFiveInvestmentForm(
             user=request.user if request.user.is_authenticated else None
         ),
         "web5_totals": {
-            "total_committed": WebFiveInvestment.objects.total_committed(),
-            "user_committed": WebFiveInvestment.objects.total_for_user(request.user),
+            "total_committed": total_committed,
+            "user_committed": user_committed,
         },
+        "half_life_release_target": WEB5_HALF_LIFE_RELEASE_TARGET,
+        "half_life_release_remaining": hl3_remaining,
+        "half_life_release_progress": round(hl3_progress, 1),
     }
 
 

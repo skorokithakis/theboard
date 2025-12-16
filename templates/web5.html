@@ -68,4 +68,39 @@
         </div>
     </div>
 </section>
+
+<section class="hl3-announcement" aria-labelledby="hl3-heading">
+    <div class="hl3-grid">
+        <div class="hl3-copy">
+            <p class="hl3-eyebrow">Black Mesa brief</p>
+            <h2 id="hl3-heading" class="hl3-title">Half-Life 3 will deploy when Web 5.0 reaches 1,000,000,000 coins</h2>
+            <p class="hl3-lede">
+                The next crowbar-era reveal is locked behind Web 5.0 momentum. Every coin fuels the signal that wakes
+                the sleepers at Valve HQ and kicks off final release prep.
+            </p>
+            <ul class="hl3-promises">
+                <li><strong>Current treasury:</strong> {{ web5_totals.total_committed|default:0 }}c fueling the build.</li>
+                <li><strong>Distance to detonation:</strong> {{ half_life_release_remaining|default:0 }}c until the 1B coin threshold.</li>
+                <li><strong>Promise:</strong> The instant the Web 5.0 counter hits {{ half_life_release_target|default:0 }}c, the Half-Life 3 announcement goes live to everyone on The Board.</li>
+            </ul>
+            <div class="hl3-progress" role="status" aria-live="polite">
+                <div class="hl3-progress__meta">
+                    <span class="hl3-progress__label">Release progress</span>
+                    <span class="hl3-progress__value">{{ half_life_release_progress }}%</span>
+                </div>
+                <div class="hl3-meter" style="--hl3-progress: {{ half_life_release_progress }}%;">
+                    <div class="hl3-meter__fill"></div>
+                    <div class="hl3-meter__marker">Target: {{ half_life_release_target|default:0 }}c</div>
+                </div>
+                <p class="hl3-progress__note">Push Web 5.0 to a billion coins and we drop the full Half-Life 3 payload.</p>
+            </div>
+        </div>
+        <div class="hl3-video">
+            <div class="hl3-video__frame">
+                <iframe src="https://www.youtube.com/embed/O2W0N3uKXmo" title="Half-Life 3 announcement broadcast" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>
+            <p class="hl3-video__caption">The broadcast stays on loop until the 1B coin milestone unlocks the official Half-Life 3 drop.</p>
+        </div>
+    </div>
+</section>
 {% endblock %}

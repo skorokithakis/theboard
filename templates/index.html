@@ -1,60 +1,63 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ request.site.name }}{% endblock %}
+{% block title %}{{ request.site.name }} Hub{% endblock %}
 
 {% block content %}
-<section class="reset-board" aria-labelledby="reset-board-heading">
-    <div class="reset-board__panel">
-        <div class="reset-board__panel-header">
-            <p class="reset-board__eyebrow">Submit</p>
-            <h2 id="reset-board-heading">Add a feature to the fresh board</h2>
-            <p class="reset-board__hint">All submissions and votes still run through CAPTCHA to keep the signal clean.</p>
-        </div>
-        {% if not request.user.is_authenticated %}
-            <p class="reset-board__note">Sign in at <a href="/accounts/login/?next={{ request.path }}">/accounts/login/</a> to add a feature.</p>
-        {% elif not can_submit %}
-            <p class="reset-board__note">Daily submission limit reached. Come back after the next reset.</p>
-        {% else %}
-            <form class="reset-form" method="post" action="{% url 'main:index' %}">
-                {% csrf_token %}
-                {% if submission_form.non_field_errors %}
-                    <p class="form-error">{{ submission_form.non_field_errors|striptags }}</p>
-                {% endif %}
-                <div class="form-field">
-                    {{ submission_form.title.label_tag }}
-                    {{ submission_form.title }}
-                    {% for error in submission_form.title.errors %}
-                        <p class="form-error">{{ error }}</p>
-                    {% endfor %}
-                </div>
-                <div class="form-field">
-                    {{ submission_form.description.label_tag }}
-                    {{ submission_form.description }}
-                    {% for error in submission_form.description.errors %}
-                        <p class="form-error">{{ error }}</p>
-                    {% endfor %}
-                </div>
-                {% if turnstile_site_key %}
-                    <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
-                {% else %}
-                    <p class="reset-board__note">Cloudflare Turnstile is disabled in this environment.</p>
-                {% endif %}
-                <div class="reset-form__actions">
-                    <button class="button" type="submit">Submit feature</button>
-                </div>
-            </form>
-        {% endif %}
+<section class="page-header" data-soundtrack="atrium">
+    <p class="page-eyebrow">Board hub</p>
+    <h1 class="page-title">Choose where to explore next</h1>
+    <p class="page-lead">
+        Each major widget now has its own space. Start with submissions and voting, detour to the arcade, or jump into
+        Web 5.0 without wading through clutter.
+    </p>
+    <div class="about-reset__actions">
+        <a class="button" href="{% url 'main:feature-board' %}">Feature submission</a>
+        <a class="button-outline" href="{% url 'main:arcade' %}">Open the arcade</a>
+        <a class="button-outline" href="{% url 'main:web5' %}">Fund Web 5.0</a>
     </div>
-    <div class="reset-board__panel reset-board__panel--list">
-        <div class="reset-board__panel-header">
-            <p class="reset-board__eyebrow">Vote</p>
-            <h2>Help the next feature win</h2>
-            <p class="reset-board__hint">Votes reset after every deployment. Rally support while the board is clear.</p>
-        </div>
-        {% if features %}
+    {% if next_iteration_at %}
+        <p class="page-countdown" id="next-iteration-countdown" data-next-iteration="{{ next_iteration_at|date:'c' }}">Next iteration at {{ next_iteration_at|date:'F j, Y H:i \\U\\T\\C' }}</p>
+    {% endif %}
+</section>
+
+<section class="about-reset-grid">
+    <div class="about-reset__card">
+        <h2>Feature lab</h2>
+        <ul>
+            <li><a href="{% url 'main:feature-board' %}">Submit ideas and vote in the live queue.</a></li>
+            <li><a href="{% url 'main:graveyard' %}">Visit the graveyard</a> when ideas age out.</li>
+            <li><a href="{% url 'main:plaintext-submission' %}">Plaintext submission</a> for low-bandwidth voting.</li>
+            <li><a href="{% url 'main:scoreboard' %}">Scoreboard</a> for prolific creators.</li>
+        </ul>
+    </div>
+    <div class="about-reset__card">
+        <h2>Arcade &amp; fun</h2>
+        <ul>
+            <li><a href="{% url 'main:arcade' %}">Arcade index</a> for every playful widget.</li>
+            <li><a href="{% url 'main:penguin-view' %}">Penguin parade</a> as its own stream room.</li>
+            <li><a href="{% url 'main:arcade-terrarium' %}">Falling sand terrarium</a> in a dedicated lab.</li>
+            <li><a href="{% url 'main:arcade-quotes' %}">Quote oracle</a> and submissions.</li>
+        </ul>
+    </div>
+    <div class="about-reset__card">
+        <h2>Funding &amp; lore</h2>
+        <ul>
+            <li><a href="{% url 'main:web5' %}">Invest in Web 5.0</a> without leaving the feature flow.</li>
+            <li><a href="{% url 'main:about' %}">About</a> for how the reset works.</li>
+            <li><a href="{% url 'main:archive-index' %}">Archive</a> and <a href="{% url 'main:archive-about' %}">history</a>.</li>
+            <li><a href="{% url 'main:sitemap' %}">3D sitemap</a> if you want to orbit everything.</li>
+        </ul>
+    </div>
+    <div class="about-reset__card about-reset__card--wide">
+        <h2>Live signals</h2>
+        {% if daily_fortune %}
+            <p class="about-reset__note">Daily fortune: &ldquo;{{ daily_fortune.text }}&rdquo; — {{ daily_fortune.attribution }}</p>
+        {% endif %}
+        {% if feature_preview %}
+            <p class="about-reset__note">Top of the queue right now. Head to the feature lab to vote.</p>
             <div class="feature-stack">
-                {% for feature in features %}
+                {% for feature in feature_preview %}
                     <article class="feature-card">
                         <header class="feature-card__header">
                             <h3 class="feature-card__title">{{ feature.title }}</h3>
@@ -63,112 +66,14 @@
                         <p class="feature-card__description">{{ feature.description }}</p>
                         <div class="feature-card__footer">
                             <div class="feature-card__votes">Votes: {{ feature.vote_total }}</div>
-                            <form class="feature-card__vote-form" method="post" action="{% url 'main:feature-vote-toggle' feature.id %}">
-                                {% csrf_token %}
-                                {% if turnstile_site_key %}
-                                    <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
-                                {% endif %}
-                                <button class="button-outline" type="submit">{% if feature.user_has_voted %}Remove vote{% else %}Vote up{% endif %}</button>
-                            </form>
+                            <a class="button-outline" href="{% url 'main:feature-board' %}">Open feature lab</a>
                         </div>
                     </article>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="reset-board__empty">No ideas yet. Plant the first one.</p>
+            <p class="about-reset__note">No live submissions yet. Start the queue from the feature lab.</p>
         {% endif %}
-        <p class="reset-board__note">Need the old interface? Head to the <a href="{% url 'main:archive-index' %}">archive snapshot</a>.</p>
     </div>
 </section>
-
-<section class="reset-hero" data-soundtrack="atrium">
-    <p class="reset-hero__eyebrow">Fresh slate</p>
-    <h1 class="reset-hero__title">{{ request.site.name }}</h1>
-    <p class="reset-hero__tagline">A blank page for the next wave of ideas. Add your feature and vote it up.</p>
-    <p class="reset-hero__archive">Looking for the old experience? Visit the <a href="{% url 'main:archive-index' %}">historical archive</a>.</p>
-</section>
-
-<section class="penguin-cam" aria-labelledby="penguin-cam-heading">
-    <div class="penguin-cam__grid">
-        <div class="penguin-cam__copy">
-            <p class="penguin-cam__eyebrow">Live exhibit</p>
-            <h2 id="penguin-cam-heading" class="penguin-cam__title">Penguin parade, live from Edinburgh Zoo</h2>
-            <p class="penguin-cam__lede">By request from the board: a window into the gentoo colony on their famous parade route. Drop in between votes to watch the waddle.</p>
-            <ul class="penguin-cam__highlights">
-                <li><strong>Source:</strong> Official Edinburgh Zoo penguin cam.</li>
-                <li><strong>Best moments:</strong> Feeding sessions and the daily march around Penguin Rock.</li>
-                <li><strong>Tip:</strong> If the embed hesitates, open the full stream on the zoo site.</li>
-            </ul>
-            <p class="penguin-cam__cta"><a href="https://www.edinburghzoo.org.uk/animals/webcams/penguin-cam" target="_blank" rel="noreferrer noopener">Watch on Edinburgh Zoo</a></p>
-        </div>
-        <div class="penguin-cam__media">
-            <div class="penguin-cam__frame">
-                <span class="penguin-cam__badge">Live - Edinburgh Zoo</span>
-                <div class="penguin-cam__embed" data-penguin-embed aria-label="Live penguin feed from Edinburgh Zoo">
-                    <script src="https://live.streamdays.com/xb1u3eln" type="text/javascript" language="javascript"></script>
-                </div>
-            </div>
-            <p class="penguin-cam__fallback">Having trouble? The stream is also available on the <a href="https://www.edinburghzoo.org.uk/animals/webcams/penguin-cam" target="_blank" rel="noreferrer noopener">Edinburgh Zoo site</a>.</p>
-        </div>
-    </div>
-</section>
-
-<section class="web5-section" aria-labelledby="web5-heading">
-    <div class="web5-grid">
-        <div class="web5-copy">
-            <p class="web5-eyebrow">Web 5.0 acceleration</p>
-            <h2 id="web5-heading" class="web5-title">Invest in the fifth dimension of the internet</h2>
-            <p class="web5-intro">Web 5.0 is where sensory internet, autonomous agents, and shared ownership collide. We are building a sentient network that remembers your intent, rewards your curiosity, and routes value the moment inspiration strikes.</p>
-            <ul class="web5-promises">
-                <li><strong>Omni-presence:</strong> identity, data, and assets follow you between worlds—no logins, no friction.</li>
-                <li><strong>Instant upside:</strong> every idea backed on The Board earns stake in the Web 5.0 lattice the second it lands.</li>
-                <li><strong>Trustless growth:</strong> transparent treasury, automated rewards, and auditable momentum for every supporter.</li>
-                <li><strong>Hype you can hold:</strong> early investors get front-row access to drops, partner launches, and surprise multipliers.</li>
-            </ul>
-            <div class="web5-stats" role="status" aria-live="polite">
-                <div class="web5-stat">
-                    <p class="web5-stat__label">Total war chest</p>
-                    <p class="web5-stat__value">{{ web5_totals.total_committed|default:0 }}c</p>
-                </div>
-                <div class="web5-stat">
-                    <p class="web5-stat__label">Your contribution</p>
-                    <p class="web5-stat__value">{{ web5_totals.user_committed|default:0 }}c</p>
-                </div>
-                <div class="web5-stat">
-                    <p class="web5-stat__label">Ready to deploy</p>
-                    <p class="web5-stat__value">{{ request.user.balance|default:0 }}c</p>
-                </div>
-            </div>
-        </div>
-        <div class="web5-action">
-            <p class="web5-action__eyebrow">Fuel the initiative</p>
-            <p class="web5-action__lede">Turn your balance into momentum. Every coin pushes Web 5.0 closer to launch.</p>
-            {% if request.user.is_authenticated %}
-                <form method="post" action="{% url 'main:web5-invest' %}" class="web5-form">
-                    {% csrf_token %}
-                    <label class="web5-form__label" for="{{ web5_investment_form.amount.id_for_label }}">Invest coins</label>
-                    {{ web5_investment_form.amount }}
-                    {% if web5_investment_form.amount.help_text %}
-                        <p class="web5-form__help">{{ web5_investment_form.amount.help_text }}</p>
-                    {% endif %}
-                    {% for error in web5_investment_form.amount.errors %}
-                        <p class="form-error">{{ error }}</p>
-                    {% endfor %}
-                    <button type="submit" class="button web5-form__submit">Invest in Web 5.0</button>
-                </form>
-                <p class="web5-action__note">Every contribution is logged forever. No takesies-backsies—only forward motion.</p>
-            {% else %}
-                <p class="web5-action__locked">Sign in to deploy your balance into Web 5.0.</p>
-                <p class="web5-action__note">Members get instant perks and a live ledger of their backing history.</p>
-            {% endif %}
-        </div>
-    </div>
-</section>
-{% endblock %}
-
-{% block extra_scripts %}
-    {{ block.super }}
-    {% if turnstile_site_key %}
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-    {% endif %}
 {% endblock %}

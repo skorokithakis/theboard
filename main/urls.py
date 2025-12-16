@@ -7,7 +7,14 @@ from . import views
 app_name = "main"
 urlpatterns = [
     path("", views.index, name="index"),
+    path("features/", views.feature_board, name="feature-board"),
     path("invest/web5/", views.web5_invest, name="web5-invest"),
+    path("web5/", views.web5, name="web5"),
+    path("arcade/", views.arcade, name="arcade"),
+    path("arcade/penguins/", views.penguin_view, name="penguin-view"),
+    path("arcade/terrarium/", views.arcade_terrarium, name="arcade-terrarium"),
+    path("arcade/quotes/", views.arcade_quotes, name="arcade-quotes"),
+    path("arcade/buddy/", views.arcade_buddy, name="arcade-buddy"),
     path(
         "features/<int:pk>/vote/",
         views.feature_vote_toggle,

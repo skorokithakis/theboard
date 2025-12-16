@@ -151,9 +151,57 @@ def _build_homepage_context(
     }
 
 
-@require_http_methods(["GET", "HEAD", "POST"])
+def _web5_context(
+    request: HttpRequest, investment_form: WebFiveInvestmentForm | None = None
+) -> dict[str, object]:
+    """Collect Web 5.0 investment context without polluting other pages."""
+
+    return {
+        "web5_investment_form": investment_form
+        or WebFiveInvestmentForm(
+            user=request.user if request.user.is_authenticated else None
+        ),
+        "web5_totals": {
+            "total_committed": WebFiveInvestment.objects.total_committed(),
+            "user_committed": WebFiveInvestment.objects.total_for_user(request.user),
+        },
+    }
+
+
+def _quote_page_context(
+    request: HttpRequest, fortune_form: QuoteSuggestionForm | None = None
+) -> dict[str, object]:
+    """Assemble data for the quotes arcade, including the current fortune."""
+
+    return {
+        "daily_fortune": get_daily_fortune(),
+        "fortune_suggestion_form": fortune_form or QuoteSuggestionForm(),
+    }
+
+
+@require_GET
 def index(request: HttpRequest) -> HttpResponse:
-    """Render the pared-down board with just voting and submissions."""
+    """Render the hub that links to each focused experience."""
+
+    Feature.expire_stale()
+    preview = list(
+        Feature.objects.pending()
+        .with_vote_totals()
+        .select_related("creator")
+        .order_by("-total_votes", "-created_at")[:3]
+    )
+
+    context = {
+        "feature_preview": preview,
+        "next_iteration_at": get_next_iteration_at(),
+        "daily_fortune": get_daily_fortune(),
+    }
+    return render(request, "index.html", context)
+
+
+@require_http_methods(["GET", "HEAD", "POST"])
+def feature_board(request: HttpRequest) -> HttpResponse:
+    """Dedicated page for feature submissions and live voting."""
 
     Feature.expire_stale()
 
@@ -195,13 +243,13 @@ def index(request: HttpRequest) -> HttpResponse:
                 feature.save()
                 Vote.objects.create(user=request.user, feature=feature)
                 messages.success(request, "Feature submitted to the fresh board.")
-                return redirect("main:index")
+                return redirect("main:feature-board")
             elif verification_success:
                 status_code = 400
 
     return render(
         request,
-        "index.html",
+        "features/feature_board.html",
         _fresh_board_context(
             request,
             submission_form=submission_form,
@@ -233,50 +281,106 @@ def sitemap(request: HttpRequest) -> HttpResponse:
 
     destinations = [
         {
-            "name": "Atrium of Ideas",
+            "name": "Board Hub",
             "url": reverse("main:index"),
             "kind": "capital",
-            "x": 26,
-            "y": 46,
-            "summary": "Live board for submissions and votes.",
+            "x": 30,
+            "y": 44,
+            "summary": "Pick a destination for features, arcade, or funding.",
         },
         {
-            "name": "Storyteller's Grove",
-            "url": reverse("main:about"),
-            "kind": "grove",
-            "x": 40,
-            "y": 26,
-            "summary": "How the reset works and what's changed.",
+            "name": "Feature Lab",
+            "url": reverse("main:feature-board"),
+            "kind": "fortress",
+            "x": 20,
+            "y": 52,
+            "summary": "Submit ideas and vote in the dedicated lab.",
         },
         {
-            "name": "Fallen Valley",
+            "name": "Feature Graveyard",
             "url": reverse("main:graveyard"),
             "kind": "ruins",
-            "x": 18,
-            "y": 70,
+            "x": 16,
+            "y": 68,
             "summary": "Where expired ideas rest.",
         },
         {
             "name": "Plaintext Outpost",
             "url": reverse("main:plaintext-submission"),
             "kind": "outpost",
-            "x": 44,
-            "y": 64,
+            "x": 42,
+            "y": 70,
             "summary": "Text-only submissions with the same voting rules.",
         },
         {
             "name": "Scorekeep Arena",
             "url": reverse("main:scoreboard"),
-            "kind": "fortress",
-            "x": 60,
-            "y": 36,
+            "kind": "hamlet",
+            "x": 54,
+            "y": 32,
             "summary": "Leaderboard of prolific idea forgers.",
+        },
+        {
+            "name": "Web 5.0 Vault",
+            "url": reverse("main:web5"),
+            "kind": "tower",
+            "x": 46,
+            "y": 28,
+            "summary": "Invest in the initiative from a focused page.",
+        },
+        {
+            "name": "Arcade Atrium",
+            "url": reverse("main:arcade"),
+            "kind": "grove",
+            "x": 60,
+            "y": 60,
+            "summary": "Hub for penguins, sand, quotes, and the buddy.",
+        },
+        {
+            "name": "Penguin Parade",
+            "url": reverse("main:penguin-view"),
+            "kind": "village",
+            "x": 70,
+            "y": 72,
+            "summary": "Live cam from Edinburgh Zoo in its own room.",
+        },
+        {
+            "name": "Terrarium Lab",
+            "url": reverse("main:arcade-terrarium"),
+            "kind": "library",
+            "x": 66,
+            "y": 46,
+            "summary": "Falling sand and board-health driven habitat.",
+        },
+        {
+            "name": "Quote Oracle",
+            "url": reverse("main:arcade-quotes"),
+            "kind": "hamlet",
+            "x": 78,
+            "y": 52,
+            "summary": "Read the daily fortune and submit quotes.",
+        },
+        {
+            "name": "Buddy Workshop",
+            "url": reverse("main:arcade-buddy"),
+            "kind": "village",
+            "x": 74,
+            "y": 62,
+            "summary": "Summon and kit out the roaming companion.",
+        },
+        {
+            "name": "Storyteller's Grove",
+            "url": reverse("main:about"),
+            "kind": "grove",
+            "x": 38,
+            "y": 22,
+            "summary": "How the reset works and what's changed.",
         },
         {
             "name": "Profile Roost",
             "url": reverse("main:profile"),
             "kind": "village",
-            "x": 54,
+            "x": 50,
             "y": 58,
             "summary": "Your status, submissions, and lore.",
         },
@@ -285,7 +389,7 @@ def sitemap(request: HttpRequest) -> HttpResponse:
             "url": reverse("main:archive-index"),
             "kind": "library",
             "x": 72,
-            "y": 54,
+            "y": 38,
             "summary": "Historical board preserved in amber.",
         },
         {
@@ -311,6 +415,74 @@ def sitemap(request: HttpRequest) -> HttpResponse:
         "sitemap.html",
         {"destinations": destinations},
     )
+
+
+@require_GET
+def penguin_view(request: HttpRequest) -> HttpResponse:
+    """Standalone page for the penguin parade feed."""
+
+    return render(request, "penguins.html")
+
+
+@require_GET
+def web5(request: HttpRequest) -> HttpResponse:
+    """Show the Web 5.0 initiative and allow investments."""
+
+    Feature.expire_stale()
+    return render(request, "web5.html", _web5_context(request))
+
+
+@require_GET
+def arcade(request: HttpRequest) -> HttpResponse:
+    """Hub for playful experiments and side quests."""
+
+    Feature.expire_stale()
+    fun_preview = list(
+        Feature.objects.pending()
+        .with_vote_totals()
+        .order_by("-total_votes", "-created_at")[:2]
+    )
+    return render(
+        request,
+        "arcade/index.html",
+        {
+            "daily_fortune": get_daily_fortune(),
+            "feature_preview": fun_preview,
+        },
+    )
+
+
+@require_GET
+def arcade_terrarium(request: HttpRequest) -> HttpResponse:
+    """Interactive falling-sand terrarium in its own arcade room."""
+
+    Feature.expire_stale()
+    return render(
+        request,
+        "arcade/terrarium.html",
+        {
+            "terrarium_state": build_terrarium_state(),
+        },
+    )
+
+
+@require_http_methods(["GET", "HEAD"])
+def arcade_quotes(request: HttpRequest) -> HttpResponse:
+    """Quote oracle with submissions routed through the arcade."""
+
+    Feature.expire_stale()
+    return render(
+        request,
+        "arcade/quotes.html",
+        _quote_page_context(request),
+    )
+
+
+@require_GET
+def arcade_buddy(request: HttpRequest) -> HttpResponse:
+    """Companion lab for the wandering board buddy."""
+
+    return render(request, "arcade/buddy.html")
 
 
 @require_GET
@@ -420,9 +592,9 @@ def plaintext_vote_toggle(request: HttpRequest, pk: int) -> HttpResponse:
 
 @require_POST
 def feature_vote_toggle(request: HttpRequest, pk: int) -> HttpResponse:
-    """Toggle a vote from the simplified homepage."""
+    """Toggle a vote from the focused feature lab page."""
 
-    return _toggle_vote(request, pk, redirect_name="main:index")
+    return _toggle_vote(request, pk, redirect_name="main:feature-board")
 
 
 @login_required
@@ -464,7 +636,7 @@ def web5_invest(request: HttpRequest) -> HttpResponse:
                     f"you've personally fueled {user_total}."
                 ),
             )
-            return redirect("main:index")
+            return redirect("main:web5")
     else:
         status_code = 400
 
@@ -478,11 +650,8 @@ def web5_invest(request: HttpRequest) -> HttpResponse:
 
     return render(
         request,
-        "index.html",
-        _fresh_board_context(
-            request,
-            investment_form=investment_form,
-        ),
+        "web5.html",
+        _web5_context(request, investment_form=investment_form),
         status=status_code,
     )
 
@@ -511,7 +680,7 @@ def submit_quote_suggestion(request: HttpRequest) -> HttpResponse:
             request,
             "Thanks! We'll review your quote and add it to the rotation once approved.",
         )
-        return redirect("main:index")
+        return redirect("main:arcade-quotes")
 
     messages.error(
         request,
@@ -522,8 +691,8 @@ def submit_quote_suggestion(request: HttpRequest) -> HttpResponse:
             messages.error(request, error)
     return render(
         request,
-        "index.html",
-        _fresh_board_context(request),
+        "arcade/quotes.html",
+        _quote_page_context(request, fortune_form=form),
         status=400,
     )
 

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Board Buddy Lab | {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="page-header" data-soundtrack="arcade">
+    <p class="page-eyebrow">Arcade · Companion</p>
+    <h1 class="page-title">Summon and tune the roaming board buddy</h1>
+    <p class="page-lead">
+        The Shimeji-style assistant now has a dedicated lab. Wake it up, pause its wander, and window-shop gifts
+        without competing with other widgets.
+    </p>
+    <div class="about-reset__actions">
+        <a class="button-outline" href="{% url 'main:arcade' %}">Back to arcade hub</a>
+        <a class="button-outline" href="{% url 'main:feature-board' %}">Feature lab</a>
+    </div>
+</section>
+
+<section class="companion-lab" aria-labelledby="companion-heading" data-soundtrack="arcade" data-shimeji-anchor data-shimeji-label="Desktop companion lab">
+    <div class="companion-lab__grid">
+        <div class="companion-lab__copy">
+            <p class="companion-lab__eyebrow">Desktop familiar</p>
+            <h2 id="companion-heading">Adopt a Shimeji-style board assistant</h2>
+            <p class="companion-lab__lead">
+                A tiny mascot now roams the viewport, perches on feature stacks, and chats about whatever part of the board you're visiting. It hitches a ride on buttons, follows your cursor, and nudges you toward the backlog when votes slow down.
+            </p>
+            <ul class="companion-lab__list">
+                <li>Walks the screen edges and hops between anchors like the terrarium, feature buttons, and scoreboard tiles.</li>
+                <li>Speaks in floating speech bubbles whenever you hover, click, or summon it near a section.</li>
+                <li>Responds to nearby elements with spark trails and a curious wobble when you linger.</li>
+                <li>Spend buddy coins on ribbons, snacks, or tools&mdash;they mirror your balance but never touch your real account.</li>
+            </ul>
+            <div class="companion-lab__actions">
+                <button class="button" type="button" data-shimeji-summon>Wake the companion</button>
+                <button class="button-outline" type="button" data-shimeji-open-shop>Gift shelf</button>
+                <button class="button-muted button-sm" type="button" data-shimeji-toggle>Pause wander</button>
+            </div>
+        </div>
+        <div class="companion-lab__stage" data-shimeji-anchor data-shimeji-label="Companion playground">
+            <div class="companion-lab__sky">
+                <span class="companion-lab__spark companion-lab__spark--one"></span>
+                <span class="companion-lab__spark companion-lab__spark--two"></span>
+                <span class="companion-lab__spark companion-lab__spark--three"></span>
+                <div class="companion-lab__radar" data-shimeji-radar>
+                    <div class="companion-lab__ring companion-lab__ring--one"></div>
+                    <div class="companion-lab__ring companion-lab__ring--two"></div>
+                    <div class="companion-lab__ring companion-lab__ring--three"></div>
+                    <div class="companion-lab__radar-label">Roaming</div>
+                </div>
+            </div>
+            <div class="companion-lab__status">
+                <div class="companion-card">
+                    <p class="companion-card__eyebrow">Buddy mood</p>
+                    <p class="companion-card__stat" data-shimeji-mood>Curious</p>
+                    <p class="companion-card__hint">Speaks up when it spots interactive elements.</p>
+                </div>
+                <div class="companion-card companion-card--alt">
+                    <p class="companion-card__eyebrow">Buddy coins</p>
+                    <p class="companion-card__stat" data-shimeji-balance-display>—</p>
+                    <p class="companion-card__hint">A sandbox stash for gifts; your board balance stays untouched.</p>
+                </div>
+                <div class="companion-card">
+                    <p class="companion-card__eyebrow">Anchor lock</p>
+                    <p class="companion-card__stat" data-shimeji-anchor-label>Waiting for a ping</p>
+                    <p class="companion-card__hint">Tag any section with a pulse to pull the mascot toward it.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="companion-lab__shelf" aria-label="Gift ideas for the companion">
+        <div class="companion-gift">
+            <p class="companion-gift__title">Star silk ribbon</p>
+            <p class="companion-gift__desc">Adds a luminous ribbon and boosts the buddy's confidence.</p>
+            <span class="companion-gift__cost">12 coins</span>
+        </div>
+        <div class="companion-gift">
+            <p class="companion-gift__title">Glowing mochi snack</p>
+            <p class="companion-gift__desc">Rewards good pathfinding; the buddy will sprint after eating.</p>
+            <span class="companion-gift__cost">9 coins</span>
+        </div>
+        <div class="companion-gift">
+            <p class="companion-gift__title">Signal lantern</p>
+            <p class="companion-gift__desc">Lets the mascot ping sections you mark with data anchors.</p>
+            <span class="companion-gift__cost">14 coins</span>
+        </div>
+        <div class="companion-gift">
+            <p class="companion-gift__title">Confetti thruster</p>
+            <p class="companion-gift__desc">Explodes with particles when a feature receives a vote.</p>
+            <span class="companion-gift__cost">7 coins</span>
+        </div>
+    </div>
+</section>
+{% endblock %}

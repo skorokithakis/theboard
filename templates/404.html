@@ -15,7 +15,7 @@
             <span class="not-found__chip">Voting stays live</span>
         </div>
         <div class="not-found__actions">
-            <a class="button" href="{% url 'main:index' %}">Return to the board</a>
+            <a class="button" href="{% url 'main:feature-board' %}">Return to the board</a>
             <a class="button-outline" href="{% url 'main:plaintext-submission' %}">Submit a feature</a>
         </div>
     </div>
@@ -63,7 +63,7 @@
                 </header>
                 <h3 class="not-found__feature-title">{{ feature.title }}</h3>
                 <p class="not-found__feature-desc">{{ feature.description|truncatechars:160 }}</p>
-                <a class="not-found__feature-link" href="{% url 'main:index' %}">Return to board to vote</a>
+                <a class="not-found__feature-link" href="{% url 'main:feature-board' %}">Return to board to vote</a>
             </article>
         {% endfor %}
     </div>

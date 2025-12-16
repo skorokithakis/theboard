@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Quote Oracle | {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="page-header" data-soundtrack="greenhouse">
+    <p class="page-eyebrow">Arcade · Quotes</p>
+    <h1 class="page-title">Daily fortune and quote submissions</h1>
+    <p class="page-lead">
+        The oracle now has its own perch. Read today&apos;s pull and submit new quotes without wading through the feature
+        board.
+    </p>
+    <div class="about-reset__actions">
+        <a class="button-outline" href="{% url 'main:arcade' %}">Back to arcade hub</a>
+        <a class="button-outline" href="{% url 'main:feature-board' %}">Feature lab</a>
+    </div>
+</section>
+
+<section class="about-reset-grid">
+    <div class="about-reset__card about-reset__card--wide">
+        <h2>Today&apos;s fortune</h2>
+        {% if daily_fortune %}
+            <blockquote class="daily-fortune__text">&ldquo;{{ daily_fortune.text }}&rdquo;</blockquote>
+            <p class="daily-fortune__attribution">- {{ daily_fortune.attribution }}</p>
+            <p class="about-reset__note">Source: {{ daily_fortune.collection }} ({{ daily_fortune.package }}){% if daily_fortune.submitted_by %}, submitted by {{ daily_fortune.submitted_by }}{% endif %}.</p>
+        {% else %}
+            <p class="about-reset__note">No fortune pulled yet. Check back later.</p>
+        {% endif %}
+    </div>
+    <div class="about-reset__card about-reset__card--wide">
+        <h2>Suggest the next quote</h2>
+        {% if not request.user.is_authenticated %}
+            <p class="about-reset__note">Sign in before submitting; the form will redirect you to login if needed.</p>
+        {% endif %}
+        <form action="{% url 'main:fortune-suggest' %}" method="post">
+            {% csrf_token %}
+            <div class="form-field">
+                {{ fortune_suggestion_form.text.label_tag }}
+                {{ fortune_suggestion_form.text }}
+                {% if fortune_suggestion_form.text.help_text %}
+                    <p class="form-help">{{ fortune_suggestion_form.text.help_text }}</p>
+                {% endif %}
+                {% for error in fortune_suggestion_form.text.errors %}
+                    <p class="form-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+            <div class="form-field">
+                {{ fortune_suggestion_form.attribution.label_tag }}
+                {{ fortune_suggestion_form.attribution }}
+                {% if fortune_suggestion_form.attribution.help_text %}
+                    <p class="form-help">{{ fortune_suggestion_form.attribution.help_text }}</p>
+                {% endif %}
+                {% for error in fortune_suggestion_form.attribution.errors %}
+                    <p class="form-error">{{ error }}</p>
+                {% endfor %}
+            </div>
+            <div class="form-actions">
+                <button class="button" type="submit">Submit quote</button>
+            </div>
+        </form>
+        <p class="about-reset__note">Quotes head to moderation before they rotate into the daily pull.</p>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Arcade | {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="page-header" data-soundtrack="arcade">
+    <p class="page-eyebrow">Arcade</p>
+    <h1 class="page-title">Fun widgets now live in their own halls</h1>
+    <p class="page-lead">
+        Every playful experiment sits in a dedicated room. Browse the map below to visit the penguin parade, the falling
+        sand lab, the quote oracle, or the wandering board buddy.
+    </p>
+    <div class="about-reset__actions">
+        <a class="button-outline" href="{% url 'main:penguin-view' %}">Penguin parade</a>
+        <a class="button-outline" href="{% url 'main:arcade-terrarium' %}">Falling sand</a>
+        <a class="button-outline" href="{% url 'main:arcade-quotes' %}">Quote oracle</a>
+    </div>
+</section>
+
+<section class="about-reset-grid">
+    <div class="about-reset__card">
+        <h2>Penguin viewing room</h2>
+        <p>Drop in on the Edinburgh Zoo parade without overlapping the feature board.</p>
+        <a class="button" href="{% url 'main:penguin-view' %}">Open stream</a>
+    </div>
+    <div class="about-reset__card">
+        <h2>Falling sand terrarium</h2>
+        <p>Paint materials, trigger the neon paddle, and see how the board health shapes the habitat.</p>
+        <a class="button" href="{% url 'main:arcade-terrarium' %}">Enter terrarium</a>
+    </div>
+    <div class="about-reset__card">
+        <h2>Quote oracle</h2>
+        <p>Read the daily fortune and submit new quotes from a focused form.</p>
+        <a class="button" href="{% url 'main:arcade-quotes' %}">Share a quote</a>
+    </div>
+    <div class="about-reset__card">
+        <h2>Board buddy lab</h2>
+        <p>Summon, pause, and shop for the roaming Shimeji companion without leaving other experiences.</p>
+        <a class="button" href="{% url 'main:arcade-buddy' %}">Visit the lab</a>
+    </div>
+    <div class="about-reset__card about-reset__card--wide">
+        <h2>Daily pulse</h2>
+        {% if daily_fortune %}
+            <p class="about-reset__note">Fortune of the day:</p>
+            <blockquote class="daily-fortune__text">&ldquo;{{ daily_fortune.text }}&rdquo;</blockquote>
+            <p class="daily-fortune__attribution">- {{ daily_fortune.attribution }}</p>
+        {% else %}
+            <p class="about-reset__note">No fortune pulled yet. Check back soon.</p>
+        {% endif %}
+        {% if feature_preview %}
+            <p class="about-reset__note">Top features while you play:</p>
+            <div class="feature-stack">
+                {% for feature in feature_preview %}
+                    <article class="feature-card">
+                        <header class="feature-card__header">
+                            <h3 class="feature-card__title">{{ feature.title }}</h3>
+                            <p class="feature-card__meta">{{ feature.created_at|date:"F j, Y" }}</p>
+                        </header>
+                        <p class="feature-card__description">{{ feature.description }}</p>
+                        <div class="feature-card__footer">
+                            <div class="feature-card__votes">Votes: {{ feature.vote_total }}</div>
+                            <a class="button-outline" href="{% url 'main:feature-board' %}">Vote on the board</a>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

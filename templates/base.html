@@ -29,17 +29,17 @@
             <nav class="header-nav">
                 {% with url_name=request.resolver_match.url_name %}
                     <a
-                        class="header-nav__link{% if url_name == 'about' %} header-nav__link--active{% endif %}"
-                        {% if url_name == 'about' %}aria-current="page"{% endif %}
-                        href="{% url 'main:about' %}">About</a>
+                        class="header-nav__link{% if url_name == 'feature-board' or url_name == 'feature-vote-toggle' or url_name == 'plaintext-submission' or url_name == 'graveyard' %} header-nav__link--active{% endif %}"
+                        {% if url_name == 'feature-board' or url_name == 'feature-vote-toggle' or url_name == 'plaintext-submission' or url_name == 'graveyard' %}aria-current="page"{% endif %}
+                        href="{% url 'main:feature-board' %}">Features</a>
                     <a
-                        class="header-nav__link{% if url_name == 'graveyard' %} header-nav__link--active{% endif %}"
-                        {% if url_name == 'graveyard' %}aria-current="page"{% endif %}
-                        href="{% url 'main:graveyard' %}">Graveyard</a>
+                        class="header-nav__link{% if url_name == 'arcade' or url_name == 'arcade-terrarium' or url_name == 'arcade-quotes' or url_name == 'arcade-buddy' or url_name == 'penguin-view' %} header-nav__link--active{% endif %}"
+                        {% if url_name == 'arcade' or url_name == 'arcade-terrarium' or url_name == 'arcade-quotes' or url_name == 'arcade-buddy' or url_name == 'penguin-view' %}aria-current="page"{% endif %}
+                        href="{% url 'main:arcade' %}">Arcade</a>
                     <a
-                        class="header-nav__link{% if url_name == 'archive-index' or url_name == 'archive-about' or url_name == 'archive-scoreboard' %} header-nav__link--active{% endif %}"
-                        {% if url_name == 'archive-index' or url_name == 'archive-about' or url_name == 'archive-scoreboard' %}aria-current="page"{% endif %}
-                        href="{% url 'main:archive-index' %}">Archive</a>
+                        class="header-nav__link{% if url_name == 'web5' or url_name == 'web5-invest' %} header-nav__link--active{% endif %}"
+                        {% if url_name == 'web5' or url_name == 'web5-invest' %}aria-current="page"{% endif %}
+                        href="{% url 'main:web5' %}">Web 5.0</a>
                     <a
                         class="header-nav__link{% if url_name == 'sitemap' %} header-nav__link--active{% endif %}"
                         {% if url_name == 'sitemap' %}aria-current="page"{% endif %}
@@ -48,6 +48,14 @@
                         class="header-nav__link{% if url_name == 'scoreboard' %} header-nav__link--active{% endif %}"
                         {% if url_name == 'scoreboard' %}aria-current="page"{% endif %}
                         href="{% url 'main:scoreboard' %}">Scoreboard</a>
+                    <a
+                        class="header-nav__link{% if url_name == 'about' %} header-nav__link--active{% endif %}"
+                        {% if url_name == 'about' %}aria-current="page"{% endif %}
+                        href="{% url 'main:about' %}">About</a>
+                    <a
+                        class="header-nav__link{% if url_name == 'archive-index' or url_name == 'archive-about' or url_name == 'archive-scoreboard' %} header-nav__link--active{% endif %}"
+                        {% if url_name == 'archive-index' or url_name == 'archive-about' or url_name == 'archive-scoreboard' %}aria-current="page"{% endif %}
+                        href="{% url 'main:archive-index' %}">Archive</a>
                     {% if request.user.is_authenticated %}
                         <a
                             class="header-nav__link{% if url_name == 'profile' or url_name == 'profile-detail' %} header-nav__link--active{% endif %}"

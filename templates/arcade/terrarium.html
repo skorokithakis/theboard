@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Falling Sand Terrarium | {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="page-header" data-soundtrack="greenhouse">
+    <p class="page-eyebrow">Arcade · Sandbox</p>
+    <h1 class="page-title">Build and break a falling-sand biome</h1>
+    <p class="page-lead">
+        The terrarium lives here now so the feature board stays lean. Paint materials, invite invaders, and watch the
+        board health ripple through the habitat.
+    </p>
+    <div class="about-reset__actions">
+        <a class="button-outline" href="{% url 'main:arcade' %}">Back to arcade hub</a>
+        <a class="button-outline" href="{% url 'main:feature-board' %}">Visit the feature lab</a>
+    </div>
+</section>
+
+<section class="plant-terrarium" aria-labelledby="plant-heading" data-soundtrack="greenhouse" data-plant-state="{{ terrarium_state.key }}" data-shimeji-anchor data-shimeji-label="Terrarium mist">
+    <div class="plant-terrarium__copy">
+        <p class="plant-terrarium__eyebrow">Sandspiel terrarium · {{ terrarium_state.headline }}</p>
+        <h2 id="plant-heading">Paint a falling-sand biome</h2>
+        <p class="plant-terrarium__lead">
+            Mist, light, and board health now feed a tiny sand simulation. Paint materials into the glass, then sling a
+            neon paddle through the grains like a pocket brick breaker.
+        </p>
+        <p class="plant-terrarium__note">
+            {{ terrarium_state.note }}
+        </p>
+        <div class="plant-terrarium__chips" role="list">
+            <div class="plant-chip" role="listitem">
+                <span class="plant-chip__label">Light</span>
+                <span class="plant-chip__value">{{ terrarium_state.sun }}</span>
+            </div>
+            <div class="plant-chip" role="listitem">
+                <span class="plant-chip__label">Water</span>
+                <span class="plant-chip__value">{{ terrarium_state.water }}</span>
+            </div>
+            <div class="plant-chip" role="listitem">
+                <span class="plant-chip__label">Mood</span>
+                <span class="plant-chip__value">{{ terrarium_state.mood }}</span>
+            </div>
+            <div class="plant-chip plant-chip--label" role="listitem">
+                <span class="plant-chip__label">Beacon feature</span>
+                <span class="plant-chip__value">{{ terrarium_state.label|default:"Sprouting idea"|truncatechars:28 }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="plant-terrarium__art" role="img" aria-label="{{ terrarium_state.aria_label }}">
+        <div class="sand-terrarium" data-sand-terrarium data-plant-state="{{ terrarium_state.key }}">
+            <div class="sand-terrarium__header">
+                <div class="sand-terrarium__meta">
+                    <span class="sand-terrarium__eyebrow">Live sandbox</span>
+                    <span class="sand-terrarium__title">{{ terrarium_state.label|default:"Sprouting idea"|truncatechars:28 }}</span>
+                </div>
+                <div class="sand-terrarium__toggles" role="group" aria-label="Brush size">
+                    <button type="button" class="sand-toggle" data-sand-brush="1" aria-pressed="false">Fine</button>
+                    <button type="button" class="sand-toggle" data-sand-brush="2" aria-pressed="true">Medium</button>
+                    <button type="button" class="sand-toggle" data-sand-brush="3" aria-pressed="false">Flood</button>
+                </div>
+            </div>
+            <div class="sand-terrarium__frame">
+                <div class="sand-terrarium__controls" role="list" aria-label="Materials">
+                    <button class="sand-chip" type="button" data-sand-material="sand" data-color="#e6be82" aria-pressed="true" role="listitem">Sand</button>
+                    <button class="sand-chip" type="button" data-sand-material="stone" data-color="#8fa7bc" aria-pressed="false" role="listitem">Stone</button>
+                    <button class="sand-chip" type="button" data-sand-material="glass" data-color="#c0e2ff" aria-pressed="false" role="listitem">Glass</button>
+                    <button class="sand-chip" type="button" data-sand-material="wood" data-color="#c07f4f" aria-pressed="false" role="listitem">Wood</button>
+                    <button class="sand-chip" type="button" data-sand-material="water" data-color="#5fb8ff" aria-pressed="false" role="listitem">Water</button>
+                    <button class="sand-chip" type="button" data-sand-material="steam" data-color="#cdd9de" aria-pressed="false" role="listitem">Steam</button>
+                    <button class="sand-chip" type="button" data-sand-material="fire" data-color="#ff7044" aria-pressed="false" role="listitem">Fire</button>
+                    <button class="sand-chip" type="button" data-sand-material="bacteria" data-color="#b6ff6c" aria-pressed="false" role="listitem">Bacteria</button>
+                    <button class="sand-chip" type="button" data-sand-material="plant" data-color="#62f1af" aria-pressed="false" role="listitem">Plant</button>
+                </div>
+                <div class="sand-terrarium__status" data-sand-status>Painting with sand · medium brush</div>
+                <div class="sand-invaders" data-sand-invaders>
+                    <div class="sand-invaders__copy">
+                        <p class="sand-invaders__eyebrow">Optional mode</p>
+                        <p class="sand-invaders__title">Sand Invaders</p>
+                        <p class="sand-invaders__hint" data-sand-invaders-status>Cosmic steel is dormant. Enable the mode to invite geometric visitors.</p>
+                    </div>
+                    <div class="sand-invaders__controls">
+                        <button type="button" class="sand-toggle sand-toggle--ghost" data-sand-invaders-toggle aria-pressed="false">Enable</button>
+                        <button type="button" class="sand-chip sand-chip--mini" data-sand-invaders-spawn disabled>Call a wave</button>
+                    </div>
+                </div>
+                <div class="sand-breaker" data-sand-breaker>
+                    <div class="sand-breaker__copy">
+                        <p class="sand-breaker__eyebrow">Fusion mini-game</p>
+                        <p class="sand-breaker__title">Brick Breaker terrarium</p>
+                        <p class="sand-breaker__hint" data-breaker-status>Enable the paddle to ricochet a plasma orb through your sand stack. Use your pointer or ← → to steer; space to serve.</p>
+                    </div>
+                    <div class="sand-breaker__controls">
+                        <button type="button" class="sand-toggle sand-toggle--ghost" data-breaker-toggle aria-pressed="false">Enable paddle</button>
+                        <button type="button" class="sand-chip sand-chip--mini" data-breaker-serve disabled>Serve orb</button>
+                    </div>
+                </div>
+                <div class="sand-terrarium__canvas-wrap">
+                    <canvas data-sand-canvas width="150" height="180" aria-label="Falling sand terrarium canvas"></canvas>
+                    <div class="sand-terrarium__hint">
+                        Click or touch to paint materials. Launch the breaker orb to carve through whatever you build.
+                    </div>
+                </div>
+                <div class="sand-terrarium__actions">
+                    <button type="button" class="sand-action" data-sand-action="mist">Mist</button>
+                    <button type="button" class="sand-action" data-sand-action="seed">Seed sand</button>
+                    <button type="button" class="sand-action" data-sand-action="burn">Spark</button>
+                    <button type="button" class="sand-action sand-action--clear" data-sand-action="clear">Reset glass</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ block.super }}
+    <script src="{% static 'js/sand-terrarium.js' %}" defer></script>
+{% endblock %}

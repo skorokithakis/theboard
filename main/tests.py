@@ -11,7 +11,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from . import economy, fortune, health, models, terrarium, turnstile, utils
+from . import economy, fortune, generation, health, models, terrarium, turnstile, utils
 
 User = get_user_model()
 
@@ -563,6 +563,20 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(payload["feature"]["vote_total"], 2)
         self.assertEqual(payload["feature"]["variation_count"], 1)
         self.assertEqual(payload["variations"][0]["id"], variation.pk)
+
+    def test_api_top_seeds_self_care_when_empty(self) -> None:
+        response = self.client.get("/api/top")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["feature"]["title"], generation.SELF_CARE_PLAN.title)
+        self.assertEqual(
+            payload["feature"]["creator"]["username"], generation.SYSTEM_USERNAME
+        )
+        self.assertTrue(
+            models.Feature.objects.pending()
+            .filter(title=generation.SELF_CARE_PLAN.title)
+            .exists()
+        )
 
     def test_api_top_skips_expired_features(self) -> None:
         active = self._submit_feature(title="Fresh idea")

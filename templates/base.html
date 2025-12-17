@@ -49,6 +49,10 @@
                         {% if url_name == 'scoreboard' %}aria-current="page"{% endif %}
                         href="{% url 'main:scoreboard' %}">Scoreboard</a>
                     <a
+                        class="header-nav__link{% if url_name == 'board-self' %} header-nav__link--active{% endif %}"
+                        {% if url_name == 'board-self' %}aria-current="page"{% endif %}
+                        href="{% url 'main:board-self' %}">The Board</a>
+                    <a
                         class="header-nav__link{% if url_name == 'about' %} header-nav__link--active{% endif %}"
                         {% if url_name == 'about' %}aria-current="page"{% endif %}
                         href="{% url 'main:about' %}">About</a>

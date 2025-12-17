@@ -27,7 +27,7 @@ from .forms import (
 from .fortune import get_daily_fortune
 from .models import Feature, QuoteSuggestion, User as BoardUser, Vote, WebFiveInvestment
 from .terrarium import build_terrarium_state
-from . import turnstile
+from . import generation, turnstile
 from .utils import get_next_iteration_at
 
 User = get_user_model()
@@ -289,6 +289,33 @@ def about(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
+def board_self(request: HttpRequest) -> HttpResponse:
+    """A reflective page dedicated to The Board itself."""
+
+    Feature.expire_stale()
+    generation.ensure_generation_seed()
+
+    feature_stats = {
+        "pending": Feature.objects.pending().count(),
+        "implemented": Feature.objects.implemented().count(),
+        "graveyard": Feature.objects.expired().count(),
+    }
+    preview = list(
+        Feature.objects.pending()
+        .with_vote_totals()
+        .order_by("-total_votes", "-created_at")[:3]
+    )
+
+    context = {
+        "next_iteration_at": get_next_iteration_at(),
+        "feature_stats": feature_stats,
+        "generation_plan": generation.SELF_CARE_PLAN,
+        "feature_preview": preview,
+    }
+    return render(request, "theboard.html", context)
+
+
+@require_GET
 def sitemap(request: HttpRequest) -> HttpResponse:
     """Render a fantasy-styled sitemap that links to every page."""
 
@@ -308,6 +335,14 @@ def sitemap(request: HttpRequest) -> HttpResponse:
             "x": 20,
             "y": 52,
             "summary": "Submit ideas and vote in the dedicated lab.",
+        },
+        {
+            "name": "The Board Room",
+            "url": reverse("main:board-self"),
+            "kind": "library",
+            "x": 64,
+            "y": 48,
+            "summary": "Where The Board reflects and seeds its own happiness.",
         },
         {
             "name": "Feature Graveyard",

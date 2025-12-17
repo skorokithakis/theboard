@@ -7,6 +7,7 @@ from . import views
 app_name = "main"
 urlpatterns = [
     path("", views.index, name="index"),
+    path("the-board/", views.board_self, name="board-self"),
     path("features/", views.feature_board, name="feature-board"),
     path("invest/web5/", views.web5_invest, name="web5-invest"),
     path("web5/", views.web5, name="web5"),

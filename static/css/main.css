@@ -7439,6 +7439,113 @@ select {
   color: var(--muted-text);
 }
 
+.board-self__hero {
+  background: linear-gradient(135deg, rgba(255, 163, 102, 0.1), rgba(255, 255, 255, 0));
+  border: 2px solid var(--border);
+  box-shadow: 10px 12px 0 rgba(0, 0, 0, 0.08);
+}
+
+.board-self {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  margin-bottom: 2rem;
+}
+
+.board-self__card {
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  box-shadow: 6px 8px 0 var(--border);
+}
+
+.board-self__card--signal {
+  background: linear-gradient(145deg, rgba(255, 225, 195, 0.35), rgba(255, 255, 255, 0.08));
+  border-color: var(--accent);
+}
+
+.board-self__card--wide {
+  grid-column: 1 / -1;
+}
+
+.board-self__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.78rem;
+  color: var(--muted-text);
+  margin: 0 0 0.4rem 0;
+}
+
+.board-self__title {
+  margin: 0 0 0.6rem 0;
+}
+
+.board-self__copy {
+  margin: 0 0 0.6rem 0;
+  color: var(--muted-text);
+}
+
+.board-self__copy--sm {
+  font-size: 0.95rem;
+}
+
+.board-self__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.board-self__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.board-self__stat {
+  font-size: 1.25rem;
+  margin: 0 0 0.8rem 0;
+}
+
+.board-self__stats {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.board-self__stats li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+}
+
+.board-self__label {
+  color: var(--muted-text);
+  font-size: 0.95rem;
+}
+
+.board-self__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.board-self__list--split {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
 .graveyard-page {
   position: relative;
   margin: 2rem auto 4rem;

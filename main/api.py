@@ -17,7 +17,7 @@ from ninja import NinjaAPI
 from ninja.errors import HttpError
 from ninja.security import SessionAuth
 
-from . import economy, models, schemas, turnstile
+from . import economy, generation, models, schemas, turnstile
 from .utils import get_next_iteration_at
 
 FEATURE_DAILY_LIMIT = 3
@@ -622,6 +622,7 @@ def web5_invest(
 def top_feature(request: HttpRequest) -> dict[str, Any]:
     """Return the highest-rated feature as JSON."""
     models.Feature.expire_stale()
+    generation.ensure_generation_seed()
 
     variations_qs = (
         models.Feature.objects.pending()

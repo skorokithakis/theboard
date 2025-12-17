@@ -21,23 +21,23 @@
     <div class="penguin-cam__grid">
         <div class="penguin-cam__copy">
             <p class="penguin-cam__eyebrow">Live exhibit</p>
-            <h2 id="penguin-cam-heading" class="penguin-cam__title">Penguin parade, live from Edinburgh Zoo</h2>
-            <p class="penguin-cam__lede">By request from the board: a window into the gentoo colony on their famous parade route. Drop in between votes to watch the waddle.</p>
+            <h2 id="penguin-cam-heading" class="penguin-cam__title">Penguin parade, captured for The Board</h2>
+            <p class="penguin-cam__lede">By request from the board: a house-hosted highlight reel from the gentoo colony’s parade route. No third-party embeds, just the waddle, ready to loop.</p>
             <ul class="penguin-cam__highlights">
-                <li><strong>Source:</strong> Official Edinburgh Zoo penguin cam.</li>
-                <li><strong>Best moments:</strong> Feeding sessions and the daily march around Penguin Rock.</li>
-                <li><strong>Tip:</strong> If the embed hesitates, open the full stream on the zoo site.</li>
+                <li><strong>Source:</strong> Captured on The Board and hosted locally for smoother playback.</li>
+                <li><strong>Best moments:</strong> Feeding sessions, the daily march, and a few extra waddles for good measure.</li>
+                <li><strong>Tip:</strong> Audio stays muted by default—unmute the controls if you want the ambient splash.</li>
             </ul>
             <p class="penguin-cam__cta"><a href="https://www.edinburghzoo.org.uk/animals/webcams/penguin-cam" target="_blank" rel="noreferrer noopener">Watch on Edinburgh Zoo</a></p>
         </div>
         <div class="penguin-cam__media">
             <div class="penguin-cam__frame">
-                <span class="penguin-cam__badge">Live - Edinburgh Zoo</span>
-                <div class="penguin-cam__embed" data-penguin-embed aria-label="Live penguin feed from Edinburgh Zoo">
-                    <script src="https://live.streamdays.com/xb1u3eln" type="text/javascript" language="javascript"></script>
+                <span class="penguin-cam__badge">Board studio</span>
+                <div class="penguin-cam__embed" aria-label="Penguin parade highlight reel">
+                    <video src="{% static 'video/penguin-parade.mp4' %}" autoplay muted loop playsinline controls></video>
                 </div>
             </div>
-            <p class="penguin-cam__fallback">Having trouble? The stream is also available on the <a href="https://www.edinburghzoo.org.uk/animals/webcams/penguin-cam" target="_blank" rel="noreferrer noopener">Edinburgh Zoo site</a>.</p>
+            <p class="penguin-cam__fallback">Need the live feed instead? It’s still available on the <a href="https://www.edinburghzoo.org.uk/animals/webcams/penguin-cam" target="_blank" rel="noreferrer noopener">Edinburgh Zoo site</a>.</p>
         </div>
     </div>
 </section>

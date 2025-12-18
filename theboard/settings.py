@@ -94,6 +94,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "theboard.context_processors.settings",
                 "theboard.context_processors.board_health",
+                "theboard.context_processors.navigation",
             ]
         },
     }

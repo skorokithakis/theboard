@@ -69,8 +69,7 @@ def ensure_generation_seed() -> Optional[Feature]:
         return Feature.objects.create(
             title=SELF_CARE_PLAN.title,
             description=(
-                f"{SELF_CARE_PLAN.description} "
-                f"Ritual: {SELF_CARE_PLAN.ritual}"
+                f"{SELF_CARE_PLAN.description} Ritual: {SELF_CARE_PLAN.ritual}"
             ),
             creator=author,
         )

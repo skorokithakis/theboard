@@ -13,7 +13,6 @@ from django.db.models import Count, F, Q, Sum, Value
 from django.db.models.functions import Coalesce, Greatest
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
-from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.core.exceptions import PermissionDenied
 
@@ -25,6 +24,7 @@ from .forms import (
     WebFiveInvestmentForm,
 )
 from .fortune import get_daily_fortune
+from .navigation import build_sitemap_destinations
 from .models import Feature, QuoteSuggestion, User as BoardUser, Vote, WebFiveInvestment
 from .terrarium import build_terrarium_state
 from . import generation, turnstile
@@ -319,144 +319,7 @@ def board_self(request: HttpRequest) -> HttpResponse:
 def sitemap(request: HttpRequest) -> HttpResponse:
     """Render a fantasy-styled sitemap that links to every page."""
 
-    destinations = [
-        {
-            "name": "Board Hub",
-            "url": reverse("main:index"),
-            "kind": "capital",
-            "x": 30,
-            "y": 44,
-            "summary": "Pick a destination for features, arcade, or funding.",
-        },
-        {
-            "name": "Feature Lab",
-            "url": reverse("main:feature-board"),
-            "kind": "fortress",
-            "x": 20,
-            "y": 52,
-            "summary": "Submit ideas and vote in the dedicated lab.",
-        },
-        {
-            "name": "The Board Room",
-            "url": reverse("main:board-self"),
-            "kind": "library",
-            "x": 64,
-            "y": 48,
-            "summary": "Where The Board reflects and seeds its own happiness.",
-        },
-        {
-            "name": "Feature Graveyard",
-            "url": reverse("main:graveyard"),
-            "kind": "ruins",
-            "x": 16,
-            "y": 68,
-            "summary": "Where expired ideas rest.",
-        },
-        {
-            "name": "Plaintext Outpost",
-            "url": reverse("main:plaintext-submission"),
-            "kind": "outpost",
-            "x": 42,
-            "y": 70,
-            "summary": "Text-only submissions with the same voting rules.",
-        },
-        {
-            "name": "Scorekeep Arena",
-            "url": reverse("main:scoreboard"),
-            "kind": "hamlet",
-            "x": 54,
-            "y": 32,
-            "summary": "Leaderboard of prolific idea forgers.",
-        },
-        {
-            "name": "Web 5.0 Vault",
-            "url": reverse("main:web5"),
-            "kind": "tower",
-            "x": 46,
-            "y": 28,
-            "summary": "Invest in the initiative from a focused page.",
-        },
-        {
-            "name": "Arcade Atrium",
-            "url": reverse("main:arcade"),
-            "kind": "grove",
-            "x": 60,
-            "y": 60,
-            "summary": "Hub for penguins, sand, quotes, and the buddy.",
-        },
-        {
-            "name": "Penguin Parade",
-            "url": reverse("main:penguin-view"),
-            "kind": "village",
-            "x": 70,
-            "y": 72,
-            "summary": "Live cam from Edinburgh Zoo in its own room.",
-        },
-        {
-            "name": "Terrarium Lab",
-            "url": reverse("main:arcade-terrarium"),
-            "kind": "library",
-            "x": 66,
-            "y": 46,
-            "summary": "Falling sand and board-health driven habitat.",
-        },
-        {
-            "name": "Quote Oracle",
-            "url": reverse("main:arcade-quotes"),
-            "kind": "hamlet",
-            "x": 78,
-            "y": 52,
-            "summary": "Read the daily fortune and submit quotes.",
-        },
-        {
-            "name": "Buddy Workshop",
-            "url": reverse("main:arcade-buddy"),
-            "kind": "village",
-            "x": 74,
-            "y": 62,
-            "summary": "Summon and kit out the roaming companion.",
-        },
-        {
-            "name": "Storyteller's Grove",
-            "url": reverse("main:about"),
-            "kind": "grove",
-            "x": 38,
-            "y": 22,
-            "summary": "How the reset works and what's changed.",
-        },
-        {
-            "name": "Profile Roost",
-            "url": reverse("main:profile"),
-            "kind": "village",
-            "x": 50,
-            "y": 58,
-            "summary": "Your status, submissions, and lore.",
-        },
-        {
-            "name": "Archive Keep",
-            "url": reverse("main:archive-index"),
-            "kind": "library",
-            "x": 72,
-            "y": 38,
-            "summary": "Historical board preserved in amber.",
-        },
-        {
-            "name": "Chronicle Tower",
-            "url": reverse("main:archive-about"),
-            "kind": "tower",
-            "x": 82,
-            "y": 30,
-            "summary": "The old world's about page.",
-        },
-        {
-            "name": "Legacy Score Dunes",
-            "url": reverse("main:archive-scoreboard"),
-            "kind": "hamlet",
-            "x": 68,
-            "y": 22,
-            "summary": "Frozen-in-time leaderboard.",
-        },
-    ]
+    destinations = build_sitemap_destinations(request.user.is_authenticated)
 
     return render(
         request,

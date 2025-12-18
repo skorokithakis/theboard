@@ -12,8 +12,9 @@
     <p class="page-eyebrow">Navigation Constellation</p>
     <h1 class="page-title">The Board, charted as a 3D orbit</h1>
     <p class="page-lead">
-        The sitemap is now an interactive force-orbit rendered with D3.js. Drag to tilt the sphere, hover a beacon to
-        preview the stop, or click to warp there instantly.
+        The sitemap now mirrors the compact menu: destinations are grouped by category, with sub-nav beacons tucked
+        under each cluster. Drag to tilt the sphere, hover a beacon to preview the stop, or click to warp there
+        instantly.
     </p>
     <div class="map-hero__meta">
         <span class="map-hero__pill">Force-directed nodes, eased in 3D</span>
@@ -57,14 +58,25 @@
         </div>
         <div class="map-ledger" aria-label="Destinations list">
             <h2 class="map-ledger__title">Prefer a list?</h2>
-            <p class="map-ledger__intro">Every beacon also shows up here for quick navigation.</p>
+            <p class="map-ledger__intro">Browse by category—each group mirrors the compact site menu.</p>
             <ul class="map-ledger__list">
-                {% for destination in destinations %}
-                    <li class="map-ledger__item">
-                        <a class="map-ledger__link map-ledger__link--{{ destination.kind }}" href="{{ destination.url }}">
-                            <span class="map-ledger__name">{{ destination.name }}</span>
-                            <span class="map-ledger__summary">{{ destination.summary }}</span>
-                        </a>
+                {% regroup destinations by category as destination_groups %}
+                {% for group in destination_groups %}
+                    <li class="map-ledger__group">
+                        <div class="map-ledger__group-header">
+                            <span class="map-ledger__group-title">{{ group.grouper }}</span>
+                            <span class="map-ledger__group-note">{{ group.list.0.section }}</span>
+                        </div>
+                        <ul class="map-ledger__group-list">
+                            {% for destination in group.list %}
+                                <li class="map-ledger__item">
+                                    <a class="map-ledger__link map-ledger__link--{{ destination.kind }}" href="{{ destination.url }}">
+                                        <span class="map-ledger__name">{{ destination.name }}</span>
+                                        <span class="map-ledger__summary">{{ destination.summary }}</span>
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        </ul>
                     </li>
                 {% endfor %}
             </ul>

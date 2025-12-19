@@ -81,6 +81,7 @@ def _profile_avatar_descriptor(user: BoardUser) -> dict[str, str]:
 
 def _pending_features_with_vote_state(user: BoardUser) -> list[Feature]:
     """Return pending features annotated with whether the user has voted."""
+    generation.ensure_generation_seed()
     features = list(
         Feature.objects.pending().ordered_by_popularity().select_related("creator")
     )
@@ -281,6 +282,7 @@ def index(request: HttpRequest) -> HttpResponse:
     """Render the hub that links to each focused experience."""
 
     Feature.expire_stale()
+    generation.ensure_generation_seed()
     preview = list(
         Feature.objects.pending()
         .with_vote_totals()

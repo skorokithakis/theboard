@@ -139,12 +139,26 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
 
-        self.assertEqual(data["features"], [])
+        self.assertEqual(data["features"][0]["title"], generation.SELF_CARE_PLAN.title)
         graveyard_titles = [item["title"] for item in data["graveyard_features"]]
         self.assertIn("Forgotten request", graveyard_titles)
 
         stale.refresh_from_db()
         self.assertIsNotNone(stale.expired_at)
+
+    def test_feature_list_seeds_self_care_when_empty(self) -> None:
+        response = self.client.get("/api/features")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+
+        self.assertEqual(
+            data["features"][0]["title"],
+            generation.SELF_CARE_PLAN.title,
+        )
+        self.assertEqual(
+            data["features"][0]["creator"]["username"],
+            generation.SYSTEM_USERNAME,
+        )
 
     def test_expire_stale_respects_missed_vote_penalties(self) -> None:
         feature = self._submit_feature(title="Needs daily love")
@@ -747,6 +761,20 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(stats["implemented"], 1)
         self.assertEqual(stats["graveyard"], 1)
         self.assertContains(response, "How it works")
+
+    def test_feature_board_seeds_self_care_when_queue_empty(self) -> None:
+        with self._static_override():
+            response = self.client.get(reverse("main:feature-board"))
+
+        self.assertEqual(response.status_code, 200)
+        features = response.context["features"]
+        self.assertEqual(len(features), 1)
+        self.assertEqual(features[0].title, generation.SELF_CARE_PLAN.title)
+        self.assertTrue(
+            models.Feature.objects.pending()
+            .filter(title=generation.SELF_CARE_PLAN.title)
+            .exists()
+        )
 
     def test_feature_list_includes_creator_status(self) -> None:
         self.owner.status = "API surfaces the vibe"

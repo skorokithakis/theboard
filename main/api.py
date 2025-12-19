@@ -152,6 +152,7 @@ def _web5_totals(user) -> dict[str, int]:
 def features_list(request: HttpRequest) -> dict[str, Any]:
     """List pending features ordered by popularity and implemented features chronologically."""
     models.Feature.expire_stale()
+    generation.ensure_generation_seed()
 
     pending_qs = (
         models.Feature.objects.pending()

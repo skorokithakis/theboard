@@ -69,7 +69,7 @@
         {% if features %}
             <div class="feature-stack">
                 {% for feature in features %}
-                    <article class="feature-card">
+                    <article class="feature-card" id="feature-{{ feature.id }}">
                         <header class="feature-card__header">
                             <h3 class="feature-card__title">{{ feature.title }}</h3>
                             <p class="feature-card__meta">{{ feature.created_at|date:"F j, Y" }}</p>
@@ -92,6 +92,80 @@
             <p class="reset-board__empty">No ideas yet. Plant the first one.</p>
         {% endif %}
         <p class="reset-board__note">Need the old interface? Head to the <a href="{% url 'main:archive-index' %}">archive snapshot</a>.</p>
+    </div>
+</section>
+
+<section class="personalized-lane" aria-labelledby="personalized-lane-heading">
+    <div class="personalized-lane__panel personalized-lane__panel--summary">
+        <p class="personalized-lane__eyebrow">Hyper-personalized lane</p>
+        <h2 id="personalized-lane-heading">Your signal on the board</h2>
+        <p class="personalized-lane__hint">
+            A quick pulse of your momentum plus a shortlist tailored to creators you’ve backed.
+        </p>
+        {% if personalized_lane.is_authenticated %}
+            <dl class="personalized-lane__stats">
+                <div>
+                    <dt>Remaining submissions today</dt>
+                    <dd>{{ personalized_lane.remaining_submissions }}</dd>
+                </div>
+                <div>
+                    <dt>Total votes cast</dt>
+                    <dd>{{ personalized_lane.vote_count }}</dd>
+                </div>
+                <div>
+                    <dt>Last vote</dt>
+                    <dd>
+                        {% if personalized_lane.last_vote_at %}
+                            {{ personalized_lane.last_vote_at|date:"M j, Y H:i \\U\\T\\C" }}
+                        {% else %}
+                            Not yet — make your first upvote count.
+                        {% endif %}
+                    </dd>
+                </div>
+            </dl>
+        {% else %}
+            <p class="personalized-lane__note">
+                Sign in to unlock tailored picks from creators you’ve backed and keep your submissions limit handy.
+            </p>
+        {% endif %}
+    </div>
+    <div class="personalized-lane__panel personalized-lane__panel--list">
+        <div class="personalized-lane__panel-header">
+            <p class="personalized-lane__eyebrow">Suggested for you</p>
+            <h3>Hyper-personalized experiences</h3>
+            <p class="personalized-lane__hint">
+                Based on who you’ve supported, here are a few ideas to champion next.
+            </p>
+        </div>
+        {% if personalized_lane.recommendations %}
+            <div class="feature-stack feature-stack--compact">
+                {% for feature in personalized_lane.recommendations %}
+                    <article class="feature-card feature-card--inline">
+                        <header class="feature-card__header">
+                            <h4 class="feature-card__title">{{ feature.title }}</h4>
+                            <p class="feature-card__meta">{{ feature.created_at|date:"F j, Y" }}</p>
+                        </header>
+                        <p class="feature-card__description">{{ feature.description }}</p>
+                        <div class="feature-card__footer">
+                            <div class="feature-card__votes">Votes: {{ feature.vote_total }}</div>
+                            <a class="button-outline" href="{% url 'main:feature-board' %}#feature-{{ feature.id }}">Open in queue</a>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="personalized-lane__note">No recommendations yet. Cast a vote to start building your lane.</p>
+        {% endif %}
+        {% if personalized_lane.authored_features %}
+            <div class="personalized-lane__authored">
+                <p class="personalized-lane__eyebrow">Your active ideas</p>
+                <ul>
+                    {% for feature in personalized_lane.authored_features %}
+                        <li>{{ feature.title }} — {{ feature.vote_total }} votes</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

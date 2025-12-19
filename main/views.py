@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models import Count, F, Q, Sum, Value
+from django.db.models import Count, F, Max, Q, Sum, Value
 from django.db.models.functions import Coalesce, Greatest
 from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
@@ -90,6 +90,84 @@ def _pending_features_with_vote_state(user: BoardUser) -> list[Feature]:
     return features
 
 
+def _personalized_lane_context(
+    user: BoardUser, pending_features: list[Feature]
+) -> dict[str, object]:
+    """Build per-user personalization data for the feature board."""
+
+    submission_limit = 3
+    curated_set = pending_features[:3]
+
+    if not user.is_authenticated:
+        return {
+            "is_authenticated": False,
+            "remaining_submissions": 0,
+            "vote_count": 0,
+            "last_vote_at": None,
+            "recommendations": curated_set,
+            "authored_features": [],
+        }
+
+    vote_stats = user.votes.aggregate(
+        total_votes=Count("id"),
+        last_vote_at=Max("created_at"),
+    )
+    voted_feature_ids = _user_vote_ids(user)
+    submissions_today = Feature.submissions_in_utc_day(user)
+    remaining_submissions = max(submission_limit - submissions_today, 0)
+
+    affinity_creator_rows = (
+        Vote.objects.filter(user=user)
+        .values("feature__creator")
+        .annotate(vote_count=Count("id"))
+        .order_by("-vote_count")
+    )
+    affinity_creator_ids = [row["feature__creator"] for row in affinity_creator_rows]
+
+    recommendations: list[Feature] = []
+    if affinity_creator_ids:
+        for feature in pending_features:
+            if (
+                feature.creator_id in affinity_creator_ids
+                and feature.id not in voted_feature_ids
+            ):
+                if feature.creator_id == user.id:
+                    continue
+                recommendations.append(feature)
+            if len(recommendations) >= 3:
+                break
+
+    if len(recommendations) < 3:
+        for feature in pending_features:
+            if feature.id in voted_feature_ids or feature.creator_id == user.id:
+                continue
+            if feature in recommendations:
+                continue
+            recommendations.append(feature)
+            if len(recommendations) >= 3:
+                break
+
+    if len(recommendations) < 3:
+        for feature in curated_set:
+            if feature not in recommendations:
+                recommendations.append(feature)
+            if len(recommendations) >= 3:
+                break
+
+    authored_features = [
+        feature for feature in pending_features if feature.creator_id == user.id
+    ][:3]
+
+    return {
+        "is_authenticated": True,
+        "remaining_submissions": remaining_submissions,
+        "vote_count": int(vote_stats.get("total_votes") or 0),
+        "last_vote_at": vote_stats.get("last_vote_at"),
+        "recommendations": recommendations,
+        "authored_features": authored_features,
+    }
+
+
 def _fresh_board_context(
     request: HttpRequest,
     *,
@@ -106,8 +184,14 @@ def _fresh_board_context(
             and not Feature.user_has_reached_daily_limit(request.user)
         )
 
+    features = _pending_features_with_vote_state(request.user)
+
     return {
-        "features": _pending_features_with_vote_state(request.user),
+        "features": features,
+        "personalized_lane": _personalized_lane_context(
+            request.user,
+            features,
+        ),
         "submission_form": form,
         "turnstile_site_key": getattr(settings, "TURNSTILE_SITE_KEY", ""),
         "can_submit": can_submit,

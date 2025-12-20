@@ -13,6 +13,8 @@
     "[role='button']",
     "form",
     ".header-nav__link",
+    ".sidebar__preference-button",
+    "[data-sidebar-toggle]",
     ".audio-toggle",
     "[data-theme-select]",
   ].join(", ");

@@ -34,6 +34,8 @@ class CustomUserAdmin(BaseUserAdmin):
         "first_name",
         "last_name",
         "balance",
+        "menu_side",
+        "menu_collapsed",
         "is_staff",
         "is_active",
     )
@@ -58,6 +60,7 @@ class CustomUserAdmin(BaseUserAdmin):
             },
         ),
         ("Economy", {"fields": ("balance", "last_daily_bonus_at")}),
+        ("Navigation", {"fields": ("menu_side", "menu_collapsed")}),
         ("Important dates", {"fields": ("last_login", "date_joined")}),
     )
     add_fieldsets = (

@@ -22,17 +22,50 @@
     data-shimeji-balance="{{ request.user.balance|default_if_none:0 }}"
     data-shimeji-auth="{{ request.user.is_authenticated|yesno:'true,false' }}"
     data-graveyard-url="{% url 'main:graveyard' %}"
+    data-menu-side="{{ nav_preferences.side }}"
+    data-menu-collapsed="{{ nav_preferences.collapsed|yesno:'true,false' }}"
+    data-nav-preference-url="{% url 'main:navigation-preferences' %}"
     {% if settings.TURNSTILE_ENABLED %}data-turnstile-sitekey="{{ settings.TURNSTILE_SITE_KEY }}"{% endif %}>
-    <header class="site-header">
-        <div class="container header-inner">
-            <a class="brand" href="{% url 'main:index' %}">{{ request.site.name }}</a>
-            <nav class="header-nav" aria-label="Primary navigation">
+    <div class="site-shell" data-menu-side="{{ nav_preferences.side }}" data-menu-collapsed="{{ nav_preferences.collapsed|yesno:'true,false' }}">
+        <aside class="site-sidebar" data-menu-side="{{ nav_preferences.side }}" data-menu-collapsed="{{ nav_preferences.collapsed|yesno:'true,false' }}">
+            <form id="nav-side-form" class="sidebar__form" method="post" action="{% url 'main:navigation-preferences' %}">
+                {% csrf_token %}
+                <input type="hidden" name="menu_collapsed" value="{{ nav_preferences.collapsed|yesno:'true,false' }}" data-menu-collapsed-input>
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            </form>
+            <form id="nav-collapse-form" class="sidebar__form" method="post" action="{% url 'main:navigation-preferences' %}">
+                {% csrf_token %}
+                <input type="hidden" name="menu_side" value="{{ nav_preferences.side }}" data-menu-side-input>
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            </form>
+            <div class="sidebar__header">
+                <a class="brand" href="{% url 'main:index' %}">{{ request.site.name }}</a>
+                <button
+                    class="sidebar__collapse button-muted"
+                    type="submit"
+                    form="nav-collapse-form"
+                    name="menu_collapsed"
+                    value="{% if nav_preferences.collapsed %}false{% else %}true{% endif %}"
+                    data-sidebar-toggle
+                    aria-pressed="{{ nav_preferences.collapsed|yesno:'true,false' }}"
+                    aria-expanded="{{ nav_preferences.collapsed|yesno:'false,true' }}"
+                    aria-controls="primary-navigation">
+                    <span class="sidebar__collapse-icon" aria-hidden="true">⟡</span>
+                    <span class="sidebar__collapse-label" data-collapse-label>
+                        {% if nav_preferences.collapsed %}Expand menu{% else %}Collapse menu{% endif %}
+                    </span>
+                </button>
+            </div>
+            <nav class="header-nav" id="primary-navigation" aria-label="Primary navigation">
                 {% if nav_sections %}
                     {% for section in nav_sections %}
-                        <details class="header-nav__group{% if section.active %} header-nav__group--active{% endif %}"{% if section.active %} open{% endif %}>
+                        <details class="header-nav__group{% if section.active %} header-nav__group--active{% endif %}"{% if section.active or forloop.first %} open{% endif %}>
                             <summary class="header-nav__summary">
-                                <span class="header-nav__label">{{ section.label }}</span>
-                                <span class="header-nav__description">{{ section.description }}</span>
+                                <span class="header-nav__glyph" aria-hidden="true">{{ section.label|slice:":1" }}</span>
+                                <span class="header-nav__summary-text">
+                                    <span class="header-nav__label">{{ section.label }}</span>
+                                    <span class="header-nav__description">{{ section.description }}</span>
+                                </span>
                             </summary>
                             <div class="header-nav__panel">
                                 <ul class="header-nav__links">
@@ -52,54 +85,97 @@
                         </details>
                     {% endfor %}
                 {% endif %}
+            </nav>
+            <div class="sidebar__footer">
+                <div class="sidebar__preferences" role="group" aria-label="Menu placement">
+                    <p class="sidebar__preferences-label">Menu side</p>
+                    <div class="sidebar__preference-buttons">
+                        <button
+                            class="sidebar__preference-button{% if nav_preferences.side == 'left' %} sidebar__preference-button--active{% endif %}"
+                            type="submit"
+                            form="nav-side-form"
+                            name="menu_side"
+                            value="left"
+                            data-menu-side="left"
+                            aria-pressed="{% if nav_preferences.side == 'left' %}true{% else %}false{% endif %}">Left</button>
+                        <button
+                            class="sidebar__preference-button{% if nav_preferences.side == 'right' %} sidebar__preference-button--active{% endif %}"
+                            type="submit"
+                            form="nav-side-form"
+                            name="menu_side"
+                            value="right"
+                            data-menu-side="right"
+                            aria-pressed="{% if nav_preferences.side == 'right' %}true{% else %}false{% endif %}">Right</button>
+                    </div>
+                </div>
                 {% if request.user.is_authenticated %}
                     <span class="header-balance">Balance: {{ request.user.balance|default:0 }}</span>
                 {% endif %}
-            </nav>
-            <div class="header-controls">
-                <div class="theme-switcher">
-                    <label class="theme-switcher__label" for="theme-select">Theme</label>
-                    <select class="theme-switcher__select" id="theme-select" data-theme-select aria-label="Select theme">
-                        <option value="auto" selected>Seasonal</option>
-                        <option value="spring">Spring</option>
-                        <option value="summer">Summer</option>
-                        <option value="winter-red">Winter but Red</option>
-                        <option value="fall">Fall</option>
-                        <option value="winter">Winter</option>
-                        <option value="neon">Neon 80s</option>
-                    </select>
+            </div>
+        </aside>
+        <div class="site-body">
+            <header class="site-header">
+                <div class="container header-inner">
+                    <div class="header-branding">
+                        <a class="brand brand--ghost" href="{% url 'main:index' %}">{{ request.site.name }}</a>
+                        <button
+                            class="sidebar-toggle button-outline"
+                            type="submit"
+                            form="nav-collapse-form"
+                            name="menu_collapsed"
+                            value="{% if nav_preferences.collapsed %}false{% else %}true{% endif %}"
+                            data-sidebar-toggle
+                            aria-pressed="{{ nav_preferences.collapsed|yesno:'true,false' }}"
+                            aria-controls="primary-navigation">
+                            <span data-collapse-label>
+                                {% if nav_preferences.collapsed %}Expand menu{% else %}Collapse menu{% endif %}
+                            </span>
+                        </button>
+                    </div>
+                    <div class="header-controls">
+                        <div class="theme-switcher">
+                            <label class="theme-switcher__label" for="theme-select">Theme</label>
+                            <select class="theme-switcher__select" id="theme-select" data-theme-select aria-label="Select theme">
+                                <option value="auto" selected>Seasonal</option>
+                                <option value="spring">Spring</option>
+                                <option value="summer">Summer</option>
+                                <option value="winter-red">Winter but Red</option>
+                                <option value="fall">Fall</option>
+                                <option value="winter">Winter</option>
+                                <option value="neon">Neon 80s</option>
+                            </select>
+                        </div>
+                        <button class="audio-toggle" type="button" data-audio-toggle aria-pressed="false" aria-live="polite">
+                            <span class="audio-toggle__icon" data-audio-icon aria-hidden="true">🔊</span>
+                            <span class="audio-toggle__label" data-audio-label>Music On</span>
+                            <span class="audio-toggle__track" data-audio-track-label>Site Mix</span>
+                        </button>
+                    </div>
                 </div>
-                <button class="audio-toggle" type="button" data-audio-toggle aria-pressed="false" aria-live="polite">
-                    <span class="audio-toggle__icon" data-audio-icon aria-hidden="true">🔊</span>
-                    <span class="audio-toggle__label" data-audio-label>Music On</span>
-                    <span class="audio-toggle__track" data-audio-track-label>Site Mix</span>
-                </button>
+            </header>
+            <div class="neon-marquee" aria-hidden="true">
+                <div class="neon-marquee__glow"></div>
+                <div class="neon-marquee__track">
+                    <span>★ Needs more 80s &middot; Neon grid online &middot; Marquee mania unlocked &middot; Sparkle shields up</span>
+                    <span>★ Needs more 80s &middot; Neon grid online &middot; Marquee mania unlocked &middot; Sparkle shields up</span>
+                    <span>★ Needs more 80s &middot; Neon grid online &middot; Marquee mania unlocked &middot; Sparkle shields up</span>
+                </div>
+                <div class="neon-marquee__track neon-marquee__track--reverse">
+                    <span>✦ Vote, glow, repeat &middot; Vaporwave dreams &middot; Add a feature &middot; Pump the jams</span>
+                    <span>✦ Vote, glow, repeat &middot; Vaporwave dreams &middot; Add a feature &middot; Pump the jams</span>
+                    <span>✦ Vote, glow, repeat &middot; Vaporwave dreams &middot; Add a feature &middot; Pump the jams</span>
+                </div>
             </div>
-        </div>
-    </header>
-    <div class="neon-marquee" aria-hidden="true">
-        <div class="neon-marquee__glow"></div>
-        <div class="neon-marquee__track">
-            <span>★ Needs more 80s &middot; Neon grid online &middot; Marquee mania unlocked &middot; Sparkle shields up</span>
-            <span>★ Needs more 80s &middot; Neon grid online &middot; Marquee mania unlocked &middot; Sparkle shields up</span>
-            <span>★ Needs more 80s &middot; Neon grid online &middot; Marquee mania unlocked &middot; Sparkle shields up</span>
-        </div>
-        <div class="neon-marquee__track neon-marquee__track--reverse">
-            <span>✦ Vote, glow, repeat &middot; Vaporwave dreams &middot; Add a feature &middot; Pump the jams</span>
-            <span>✦ Vote, glow, repeat &middot; Vaporwave dreams &middot; Add a feature &middot; Pump the jams</span>
-            <span>✦ Vote, glow, repeat &middot; Vaporwave dreams &middot; Add a feature &middot; Pump the jams</span>
-        </div>
-    </div>
-    <main class="site-main container">
-        {% if messages %}
-            <div class="flash-messages">
-                {% for message in messages %}
-                    <div class="flash flash-{{ message.tags }}">{{ message }}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
-        {% block content %}{% endblock %}
-    </main>
+            <main class="site-main container">
+                {% if messages %}
+                    <div class="flash-messages">
+                        {% for message in messages %}
+                            <div class="flash flash-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                {% block content %}{% endblock %}
+            </main>
     {% if board_health %}
     <section class="board-health" aria-labelledby="board-health-heading">
         <div class="container">
@@ -153,6 +229,8 @@
             <small>&copy; {% now "Y" %} {{ request.site.name }}.</small>
         </div>
     </footer>
+        </div>
+    </div>
     <audio
         class="visually-hidden"
         data-audio-track
@@ -169,6 +247,7 @@
     <script src="{% static 'js/seasonal-vfx.js' %}" defer></script>
     <script src="{% static 'js/theboard.js' %}" defer></script>
     <script src="{% static 'js/audio-controls.js' %}" defer></script>
+    <script src="{% static 'js/navigation-preferences.js' %}" defer></script>
     <script src="{% static 'js/depth-effects.js' %}" defer></script>
     <script src="{% static 'js/shimeji.js' %}" defer></script>
     {% if settings.TURNSTILE_ENABLED %}

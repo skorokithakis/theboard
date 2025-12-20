@@ -43,6 +43,11 @@ urlpatterns = [
         views.submit_quote_suggestion,
         name="fortune-suggest",
     ),
+    path(
+        "navigation/preferences/",
+        views.update_navigation_preferences,
+        name="navigation-preferences",
+    ),
     path("profile/", views.profile_detail, name="profile"),
     path("profiles/<str:username>/", views.profile_detail, name="profile-detail"),
 ]

@@ -228,3 +228,39 @@ class ProfileForm(forms.ModelForm):
         if len(status) > self.status_max_length:
             raise forms.ValidationError(_("Status is too long."))
         return status
+
+
+class NavigationPreferencesForm(forms.ModelForm):
+    """Form for configuring how the global navigation should be placed."""
+
+    class Meta:
+        model = models.User
+        fields = ("menu_side", "menu_collapsed")
+        labels = {
+            "menu_side": _("Sidebar side"),
+            "menu_collapsed": _("Collapsed menu"),
+        }
+        help_texts = {
+            "menu_side": _(
+                "Choose whether the navigation sidebar anchors to the left or right edge."
+            ),
+            "menu_collapsed": _(
+                "Keep the navigation collapsed into its compact state."
+            ),
+        }
+        widgets = {
+            "menu_side": forms.RadioSelect(
+                choices=models.User.MenuSide.choices, attrs={"class": "radio"}
+            ),
+            "menu_collapsed": forms.CheckboxInput(
+                attrs={"class": "checkbox", "aria-label": _("Collapse menu")}
+            ),
+        }
+
+    def clean_menu_side(self) -> str:
+        raw_side = self.cleaned_data.get("menu_side") or models.User.MenuSide.LEFT
+        side = str(raw_side).lower()
+        valid_sides = {choice[0] for choice in models.User.MenuSide.choices}
+        if side not in valid_sides:
+            raise forms.ValidationError(_("Choose left or right."))
+        return side

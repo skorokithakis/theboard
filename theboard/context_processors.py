@@ -16,9 +16,17 @@ def navigation(request):
     """Expose grouped navigation for the header and sitemap."""
 
     current_name = getattr(getattr(request, "resolver_match", None), "url_name", None)
+    menu_side = getattr(request.user, "menu_side", "left") or "left"
+    menu_collapsed = bool(getattr(request.user, "menu_collapsed", False))
+    if menu_side not in ("left", "right"):
+        menu_side = "left"
     return {
         "nav_sections": build_nav_sections(
             current_name,
             request.user.is_authenticated if request.user else False,
-        )
+        ),
+        "nav_preferences": {
+            "side": menu_side,
+            "collapsed": menu_collapsed,
+        },
     }

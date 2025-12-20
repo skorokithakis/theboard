@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import Count, F, Max, Q, Sum, Value
 from django.db.models.functions import Coalesce, Greatest
-from django.http import Http404, HttpRequest, HttpResponse
+from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.core.exceptions import PermissionDenied
@@ -19,6 +19,7 @@ from django.core.exceptions import PermissionDenied
 from .economy import daily_bonus_status
 from .forms import (
     FeatureForm,
+    NavigationPreferencesForm,
     ProfileForm,
     QuoteSuggestionForm,
     WebFiveInvestmentForm,
@@ -790,6 +791,39 @@ def profile_detail(request: HttpRequest, username: str | None = None) -> HttpRes
         "web5_totals": web5_totals,
     }
     return render(request, "profiles/detail.html", context)
+
+
+@login_required
+@require_POST
+def update_navigation_preferences(request: HttpRequest) -> HttpResponse:
+    """Persist a member's navigation layout preferences."""
+
+    form = NavigationPreferencesForm(request.POST, instance=request.user)
+    if form.is_valid():
+        preferences = form.save()
+        payload = {
+            "menu_side": preferences.menu_side,
+            "menu_collapsed": preferences.menu_collapsed,
+        }
+        if (request.headers.get("Accept") or "").startswith("application/json"):
+            return JsonResponse(payload)
+        messages.success(request, "Navigation preferences saved.")
+        redirect_target = request.POST.get("next") or request.META.get("HTTP_REFERER")
+        return redirect(redirect_target or "main:profile")
+
+    error_messages = [
+        message for errors in form.errors.values() for message in errors if message
+    ]
+    if not error_messages:
+        error_messages = ["Unable to update navigation preferences."]
+
+    if (request.headers.get("Accept") or "").startswith("application/json"):
+        return JsonResponse({"errors": error_messages}, status=400)
+
+    for message in error_messages:
+        messages.error(request, message)
+    redirect_target = request.POST.get("next") or request.META.get("HTTP_REFERER")
+    return redirect(redirect_target or "main:profile")
 
 
 @require_GET

@@ -57,6 +57,10 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     """Custom user model that authenticates with a unique username."""
 
+    class MenuSide(models.TextChoices):
+        LEFT = "left", "Left"
+        RIGHT = "right", "Right"
+
     username = models.CharField(
         max_length=150,
         unique=True,
@@ -79,6 +83,16 @@ class User(AbstractBaseUser, PermissionsMixin):
         null=True,
         blank=True,
         help_text="Timestamp of when the member most recently received the daily login bonus.",
+    )
+    menu_side = models.CharField(
+        max_length=5,
+        choices=MenuSide.choices,
+        default=MenuSide.LEFT,
+        help_text="Preferred side of the page where the global navigation menu should appear.",
+    )
+    menu_collapsed = models.BooleanField(
+        default=False,
+        help_text="Whether the global navigation should stay in its condensed, collapsed state for this member.",
     )
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)

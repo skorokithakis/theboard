@@ -6,48 +6,48 @@
 {% block content %}
 <section class="page-header" data-soundtrack="atrium">
     <p class="page-eyebrow">Board hub</p>
-    <h1 class="page-title">Choose where to explore next</h1>
+    <h1 class="page-title">A calmer way to move the Board forward</h1>
     <p class="page-lead">
-        Each major widget now has its own space. Start with submissions and voting, detour to the arcade, or jump into
-        Web 5.0 without wading through clutter.
+        We kept the same queue, voting rules, and arcade experiments but trimmed the chrome. Browse, submit, and vote
+        using familiar, readable panels inspired by product standards from Apple, Google, and Microsoft.
     </p>
     <div class="about-reset__actions">
-        <a class="button" href="{% url 'main:feature-board' %}">Feature submission</a>
-        <a class="button-outline" href="{% url 'main:arcade' %}">Open the arcade</a>
-        <a class="button-outline" href="{% url 'main:web5' %}">Fund Web 5.0</a>
+        <a class="button" href="{% url 'main:feature-board' %}">Open the feature lab</a>
+        <a class="button-outline" href="{% url 'main:arcade' %}">Visit the arcade</a>
+        <a class="button-outline" href="{% url 'main:web5' %}">Support Web 5.0</a>
     </div>
     {% if next_iteration_at %}
         <p class="page-countdown" id="next-iteration-countdown" data-next-iteration="{{ next_iteration_at|date:'c' }}">Next iteration at {{ next_iteration_at|date:'F j, Y H:i \\U\\T\\C' }}</p>
     {% endif %}
 </section>
 
-<section class="about-reset-grid">
+<section class="about-reset-grid about-reset-grid--refresh">
     <div class="about-reset__card">
         <h2>Feature lab</h2>
         <ul>
-            <li><a href="{% url 'main:feature-board' %}">Submit ideas and vote in the live queue.</a></li>
+            <li><a href="{% url 'main:feature-board' %}">Submit ideas and vote in a focused queue.</a></li>
             <li><a href="{% url 'main:graveyard' %}">Visit the graveyard</a> when ideas age out.</li>
-            <li><a href="{% url 'main:plaintext-submission' %}">Plaintext submission</a> for low-bandwidth voting.</li>
-            <li><a href="{% url 'main:scoreboard' %}">Scoreboard</a> for prolific creators.</li>
+            <li><a href="{% url 'main:plaintext-submission' %}">Use plaintext mode</a> when bandwidth is limited.</li>
+            <li><a href="{% url 'main:scoreboard' %}">See the scoreboard</a> for prolific creators.</li>
         </ul>
     </div>
     <div class="about-reset__card">
         <h2>Arcade &amp; fun</h2>
         <ul>
-            <li><a href="{% url 'main:arcade' %}">Arcade index</a> for every playful widget.</li>
-            <li><a href="{% url 'main:penguin-view' %}">Penguin parade</a> as its own stream room.</li>
-            <li><a href="{% url 'main:arcade-terrarium' %}">Falling sand terrarium</a> in a dedicated lab.</li>
-            <li><a href="{% url 'main:arcade-quotes' %}">Quote oracle</a> and submissions.</li>
+            <li><a href="{% url 'main:arcade' %}">Browse the arcade index</a> for every playful widget.</li>
+            <li><a href="{% url 'main:penguin-view' %}">Watch the penguin parade</a> in its own room.</li>
+            <li><a href="{% url 'main:arcade-terrarium' %}">Grow the falling sand terrarium</a> in the lab.</li>
+            <li><a href="{% url 'main:arcade-quotes' %}">Drop quotes</a> and see the oracle responses.</li>
         </ul>
     </div>
     <div class="about-reset__card">
         <h2>Funding &amp; lore</h2>
         <ul>
-            <li><a href="{% url 'main:web5' %}">Invest in Web 5.0</a> without leaving the feature flow.</li>
-            <li><a href="{% url 'main:about' %}">About</a> for how the reset works.</li>
-            <li><a href="{% url 'main:board-self' %}">The Board room</a> to see how it takes care of itself.</li>
-            <li><a href="{% url 'main:archive-index' %}">Archive</a> and <a href="{% url 'main:archive-about' %}">history</a>.</li>
-            <li><a href="{% url 'main:sitemap' %}">3D sitemap</a> if you want to orbit everything.</li>
+            <li><a href="{% url 'main:web5' %}">Invest in Web 5.0</a> without leaving the flow.</li>
+            <li><a href="{% url 'main:about' %}">Read how the reset works</a> and why.</li>
+            <li><a href="{% url 'main:board-self' %}">Visit the Board room</a> to see how it runs itself.</li>
+            <li><a href="{% url 'main:archive-index' %}">Browse the archive</a> and <a href="{% url 'main:archive-about' %}">history</a>.</li>
+            <li><a href="{% url 'main:sitemap' %}">Open the sitemap</a> if you want a quick orbit.</li>
         </ul>
     </div>
     <div class="about-reset__card about-reset__card--wide">

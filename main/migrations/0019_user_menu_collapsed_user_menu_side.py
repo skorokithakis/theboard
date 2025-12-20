@@ -4,20 +4,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0018_webfiveinvestment'),
+        ("main", "0018_webfiveinvestment"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='menu_collapsed',
-            field=models.BooleanField(default=False, help_text='Whether the global navigation should stay in its condensed, collapsed state for this member.'),
+            model_name="user",
+            name="menu_collapsed",
+            field=models.BooleanField(
+                default=False,
+                help_text="Whether the global navigation should stay in its condensed, collapsed state for this member.",
+            ),
         ),
         migrations.AddField(
-            model_name='user',
-            name='menu_side',
-            field=models.CharField(choices=[('left', 'Left'), ('right', 'Right')], default='left', help_text='Preferred side of the page where the global navigation menu should appear.', max_length=5),
+            model_name="user",
+            name="menu_side",
+            field=models.CharField(
+                choices=[("left", "Left"), ("right", "Right")],
+                default="left",
+                help_text="Preferred side of the page where the global navigation menu should appear.",
+                max_length=5,
+            ),
         ),
     ]

@@ -16,7 +16,7 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body
-    class="theme-winter-red"
+    class="theme-winter-red design-refresh"
     data-shimeji-user="{{ request.user.display_name|default_if_none:'' }}"
     data-shimeji-username="{{ request.user.username|default_if_none:'' }}"
     data-shimeji-balance="{{ request.user.balance|default_if_none:0 }}"
@@ -153,19 +153,6 @@
                     </div>
                 </div>
             </header>
-            <div class="neon-marquee" aria-hidden="true">
-                <div class="neon-marquee__glow"></div>
-                <div class="neon-marquee__track">
-                    <span>★ Needs more 80s &middot; Neon grid online &middot; Marquee mania unlocked &middot; Sparkle shields up</span>
-                    <span>★ Needs more 80s &middot; Neon grid online &middot; Marquee mania unlocked &middot; Sparkle shields up</span>
-                    <span>★ Needs more 80s &middot; Neon grid online &middot; Marquee mania unlocked &middot; Sparkle shields up</span>
-                </div>
-                <div class="neon-marquee__track neon-marquee__track--reverse">
-                    <span>✦ Vote, glow, repeat &middot; Vaporwave dreams &middot; Add a feature &middot; Pump the jams</span>
-                    <span>✦ Vote, glow, repeat &middot; Vaporwave dreams &middot; Add a feature &middot; Pump the jams</span>
-                    <span>✦ Vote, glow, repeat &middot; Vaporwave dreams &middot; Add a feature &middot; Pump the jams</span>
-                </div>
-            </div>
             <main class="site-main container">
                 {% if messages %}
                     <div class="flash-messages">

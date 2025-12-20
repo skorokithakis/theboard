@@ -6,10 +6,10 @@
 {% block content %}
 <section class="page-header" data-soundtrack="atrium">
     <p class="page-eyebrow">Feature Lab</p>
-    <h1 class="page-title">Submit ideas and vote them up</h1>
+    <h1 class="page-title">Submit ideas and vote with less noise</h1>
     <p class="page-lead">
-        The main board now lives here. CAPTCHA still guards every submission and vote, and daily limits remain in place
-        to keep the queue human. Explore the graveyard or plaintext mode from this hub.
+        All of the protections stay: CAPTCHA on every action, per-day limits, and the same queue logic. The layout now
+        follows familiar product patterns so you can focus on the content instead of the chrome.
     </p>
     <div class="about-reset__actions">
         <a class="button-outline" href="{% url 'main:graveyard' %}">Visit the graveyard</a>
@@ -23,7 +23,7 @@
         <div class="reset-board__panel-header">
             <p class="reset-board__eyebrow">Submit</p>
             <h2 id="reset-board-heading">Add a feature to the fresh board</h2>
-            <p class="reset-board__hint">All submissions and votes still run through CAPTCHA to keep the signal clean.</p>
+            <p class="reset-board__hint">Submissions and votes are still protected by CAPTCHA to keep the signal clean.</p>
         </div>
         {% if not request.user.is_authenticated %}
             <p class="reset-board__note">Sign in at <a href="/accounts/login/?next={{ request.path }}">/accounts/login/</a> to add a feature.</p>

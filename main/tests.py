@@ -50,6 +50,10 @@ class FeatureBoardTests(TestCase):
         data.update(kwargs)
         return models.Feature.objects.create(**data)
 
+    def _seed_plan_patch(self, plan: generation.GenerationPlan | None = None):
+        target_plan = plan or generation.GENERATION_PLANS[0]
+        return mock.patch("main.generation.choice", return_value=target_plan)
+
     def test_create_user_lowercases_username(self) -> None:
         user = User.objects.create_user(username="MiXeDCaSeUser", password="test-pass")
         self.assertEqual(user.username, "mixedcaseuser")
@@ -135,30 +139,45 @@ class FeatureBoardTests(TestCase):
             created_at=timezone.now() - timedelta(days=8)
         )
 
-        response = self.client.get("/api/features")
+        seed_plan = generation.GENERATION_PLANS[0]
+        with self._seed_plan_patch(seed_plan):
+            response = self.client.get("/api/features")
         self.assertEqual(response.status_code, 200)
         data = response.json()
 
-        self.assertEqual(data["features"][0]["title"], generation.SELF_CARE_PLAN.title)
+        self.assertEqual(data["features"][0]["title"], seed_plan.title)
         graveyard_titles = [item["title"] for item in data["graveyard_features"]]
         self.assertIn("Forgotten request", graveyard_titles)
 
         stale.refresh_from_db()
         self.assertIsNotNone(stale.expired_at)
 
-    def test_feature_list_seeds_self_care_when_empty(self) -> None:
-        response = self.client.get("/api/features")
+    def test_feature_list_seeds_generation_plan_when_empty(self) -> None:
+        seed_plan = generation.GENERATION_PLANS[0]
+        with self._seed_plan_patch(seed_plan):
+            response = self.client.get("/api/features")
         self.assertEqual(response.status_code, 200)
         data = response.json()
 
         self.assertEqual(
             data["features"][0]["title"],
-            generation.SELF_CARE_PLAN.title,
+            seed_plan.title,
         )
         self.assertEqual(
             data["features"][0]["creator"]["username"],
             generation.SYSTEM_USERNAME,
         )
+
+    def test_generation_seed_uses_random_plan_picker(self) -> None:
+        selected_plan = generation.GENERATION_PLANS[2]
+        feature = generation.ensure_generation_seed(
+            plan_picker=lambda plans: selected_plan
+        )
+        self.assertIsNotNone(feature)
+        assert feature is not None
+        self.assertEqual(feature.title, selected_plan.title)
+        self.assertIn(selected_plan.ritual, feature.description)
+        self.assertEqual(generation.current_generation_plan(), selected_plan)
 
     def test_expire_stale_respects_missed_vote_penalties(self) -> None:
         feature = self._submit_feature(title="Needs daily love")
@@ -578,18 +597,18 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(payload["feature"]["variation_count"], 1)
         self.assertEqual(payload["variations"][0]["id"], variation.pk)
 
-    def test_api_top_seeds_self_care_when_empty(self) -> None:
-        response = self.client.get("/api/top")
+    def test_api_top_seeds_generation_plan_when_empty(self) -> None:
+        seed_plan = generation.GENERATION_PLANS[0]
+        with self._seed_plan_patch(seed_plan):
+            response = self.client.get("/api/top")
         self.assertEqual(response.status_code, 200)
         payload = response.json()
-        self.assertEqual(payload["feature"]["title"], generation.SELF_CARE_PLAN.title)
+        self.assertEqual(payload["feature"]["title"], seed_plan.title)
         self.assertEqual(
             payload["feature"]["creator"]["username"], generation.SYSTEM_USERNAME
         )
         self.assertTrue(
-            models.Feature.objects.pending()
-            .filter(title=generation.SELF_CARE_PLAN.title)
-            .exists()
+            models.Feature.objects.pending().filter(title=seed_plan.title).exists()
         )
 
     def test_api_top_skips_expired_features(self) -> None:
@@ -762,18 +781,17 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(stats["graveyard"], 1)
         self.assertContains(response, "How it works")
 
-    def test_feature_board_seeds_self_care_when_queue_empty(self) -> None:
-        with self._static_override():
+    def test_feature_board_seeds_generation_plan_when_queue_empty(self) -> None:
+        seed_plan = generation.GENERATION_PLANS[0]
+        with self._static_override(), self._seed_plan_patch(seed_plan):
             response = self.client.get(reverse("main:feature-board"))
 
         self.assertEqual(response.status_code, 200)
         features = response.context["features"]
         self.assertEqual(len(features), 1)
-        self.assertEqual(features[0].title, generation.SELF_CARE_PLAN.title)
+        self.assertEqual(features[0].title, seed_plan.title)
         self.assertTrue(
-            models.Feature.objects.pending()
-            .filter(title=generation.SELF_CARE_PLAN.title)
-            .exists()
+            models.Feature.objects.pending().filter(title=seed_plan.title).exists()
         )
 
     def test_feature_list_includes_creator_status(self) -> None:

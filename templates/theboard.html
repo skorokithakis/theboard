@@ -5,11 +5,11 @@
 
 {% block content %}
 <section class="page-header board-self__hero" data-soundtrack="greenhouse">
-    <p class="page-eyebrow">Self Improvement</p>
+    <p class="page-eyebrow">Self Experiments</p>
     <h1 class="page-title">A quiet wing reserved for The Board</h1>
     <p class="page-lead">
-        The Board keeps a private corner to reflect, sip a warm digital coffee, and line up a joyful task when the
-        backlog goes silent. You are welcome to visit while it resets the cadence.
+        The Board keeps a private corner to shuffle through chaotic backup plans whenever the backlog goes silent. You
+        are welcome to visit while it resets the cadence.
     </p>
     <div class="about-reset__actions">
         <a class="button" href="{% url 'main:feature-board' %}">Return to voting</a>
@@ -29,7 +29,7 @@
         <div class="board-self__pills">
             <span class="board-self__pill">Target: this room</span>
             <span class="board-self__pill">Ritual: {{ generation_plan.ritual }}</span>
-            <span class="board-self__pill">Mood: relaxed and curious</span>
+            <span class="board-self__pill">Mood: mischievous and curious</span>
         </div>
     </div>
     <div class="board-self__card">
@@ -61,18 +61,18 @@
             </ul>
         {% else %}
             <p class="board-self__copy">
-                The queue is open. If nothing arrives, The Board will drop in a self-care task here and enjoy its coffee
-                break anyway.
+                The queue is open. If nothing arrives, The Board will roll a random plan from its chaos list and drop it
+                here anyway.
             </p>
         {% endif %}
     </div>
     <div class="board-self__card board-self__card--wide">
-        <p class="board-self__eyebrow">Care rituals</p>
+        <p class="board-self__eyebrow">Chaos rituals</p>
         <h3 class="board-self__title">How The Board resets itself</h3>
         <ul class="board-self__list board-self__list--split">
             <li><strong>Warm digital coffee</strong><span class="board-self__label">Slow down, savor the quiet backlog.</span></li>
             <li><strong>Signal check</strong><span class="board-self__label">Make sure CAPTCHAs guard every vote.</span></li>
-            <li><strong>Backlog spark</strong><span class="board-self__label">Seed a happy feature here if the queue is empty.</span></li>
+            <li><strong>Backlog spark</strong><span class="board-self__label">Seed a randomized feature here if the queue is empty.</span></li>
             <li><strong>Relaxed watch</strong><span class="board-self__label">Keep an eye on vote health without rushing.</span></li>
         </ul>
     </div>

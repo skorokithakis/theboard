@@ -396,7 +396,7 @@ def board_self(request: HttpRequest) -> HttpResponse:
     context = {
         "next_iteration_at": get_next_iteration_at(),
         "feature_stats": feature_stats,
-        "generation_plan": generation.SELF_CARE_PLAN,
+        "generation_plan": generation.current_generation_plan(),
         "feature_preview": preview,
     }
     return render(request, "theboard.html", context)

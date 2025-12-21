@@ -15,198 +15,69 @@
     <link href="{% static 'css/main.css' %}" rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
-<body
-    class="theme-winter-red design-refresh"
-    data-shimeji-user="{{ request.user.display_name|default_if_none:'' }}"
-    data-shimeji-username="{{ request.user.username|default_if_none:'' }}"
-    data-shimeji-balance="{{ request.user.balance|default_if_none:0 }}"
-    data-shimeji-auth="{{ request.user.is_authenticated|yesno:'true,false' }}"
-    data-graveyard-url="{% url 'main:graveyard' %}"
-    data-menu-side="{{ nav_preferences.side }}"
-    data-menu-collapsed="{{ nav_preferences.collapsed|yesno:'true,false' }}"
-    data-nav-preference-url="{% url 'main:navigation-preferences' %}"
-    {% if settings.TURNSTILE_ENABLED %}data-turnstile-sitekey="{{ settings.TURNSTILE_SITE_KEY }}"{% endif %}>
-    <div class="site-shell" data-menu-side="{{ nav_preferences.side }}" data-menu-collapsed="{{ nav_preferences.collapsed|yesno:'true,false' }}">
-        <aside class="site-sidebar" data-menu-side="{{ nav_preferences.side }}" data-menu-collapsed="{{ nav_preferences.collapsed|yesno:'true,false' }}">
-            <form id="nav-side-form" class="sidebar__form" method="post" action="{% url 'main:navigation-preferences' %}">
-                {% csrf_token %}
-                <input type="hidden" name="menu_collapsed" value="{{ nav_preferences.collapsed|yesno:'true,false' }}" data-menu-collapsed-input>
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            </form>
-            <form id="nav-collapse-form" class="sidebar__form" method="post" action="{% url 'main:navigation-preferences' %}">
-                {% csrf_token %}
-                <input type="hidden" name="menu_side" value="{{ nav_preferences.side }}" data-menu-side-input>
-                <input type="hidden" name="next" value="{{ request.get_full_path }}">
-            </form>
-            <div class="sidebar__header">
-                <a class="brand" href="{% url 'main:index' %}">{{ request.site.name }}</a>
-                <button
-                    class="sidebar__collapse button-muted"
-                    type="submit"
-                    form="nav-collapse-form"
-                    name="menu_collapsed"
-                    value="{% if nav_preferences.collapsed %}false{% else %}true{% endif %}"
-                    data-sidebar-toggle
-                    aria-pressed="{{ nav_preferences.collapsed|yesno:'true,false' }}"
-                    aria-expanded="{{ nav_preferences.collapsed|yesno:'false,true' }}"
-                    aria-controls="primary-navigation">
-                    <span class="sidebar__collapse-icon" aria-hidden="true">⟡</span>
-                    <span class="sidebar__collapse-label" data-collapse-label>
-                        {% if nav_preferences.collapsed %}Expand menu{% else %}Collapse menu{% endif %}
-                    </span>
-                </button>
-            </div>
-            <nav class="header-nav" id="primary-navigation" aria-label="Primary navigation">
-                {% if nav_sections %}
-                    {% for section in nav_sections %}
-                        <details class="header-nav__group{% if section.active %} header-nav__group--active{% endif %}"{% if section.active or forloop.first %} open{% endif %}>
-                            <summary class="header-nav__summary">
-                                <span class="header-nav__glyph" aria-hidden="true">{{ section.label|slice:":1" }}</span>
-                                <span class="header-nav__summary-text">
-                                    <span class="header-nav__label">{{ section.label }}</span>
-                                    <span class="header-nav__description">{{ section.description }}</span>
-                                </span>
-                            </summary>
-                            <div class="header-nav__panel">
-                                <ul class="header-nav__links">
-                                    {% for link in section.links %}
-                                        <li class="header-nav__item">
-                                            <a
-                                                class="header-nav__link{% if link.active %} header-nav__link--active{% endif %}"
-                                                {% if link.active %}aria-current="page"{% endif %}
-                                                href="{{ link.url }}">
-                                                <span class="header-nav__link-title">{{ link.label }}</span>
-                                                <span class="header-nav__link-summary">{{ link.summary }}</span>
-                                            </a>
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </details>
-                    {% endfor %}
-                {% endif %}
-            </nav>
-            <div class="sidebar__footer">
-                <div class="sidebar__preferences" role="group" aria-label="Menu placement">
-                    <p class="sidebar__preferences-label">Menu side</p>
-                    <div class="sidebar__preference-buttons">
-                        <button
-                            class="sidebar__preference-button{% if nav_preferences.side == 'left' %} sidebar__preference-button--active{% endif %}"
-                            type="submit"
-                            form="nav-side-form"
-                            name="menu_side"
-                            value="left"
-                            data-menu-side="left"
-                            aria-pressed="{% if nav_preferences.side == 'left' %}true{% else %}false{% endif %}">Left</button>
-                        <button
-                            class="sidebar__preference-button{% if nav_preferences.side == 'right' %} sidebar__preference-button--active{% endif %}"
-                            type="submit"
-                            form="nav-side-form"
-                            name="menu_side"
-                            value="right"
-                            data-menu-side="right"
-                            aria-pressed="{% if nav_preferences.side == 'right' %}true{% else %}false{% endif %}">Right</button>
-                    </div>
-                </div>
+<body data-graveyard-url="{% url 'main:graveyard' %}" {% if settings.TURNSTILE_ENABLED %}data-turnstile-sitekey="{{ settings.TURNSTILE_SITE_KEY }}"{% endif %}>
+    <header class="site-header">
+        <div class="container site-header__inner">
+            <a class="brand" href="{% url 'main:index' %}">{{ request.site.name }}</a>
+            {% if nav_sections %}
+                <nav class="site-nav" id="primary-navigation" aria-label="Primary navigation">
+                    <ul class="site-nav__list">
+                        {% for section in nav_sections %}
+                            {% for link in section.links %}
+                                <li class="site-nav__item">
+                                    <a
+                                        class="site-nav__link{% if link.active %} site-nav__link--active{% endif %}"
+                                        href="{{ link.url }}"
+                                        {% if link.active %}aria-current="page"{% endif %}>
+                                        {{ link.label }}
+                                    </a>
+                                </li>
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </nav>
+            {% endif %}
+            <div class="site-header__meta">
                 {% if request.user.is_authenticated %}
                     <span class="header-balance">Balance: {{ request.user.balance|default:0 }}</span>
                 {% endif %}
             </div>
-        </aside>
-        <div class="site-body">
-            <header class="site-header">
-                <div class="container header-inner">
-                    <div class="header-branding">
-                        <a class="brand brand--ghost" href="{% url 'main:index' %}">{{ request.site.name }}</a>
-                        <button
-                            class="sidebar-toggle button-outline"
-                            type="submit"
-                            form="nav-collapse-form"
-                            name="menu_collapsed"
-                            value="{% if nav_preferences.collapsed %}false{% else %}true{% endif %}"
-                            data-sidebar-toggle
-                            aria-pressed="{{ nav_preferences.collapsed|yesno:'true,false' }}"
-                            aria-controls="primary-navigation">
-                            <span data-collapse-label>
-                                {% if nav_preferences.collapsed %}Expand menu{% else %}Collapse menu{% endif %}
-                            </span>
-                        </button>
-                    </div>
-                    <div class="header-controls">
-                        <div class="theme-switcher">
-                            <label class="theme-switcher__label" for="theme-select">Theme</label>
-                            <select class="theme-switcher__select" id="theme-select" data-theme-select aria-label="Select theme">
-                                <option value="auto" selected>Seasonal</option>
-                                <option value="spring">Spring</option>
-                                <option value="summer">Summer</option>
-                                <option value="winter-red">Winter but Red</option>
-                                <option value="fall">Fall</option>
-                                <option value="winter">Winter</option>
-                                <option value="neon">Neon 80s</option>
-                            </select>
-                        </div>
-                        <button class="audio-toggle" type="button" data-audio-toggle aria-pressed="false" aria-live="polite">
-                            <span class="audio-toggle__icon" data-audio-icon aria-hidden="true">🔊</span>
-                            <span class="audio-toggle__label" data-audio-label>Music On</span>
-                            <span class="audio-toggle__track" data-audio-track-label>Site Mix</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
-            <main class="site-main container">
-                {% if messages %}
-                    <div class="flash-messages">
-                        {% for message in messages %}
-                            <div class="flash flash-{{ message.tags }}">{{ message }}</div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-                {% block content %}{% endblock %}
-            </main>
+        </div>
+    </header>
+    <main class="site-main container">
+        {% if messages %}
+            <div class="flash-messages">
+                {% for message in messages %}
+                    <div class="flash flash-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
     {% if board_health %}
     <section class="board-health" aria-labelledby="board-health-heading">
-        <div class="container">
-            <div class="board-health__panel" data-health-state="{{ board_health.state.key }}">
-                <header class="board-health__header">
-                    <p class="board-health__eyebrow">Systems Monitor</p>
-                    <h2 id="board-health-heading">Board Health</h2>
-                    <p class="board-health__intro">Each failed implementation costs {{ board_health.damage_per_failure }}% health. Keep shipping or risk a doomguy faceplant.</p>
-                </header>
-                <div class="board-health__status" role="status" aria-live="polite">
-                    <div class="board-health__reading">
-                        <span class="board-health__value">{{ board_health.percentage }}%</span>
-                        <span class="board-health__state">{{ board_health.state.label }}</span>
-                        <span class="board-health__range">{{ board_health.state.range_label }}</span>
-                    </div>
-                    <figure class="board-health__face" role="img" aria-label="{{ board_health.state.label }}">
-                        <svg class="board-health__face-icon" viewBox="0 0 160 120" aria-hidden="true" focusable="false" xmlns:xlink="http://www.w3.org/1999/xlink">
-                            <use href="{% static 'img/board-health-faces.svg' %}#{{ board_health.state.key }}" xlink:href="{% static 'img/board-health-faces.svg' %}#{{ board_health.state.key }}"></use>
-                        </svg>
-                    </figure>
-                    <div class="board-health__failures">
-                        <span class="board-health__failures-label">Failed features</span>
-                        <span class="board-health__failures-count">{{ board_health.failed_count }}</span>
-                        <span class="board-health__failures-note">&minus;{{ board_health.damage_per_failure }}% each</span>
-                    </div>
-                </div>
+        <div class="container board-health__layout">
+            <div>
+                <p class="board-health__eyebrow">Systems Monitor</p>
+                <h2 id="board-health-heading">Board health</h2>
+                <p class="board-health__intro">
+                    Each failed implementation costs {{ board_health.damage_per_failure }}% health. Keep shipping to stay in the green.
+                </p>
+            </div>
+            <div class="board-health__status" role="status" aria-live="polite">
+                <div class="board-health__value">{{ board_health.percentage }}%</div>
+                <div class="board-health__state">{{ board_health.state.label }}</div>
+                <div class="board-health__range">{{ board_health.state.range_label }}</div>
                 <div class="board-health__meter" role="img" aria-label="Board health is {{ board_health.percentage }} percent. {{ board_health.state.label }}.">
                     <div class="board-health__meter-track">
-                        <div class="board-health__meter-fill" style="width: {{ board_health.percentage }}%;"></div>
-                    </div>
-                    <div class="board-health__meter-scale" aria-hidden="true">
-                        {% for segment in board_health.scale %}
-                        <span class="board-health__meter-stop" data-segment="{{ segment.key }}">{{ segment.range_label }}</span>
-                        {% endfor %}
+                        <span class="board-health__meter-fill" style="width: {{ board_health.percentage }}%;"></span>
                     </div>
                 </div>
-                <ul class="board-health__scale" aria-label="Face state legend">
-                    {% for segment in board_health.scale %}
-                    <li class="board-health__scale-item{% if board_health.state.key == segment.key %} board-health__scale-item--active{% endif %}">
-                        <span class="board-health__scale-range">{{ segment.range_label }}</span>
-                        <span class="board-health__scale-label">{{ segment.label }}</span>
-                    </li>
-                    {% endfor %}
-                </ul>
+                <div class="board-health__failures">
+                    <span>Failed features</span>
+                    <strong>{{ board_health.failed_count }}</strong>
+                    <span class="board-health__note">-{{ board_health.damage_per_failure }}% each</span>
+                </div>
             </div>
         </div>
     </section>
@@ -216,30 +87,6 @@
             <small>&copy; {% now "Y" %} {{ request.site.name }}.</small>
         </div>
     </footer>
-        </div>
-    </div>
-    <audio
-        class="visually-hidden"
-        data-audio-track
-        data-soundtrack-default="atrium"
-        data-soundtrack-atrium="{% static 'audio/atrium-bloom.wav' %}"
-        data-soundtrack-greenhouse="{% static 'audio/greenhouse-hum.wav' %}"
-        data-soundtrack-arcade="{% static 'audio/chiptune-loop.wav' %}"
-        data-soundtrack-graveyard="{% static 'audio/graveyard-chime.wav' %}"
-        src="{% static 'audio/atrium-bloom.wav' %}"
-        loop
-        preload="auto"
-        aria-hidden="true"></audio>
-    <script src="{% static 'js/theme-picker.js' %}" defer></script>
-    <script src="{% static 'js/seasonal-vfx.js' %}" defer></script>
-    <script src="{% static 'js/theboard.js' %}" defer></script>
-    <script src="{% static 'js/audio-controls.js' %}" defer></script>
-    <script src="{% static 'js/navigation-preferences.js' %}" defer></script>
-    <script src="{% static 'js/depth-effects.js' %}" defer></script>
-    <script src="{% static 'js/shimeji.js' %}" defer></script>
-    {% if settings.TURNSTILE_ENABLED %}
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&amp;onload=onTurnstileLoad" async defer></script>
-    {% endif %}
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

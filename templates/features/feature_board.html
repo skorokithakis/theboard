@@ -4,33 +4,31 @@
 {% block title %}Feature Lab | {{ request.site.name }}{% endblock %}
 
 {% block content %}
-<section class="page-header" data-soundtrack="atrium">
+<section class="page-header">
     <p class="page-eyebrow">Feature Lab</p>
-    <h1 class="page-title">Submit ideas and vote with less noise</h1>
+    <h1 class="page-title">A lean board built for speed</h1>
     <p class="page-lead">
-        All of the protections stay: CAPTCHA on every action, per-day limits, and the same queue logic. The layout now
-        follows familiar product patterns so you can focus on the content instead of the chrome.
+        The same protections stay in place — CAPTCHA on every action and daily limits — but the layout is stripped down
+        to keep voting fast on any device.
     </p>
     <div class="about-reset__actions">
-        <a class="button-outline" href="{% url 'main:graveyard' %}">Visit the graveyard</a>
+        <a class="button-outline" href="{% url 'main:graveyard' %}">Graveyard</a>
         <a class="button-outline" href="{% url 'main:plaintext-submission' %}">Plaintext lane</a>
         <a class="button-outline" href="{% url 'main:scoreboard' %}">Scoreboard</a>
     </div>
 </section>
 
-<section class="reset-board" aria-labelledby="reset-board-heading">
-    <div class="reset-board__panel">
-        <div class="reset-board__panel-header">
-            <p class="reset-board__eyebrow">Submit</p>
-            <h2 id="reset-board-heading">Add a feature to the fresh board</h2>
-            <p class="reset-board__hint">Submissions and votes are still protected by CAPTCHA to keep the signal clean.</p>
-        </div>
+<section class="feature-lab" aria-labelledby="feature-lab-heading">
+    <div class="feature-lab__panel">
+        <p class="feature-lab__eyebrow">Submit</p>
+        <h2 id="feature-lab-heading">Propose a feature</h2>
+        <p class="feature-lab__hint">Keep it concise. CAPTCHA still guards every submission.</p>
         {% if not request.user.is_authenticated %}
-            <p class="reset-board__note">Sign in at <a href="/accounts/login/?next={{ request.path }}">/accounts/login/</a> to add a feature.</p>
+            <p class="feature-lab__note">Sign in at <a href="/accounts/login/?next={{ request.path }}">/accounts/login/</a> to add a feature.</p>
         {% elif not can_submit %}
-            <p class="reset-board__note">Daily submission limit reached. Come back after the next reset.</p>
+            <p class="feature-lab__note">Daily submission limit reached. Come back after the next reset.</p>
         {% else %}
-            <form class="reset-form" method="post" action="{% url 'main:feature-board' %}">
+            <form class="feature-form" method="post" action="{% url 'main:feature-board' %}">
                 {% csrf_token %}
                 {% if submission_form.non_field_errors %}
                     <p class="form-error">{{ submission_form.non_field_errors|striptags }}</p>
@@ -52,19 +50,19 @@
                 {% if turnstile_site_key %}
                     <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
                 {% else %}
-                    <p class="reset-board__note">Cloudflare Turnstile is disabled in this environment.</p>
+                    <p class="feature-lab__note">Cloudflare Turnstile is disabled in this environment.</p>
                 {% endif %}
-                <div class="reset-form__actions">
+                <div class="feature-form__actions">
                     <button class="button" type="submit">Submit feature</button>
                 </div>
             </form>
         {% endif %}
     </div>
-    <div class="reset-board__panel reset-board__panel--list">
-        <div class="reset-board__panel-header">
-            <p class="reset-board__eyebrow">Vote</p>
-            <h2>Help the next feature win</h2>
-            <p class="reset-board__hint">Votes reset after every deployment. Rally support while the board is clear.</p>
+    <div class="feature-lab__panel feature-lab__panel--list">
+        <div class="feature-lab__header">
+            <p class="feature-lab__eyebrow">Vote</p>
+            <h2>Back your favorites</h2>
+            <p class="feature-lab__hint">Votes reset after every deployment. Rally support quickly.</p>
         </div>
         {% if features %}
             <div class="feature-stack">
@@ -89,83 +87,9 @@
                 {% endfor %}
             </div>
         {% else %}
-            <p class="reset-board__empty">No ideas yet. Plant the first one.</p>
+            <p class="feature-lab__empty">No ideas yet. Plant the first one.</p>
         {% endif %}
-        <p class="reset-board__note">Need the old interface? Head to the <a href="{% url 'main:archive-index' %}">archive snapshot</a>.</p>
-    </div>
-</section>
-
-<section class="personalized-lane" aria-labelledby="personalized-lane-heading">
-    <div class="personalized-lane__panel personalized-lane__panel--summary">
-        <p class="personalized-lane__eyebrow">Hyper-personalized lane</p>
-        <h2 id="personalized-lane-heading">Your signal on the board</h2>
-        <p class="personalized-lane__hint">
-            A quick pulse of your momentum plus a shortlist tailored to creators you’ve backed.
-        </p>
-        {% if personalized_lane.is_authenticated %}
-            <dl class="personalized-lane__stats">
-                <div>
-                    <dt>Remaining submissions today</dt>
-                    <dd>{{ personalized_lane.remaining_submissions }}</dd>
-                </div>
-                <div>
-                    <dt>Total votes cast</dt>
-                    <dd>{{ personalized_lane.vote_count }}</dd>
-                </div>
-                <div>
-                    <dt>Last vote</dt>
-                    <dd>
-                        {% if personalized_lane.last_vote_at %}
-                            {{ personalized_lane.last_vote_at|date:"M j, Y H:i \\U\\T\\C" }}
-                        {% else %}
-                            Not yet — make your first upvote count.
-                        {% endif %}
-                    </dd>
-                </div>
-            </dl>
-        {% else %}
-            <p class="personalized-lane__note">
-                Sign in to unlock tailored picks from creators you’ve backed and keep your submissions limit handy.
-            </p>
-        {% endif %}
-    </div>
-    <div class="personalized-lane__panel personalized-lane__panel--list">
-        <div class="personalized-lane__panel-header">
-            <p class="personalized-lane__eyebrow">Suggested for you</p>
-            <h3>Hyper-personalized experiences</h3>
-            <p class="personalized-lane__hint">
-                Based on who you’ve supported, here are a few ideas to champion next.
-            </p>
-        </div>
-        {% if personalized_lane.recommendations %}
-            <div class="feature-stack feature-stack--compact">
-                {% for feature in personalized_lane.recommendations %}
-                    <article class="feature-card feature-card--inline">
-                        <header class="feature-card__header">
-                            <h4 class="feature-card__title">{{ feature.title }}</h4>
-                            <p class="feature-card__meta">{{ feature.created_at|date:"F j, Y" }}</p>
-                        </header>
-                        <p class="feature-card__description">{{ feature.description }}</p>
-                        <div class="feature-card__footer">
-                            <div class="feature-card__votes">Votes: {{ feature.vote_total }}</div>
-                            <a class="button-outline" href="{% url 'main:feature-board' %}#feature-{{ feature.id }}">Open in queue</a>
-                        </div>
-                    </article>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p class="personalized-lane__note">No recommendations yet. Cast a vote to start building your lane.</p>
-        {% endif %}
-        {% if personalized_lane.authored_features %}
-            <div class="personalized-lane__authored">
-                <p class="personalized-lane__eyebrow">Your active ideas</p>
-                <ul>
-                    {% for feature in personalized_lane.authored_features %}
-                        <li>{{ feature.title }} — {{ feature.vote_total }} votes</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
+        <p class="feature-lab__note">Need the old interface? Head to the <a href="{% url 'main:archive-index' %}">archive snapshot</a>.</p>
     </div>
 </section>
 {% endblock %}

@@ -51,6 +51,13 @@ class Command(BaseCommand):
             feature.implemented_state = Feature.ImplementationState.UNSUCCESSFUL
 
         feature.implement(when=now)
+        feature.refresh_from_db(
+            fields=[
+                "e2e_test_reference",
+                "e2e_tests_last_synced_at",
+                "implemented_at",
+            ]
+        )
 
         self._penalize_inactive_features()
 
@@ -61,6 +68,13 @@ class Command(BaseCommand):
             self.style.SUCCESS(
                 f'Successfully marked feature "{feature_title}" (ID: {feature_id}) as '
                 f"{'failed' if failed else 'implemented'} at {now.isoformat()}"
+            )
+        )
+        self.stdout.write(
+            self.style.SUCCESS(
+                "End-to-end coverage noted at "
+                f"{feature.e2e_tests_last_synced_at.isoformat()} "
+                f"via {feature.e2e_test_reference}"
             )
         )
         if deleted_count > 0:

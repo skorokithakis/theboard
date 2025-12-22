@@ -33,3 +33,10 @@ repos:
       entry: bash -c 'uv run ./manage.py test'
       types: ["python"]
       pass_filenames: false
+
+    - id: playwright-e2e
+      language: system
+      name: Playwright end-to-end tests
+      entry: bash -c 'uv run python -m playwright install --with-deps && DJANGO_SETTINGS_MODULE=theboard.e2e_settings uv run pytest e2e'
+      types: ["python"]
+      pass_filenames: false

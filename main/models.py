@@ -10,6 +10,7 @@ from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.db.models import Count
 from django.utils import timezone
+from django.utils.text import slugify
 
 
 class UserManager(BaseUserManager):
@@ -186,6 +187,20 @@ class Feature(models.Model):
         blank=True,
         help_text="Outcome of the implementation run so we can distinguish successful vs. unsuccessful launches.",
     )
+    e2e_test_reference = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text=(
+            "Path or identifier for the end-to-end test that validates this feature once it has been implemented."
+        ),
+    )
+    e2e_tests_last_synced_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text=(
+            "Timestamp of when end-to-end coverage was last created or refreshed for this implemented feature."
+        ),
+    )
     expired_at = models.DateTimeField(
         null=True,
         blank=True,
@@ -257,8 +272,19 @@ class Feature(models.Model):
         self.votes = snapshot
         if not self.implemented_state:
             self.implemented_state = self.ImplementationState.SUCCESSFUL
+        if not self.e2e_test_reference:
+            slug = slugify(self.title) or f"feature-{self.pk or 'untracked'}"
+            self.e2e_test_reference = f"e2e/implemented/{slug}.py"
+        self.e2e_tests_last_synced_at = timestamp
         self.save(
-            update_fields=["implemented_at", "expired_at", "votes", "implemented_state"]
+            update_fields=[
+                "implemented_at",
+                "expired_at",
+                "votes",
+                "implemented_state",
+                "e2e_test_reference",
+                "e2e_tests_last_synced_at",
+            ]
         )
         self._delete_descendant_variations()
 

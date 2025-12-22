@@ -4,20 +4,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0019_user_menu_collapsed_user_menu_side'),
+        ("main", "0019_user_menu_collapsed_user_menu_side"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='feature',
-            name='e2e_test_reference',
-            field=models.CharField(blank=True, help_text='Path or identifier for the end-to-end test that validates this feature once it has been implemented.', max_length=255),
+            model_name="feature",
+            name="e2e_test_reference",
+            field=models.CharField(
+                blank=True,
+                help_text="Path or identifier for the end-to-end test that validates this feature once it has been implemented.",
+                max_length=255,
+            ),
         ),
         migrations.AddField(
-            model_name='feature',
-            name='e2e_tests_last_synced_at',
-            field=models.DateTimeField(blank=True, help_text='Timestamp of when end-to-end coverage was last created or refreshed for this implemented feature.', null=True),
+            model_name="feature",
+            name="e2e_tests_last_synced_at",
+            field=models.DateTimeField(
+                blank=True,
+                help_text="Timestamp of when end-to-end coverage was last created or refreshed for this implemented feature.",
+                null=True,
+            ),
         ),
     ]

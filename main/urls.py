@@ -9,6 +9,11 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("the-board/", views.board_self, name="board-self"),
     path("features/", views.feature_board, name="feature-board"),
+    path(
+        "features/implemented/",
+        views.implemented_features,
+        name="implemented-features",
+    ),
     path("invest/web5/", views.web5_invest, name="web5-invest"),
     path("web5/", views.web5, name="web5"),
     path("arcade/", views.arcade, name="arcade"),

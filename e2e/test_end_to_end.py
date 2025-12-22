@@ -101,7 +101,8 @@ def _api_with_state(playwright: Playwright, storage_state: dict):
 
 def _unique_nav_hrefs(page, selector: str) -> list[str]:
     hrefs = page.eval_on_selector_all(
-        selector, "elements => elements.map(el => el.getAttribute('href')).filter(Boolean)"
+        selector,
+        "elements => elements.map(el => el.getAttribute('href')).filter(Boolean)",
     )
     return list(dict.fromkeys(hrefs))  # Preserve order while deduplicating.
 

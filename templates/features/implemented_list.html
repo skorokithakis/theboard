@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Implemented Suggestions · {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="page-header implemented-header">
+    <p class="page-eyebrow">Shipped ideas</p>
+    <h1 class="page-title">Implemented suggestions</h1>
+    <p class="page-lead">
+        Every suggestion that made it across the finish line lives here. Search by member username or by the words inside a request to find past wins.
+    </p>
+    <form method="get" class="implemented-search" role="search" aria-label="Search implemented suggestions">
+        <label class="sr-only" for="implemented-search-input">Search implemented suggestions</label>
+        <div class="implemented-search__fields">
+            <input
+                id="implemented-search-input"
+                type="search"
+                name="q"
+                value="{{ search_query }}"
+                placeholder="Search by username or suggestion keywords"
+                aria-label="Search by username or suggestion keywords">
+            <button class="button" type="submit">Search</button>
+            {% if search_query %}
+            <a class="button-muted implemented-search__clear" href="{% url 'main:implemented-features' %}">Clear</a>
+            {% endif %}
+        </div>
+        <p class="implemented-search__hint">
+            Showing {{ filtered_count }} of {{ total_implemented }} shipped suggestions{% if search_query %} for "{{ search_query }}"{% endif %}.
+        </p>
+    </form>
+</section>
+
+<section class="implemented-grid" aria-live="polite">
+    {% if implemented_features %}
+    <ul class="implemented-list" role="list">
+        {% for feature in implemented_features %}
+        <li class="implemented-card" role="listitem">
+            <div class="implemented-card__meta">
+                <span class="implemented-card__date">Shipped {{ feature.implemented_at|date:"M j, Y" }}</span>
+                <span class="implemented-card__votes">{{ feature.vote_total|default:0 }} votes</span>
+            </div>
+            <h2 class="implemented-card__title">{{ feature.title }}</h2>
+            <p class="implemented-card__author">
+                <span class="implemented-card__author-name">{{ feature.creator.display_name }}</span>
+                <span class="implemented-card__username">@{{ feature.creator.username }}</span>
+            </p>
+            {% if feature.description %}
+            <p class="implemented-card__description">{{ feature.description|truncatewords:60 }}</p>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="implemented-empty">
+        <p class="implemented-empty__title">No implemented suggestions match that search.</p>
+        <p class="implemented-empty__copy">Try another keyword or username, or clear the filters to see every shipped idea.</p>
+        <a class="button" href="{% url 'main:implemented-features' %}">View all implemented ideas</a>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

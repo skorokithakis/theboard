@@ -520,6 +520,46 @@ def graveyard(request: HttpRequest) -> HttpResponse:
     )
 
 
+@require_http_methods(["GET", "HEAD"])
+def implemented_features(request: HttpRequest) -> HttpResponse:
+    """List implemented suggestions with simple keyword search."""
+
+    Feature.expire_stale()
+    search_query = (request.GET.get("q") or "").strip()
+
+    implemented_qs = (
+        Feature.objects.implemented()
+        .with_vote_totals()
+        .select_related("creator")
+        .order_by("-implemented_at", "-created_at")
+    )
+    total_implemented = implemented_qs.count()
+
+    if search_query:
+        terms = [term.strip() for term in search_query.split() if term.strip()]
+        for term in terms:
+            implemented_qs = implemented_qs.filter(
+                Q(title__icontains=term)
+                | Q(description__icontains=term)
+                | Q(creator__username__icontains=term)
+                | Q(creator__first_name__icontains=term)
+                | Q(creator__last_name__icontains=term)
+            )
+
+    implemented_features = list(implemented_qs)
+
+    return render(
+        request,
+        "features/implemented_list.html",
+        {
+            "implemented_features": implemented_features,
+            "search_query": search_query,
+            "total_implemented": total_implemented,
+            "filtered_count": len(implemented_features),
+        },
+    )
+
+
 @require_http_methods(["GET", "HEAD", "POST"])
 def plaintext_submission(request: HttpRequest) -> HttpResponse:
     """Provide a minimal, styling-free path to submit and vote on features."""

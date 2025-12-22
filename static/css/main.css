@@ -593,3 +593,140 @@ textarea {
 .about-reset__actions .button-outline {
   text-decoration: none;
 }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.implemented-header {
+  position: relative;
+  overflow: hidden;
+}
+
+.implemented-header::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(31, 122, 101, 0.08), transparent 45%),
+    radial-gradient(circle at 80% 0%, rgba(15, 78, 63, 0.07), transparent 35%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.implemented-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+.implemented-search {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.implemented-search__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.implemented-search input[type="search"] {
+  flex: 1;
+  min-width: 240px;
+  max-width: 520px;
+}
+
+.implemented-search__clear {
+  background: #f3f5f2;
+}
+
+.implemented-search__hint {
+  margin: 0;
+  color: var(--muted);
+}
+
+.implemented-grid {
+  margin-top: 1.25rem;
+}
+
+.implemented-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.9rem;
+}
+
+.implemented-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  padding: 1rem;
+  display: grid;
+  gap: 0.35rem;
+  position: relative;
+}
+
+.implemented-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.implemented-card__votes {
+  font-weight: 700;
+  color: var(--accent-strong);
+}
+
+.implemented-card__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.implemented-card__author {
+  margin: 0;
+  color: var(--muted);
+}
+
+.implemented-card__author-name {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.implemented-card__username {
+  margin-left: 0.35rem;
+}
+
+.implemented-card__description {
+  margin: 0;
+}
+
+.implemented-empty {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  padding: 1.25rem;
+  color: var(--muted);
+}
+
+.implemented-empty__title {
+  margin: 0 0 0.35rem;
+  color: var(--text);
+}
+
+.implemented-empty__copy {
+  margin: 0 0 0.75rem;
+}

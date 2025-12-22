@@ -223,6 +223,58 @@ class FeatureBoardTests(TestCase):
         self.assertIsNotNone(data["feature"]["expired_at"])
         self.assertFalse(data["can_submit_variation"])
 
+    def test_implemented_features_page_lists_recent_ships(self) -> None:
+        earlier = self._submit_feature(title="First finished")
+        later = self._submit_feature(title="Second finished")
+        now = timezone.now()
+        models.Feature.objects.filter(pk=earlier.pk).update(
+            implemented_at=now - timedelta(days=1)
+        )
+        models.Feature.objects.filter(pk=later.pk).update(implemented_at=now)
+
+        with self._static_override():
+            response = self.client.get(reverse("main:implemented-features"))
+
+        self.assertEqual(response.status_code, 200)
+        features = list(response.context["implemented_features"])
+        self.assertEqual(
+            [feature.title for feature in features],
+            ["Second finished", "First finished"],
+        )
+
+    def test_implemented_features_search_matches_user_and_content(self) -> None:
+        owned = self._submit_feature(
+            title="Search me",
+            description="Detailed search fodder",
+            creator=self.owner,
+        )
+        other = self._submit_feature(
+            title="Different thread",
+            description="Completely unrelated topic",
+            creator=self.other,
+        )
+        now = timezone.now()
+        models.Feature.objects.filter(pk__in=[owned.pk, other.pk]).update(
+            implemented_at=now
+        )
+
+        with self._static_override():
+            username_response = self.client.get(
+                reverse("main:implemented-features"), {"q": self.owner.username}
+            )
+            self.assertEqual(username_response.status_code, 200)
+            username_features = list(username_response.context["implemented_features"])
+            self.assertIn(owned, username_features)
+            self.assertNotIn(other, username_features)
+
+            content_response = self.client.get(
+                reverse("main:implemented-features"), {"q": "unrelated"}
+            )
+            self.assertEqual(content_response.status_code, 200)
+            content_features = list(content_response.context["implemented_features"])
+            self.assertIn(other, content_features)
+            self.assertNotIn(owned, content_features)
+
     @override_settings(TURNSTILE_ENABLED=True)
     def test_vote_toggle_adds_and_removes_vote(self) -> None:
         feature = self._submit_feature()

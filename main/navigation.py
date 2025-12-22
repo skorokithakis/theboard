@@ -21,6 +21,12 @@ NAV_SECTIONS: list[dict[str, Any]] = [
                 "active_names": ["feature-board", "feature-vote-toggle"],
             },
             {
+                "name": "implemented-features",
+                "label": "Shipped Ledger",
+                "summary": "Search the archive of implemented suggestions.",
+                "kind": "library",
+            },
+            {
                 "name": "plaintext-submission",
                 "label": "Plaintext Outpost",
                 "summary": "Fallback submission with the same CAPTCHA voting rules.",

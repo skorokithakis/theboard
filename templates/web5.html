@@ -4,30 +4,43 @@
 {% block title %}Web 5.0 | {{ request.site.name }}{% endblock %}
 
 {% block content %}
-<section class="page-header" data-soundtrack="atrium">
-    <p class="page-eyebrow">Funding corridor</p>
-    <h1 class="page-title">Back the Web 5.0 initiative</h1>
+<section class="page-header hero-web5" data-soundtrack="atrium">
+    <p class="page-eyebrow">Prime transmission</p>
+    <h1 class="page-title">Half-Life 3 x Web 5.0 Promo</h1>
     <p class="page-lead">
-        Move coins into the shared war chest without weaving through submissions or the arcade. Your balance and
-        investment totals update in real time.
+        We are hijacking the corporate entertainment pipeline to accelerate Half-Life 3 into a Full Life. Web 5.0
+        is the broadcast satellite, the treasury, and the hype loop—every coin gets amplified.
     </p>
     <div class="about-reset__actions">
-        <a class="button-outline" href="{% url 'main:feature-board' %}">Return to feature lab</a>
-        <a class="button-outline" href="{% url 'main:arcade' %}">Visit the arcade</a>
+        <a class="button-outline" href="{% url 'main:feature-board' %}">Back to the feature board</a>
+        <a class="button-outline" href="{% url 'main:arcade' %}">Arcade intermission</a>
+    </div>
+</section>
+
+<section class="web5-ticker" aria-label="Web 5.0 live ticker">
+    <div class="ticker-track" role="presentation">
+        <div class="ticker-item">Neon carousels</div>
+        <div class="ticker-item">Spatial scroll</div>
+        <div class="ticker-item">Procedural hype</div>
+        <div class="ticker-item">Dynamic text warps</div>
+        <div class="ticker-item">Web 5.0 treasury: {{ web5_totals.total_committed|default:0 }}c</div>
+        <div class="ticker-item">Full Life launch bar: {{ half_life_release_progress }}%</div>
+        <div class="ticker-item">Ready to deploy: {{ request.user.balance|default:0 }}c</div>
+        <div class="ticker-item">Carousels with consequence</div>
     </div>
 </section>
 
 <section class="web5-section" aria-labelledby="web5-heading">
     <div class="web5-grid">
         <div class="web5-copy">
-            <p class="web5-eyebrow">Web 5.0 acceleration</p>
+            <p class="web5-eyebrow">Phase one · Funding the cinema</p>
             <h2 id="web5-heading" class="web5-title">Invest in the fifth dimension of the internet</h2>
-            <p class="web5-intro">Web 5.0 is where sensory internet, autonomous agents, and shared ownership collide. We are building a sentient network that remembers your intent, rewards your curiosity, and routes value the moment inspiration strikes.</p>
+            <p class="web5-intro">Web 5.0 is the entertainment lattice where sensory internet, agentic workflows, and communal treasuries overlap. The more coins we route through it, the faster Half-Life 3 graduates to Full Life 3.</p>
             <ul class="web5-promises">
-                <li><strong>Omni-presence:</strong> identity, data, and assets follow you between worlds—no logins, no friction.</li>
-                <li><strong>Instant upside:</strong> every idea backed on The Board earns stake in the Web 5.0 lattice the second it lands.</li>
-                <li><strong>Trustless growth:</strong> transparent treasury, automated rewards, and auditable momentum for every supporter.</li>
-                <li><strong>Hype you can hold:</strong> early investors get front-row access to drops, partner launches, and surprise multipliers.</li>
+                <li><strong>Frictionless teleportation:</strong> identity, balance, and lore follow you across every panel, stream, and showroom.</li>
+                <li><strong>Signal-boosted upside:</strong> every backer gets equity in the narrative—your coins become louder ad spots and louder governance.</li>
+                <li><strong>Transparent spectacle:</strong> the treasury, the hype metrics, and the rollout timers stay public so the suspense feels fair.</li>
+                <li><strong>Full Life dividends:</strong> investors get first access to drops, live Q&A slots, and zero-latency voting when the release trigger hits.</li>
             </ul>
             <div class="web5-stats" role="status" aria-live="polite">
                 <div class="web5-stat">
@@ -46,7 +59,7 @@
         </div>
         <div class="web5-action">
             <p class="web5-action__eyebrow">Fuel the initiative</p>
-            <p class="web5-action__lede">Turn your balance into momentum. Every coin pushes Web 5.0 closer to launch.</p>
+            <p class="web5-action__lede">Route your balance into the broadcast loop. Every coin unlocks louder effects, bigger reveals, and a closer launch.</p>
             {% if request.user.is_authenticated %}
                 <form method="post" action="{% url 'main:web5-invest' %}" class="web5-form">
                     {% csrf_token %}
@@ -58,30 +71,65 @@
                     {% for error in web5_investment_form.amount.errors %}
                         <p class="form-error">{{ error }}</p>
                     {% endfor %}
-                    <button type="submit" class="button web5-form__submit">Invest in Web 5.0</button>
+                    <button type="submit" class="button web5-form__submit">Deploy into Web 5.0</button>
                 </form>
-                <p class="web5-action__note">Every contribution is logged forever. No takesies-backsies—only forward motion.</p>
+                <p class="web5-action__note">Every contribution leaves a ripple in the ledger—permanent, public, and primed for amplification.</p>
             {% else %}
-                <p class="web5-action__locked">Sign in to deploy your balance into Web 5.0.</p>
-                <p class="web5-action__note">Members get instant perks and a live ledger of their backing history.</p>
+                <p class="web5-action__locked">Sign in to unleash your balance into Web 5.0.</p>
+                <p class="web5-action__note">Members get live readouts, surprise multipliers, and first dibs on Full Life 3 watch parties.</p>
             {% endif %}
         </div>
     </div>
+</section>
+
+<section class="web5-ornaments" aria-label="Web 5.0 effects and components">
+    <div class="ornament">
+        <p class="ornament__label">Dynamic scroll layers</p>
+        <p class="ornament__detail">Atmospheric gradients trail your scroll to make every refresh feel like a reveal trailer.</p>
+    </div>
+    <div class="ornament">
+        <p class="ornament__label">Carousel stack</p>
+        <p class="ornament__detail">Auto-rotating story cards loop the pitch while you browse the treasury.</p>
+    </div>
+    <div class="ornament">
+        <p class="ornament__label">Text warps</p>
+        <p class="ornament__detail">Headlines pulse with CRT glow whenever the war chest grows.</p>
+    </div>
+</section>
+
+<section class="web5-carousel" aria-label="Full Life 3 story carousel">
+    <div class="carousel-viewport" role="region" aria-live="polite">
+        <article class="carousel-card">
+            <p class="carousel-eyebrow">Episode 1</p>
+            <h3 class="carousel-title">From Half to Full Life</h3>
+            <p class="carousel-copy">Web 5.0 turns the legendary vaporware into a live-service cinematic universe. Coins become production slots, votes become cliffhanger decisions, and the release trailer streams straight from this ledger.</p>
+        </article>
+        <article class="carousel-card">
+            <p class="carousel-eyebrow">Episode 2</p>
+            <h3 class="carousel-title">Gordon's broadcast window</h3>
+            <p class="carousel-copy">When the treasury hits {{ half_life_release_target|default:0 }}c, we drop a synchronized reveal: audio-reactive landing page, ambient soundtrack, and a livestream with the dev cabinet.</p>
+        </article>
+        <article class="carousel-card">
+            <p class="carousel-eyebrow">Episode 3</p>
+            <h3 class="carousel-title">Web 5.0 supersymmetry</h3>
+            <p class="carousel-copy">The Board's CAPTCHA-gated votes keep brigades out and fans in. Verified or not, everyone solves the puzzle before boosting a feature or unlocking a teaser branch.</p>
+        </article>
+    </div>
+    <div class="carousel-meter" role="presentation"></div>
 </section>
 
 <section class="hl3-announcement" aria-labelledby="hl3-heading">
     <div class="hl3-grid">
         <div class="hl3-copy">
             <p class="hl3-eyebrow">Black Mesa brief</p>
-            <h2 id="hl3-heading" class="hl3-title">Half-Life 3 will deploy when Web 5.0 reaches 1,000,000,000 coins</h2>
+            <h2 id="hl3-heading" class="hl3-title">Half-Life 3 deploys the instant Web 5.0 hits 1,000,000,000 coins</h2>
             <p class="hl3-lede">
-                The next crowbar-era reveal is locked behind Web 5.0 momentum. Every coin fuels the signal that wakes
-                the sleepers at Valve HQ and kicks off final release prep.
+                This is the corporate clickbait era—the more we stream, scroll, and invest, the louder the signal. Every new supporter turns the Half-Life 3 rumor into the Full Life 3 reveal.
             </p>
             <ul class="hl3-promises">
-                <li><strong>Current treasury:</strong> {{ web5_totals.total_committed|default:0 }}c fueling the build.</li>
-                <li><strong>Distance to detonation:</strong> {{ half_life_release_remaining|default:0 }}c until the 1B coin threshold.</li>
-                <li><strong>Promise:</strong> The instant the Web 5.0 counter hits {{ half_life_release_target|default:0 }}c, the Half-Life 3 announcement goes live to everyone on The Board.</li>
+                <li><strong>Current treasury:</strong> {{ web5_totals.total_committed|default:0 }}c already committed to the drop.</li>
+                <li><strong>Distance to detonation:</strong> {{ half_life_release_remaining|default:0 }}c until the 1B coin threshold sparks the launch stream.</li>
+                <li><strong>Promise:</strong> The instant the Web 5.0 counter hits {{ half_life_release_target|default:0 }}c, the announcement publishes across every Board surface.</li>
             </ul>
             <div class="hl3-progress" role="status" aria-live="polite">
                 <div class="hl3-progress__meta">
@@ -103,4 +151,30 @@
         </div>
     </div>
 </section>
+
+<section class="hl3-interviews" aria-label="Interview carousel">
+    <div class="interview-header">
+        <p class="interview-eyebrow">Broadcast interviews</p>
+        <h3 class="interview-title">Exclusive excerpts while the treasury spins</h3>
+        <p class="interview-lede">Scroll or let the carousel run—each voice hints at the corporate entertainment coup that Web 5.0 is underwriting.</p>
+    </div>
+    <div class="interview-carousel" role="region" aria-live="polite">
+        <article class="interview-card">
+            <p class="interview-name">G-Man</p>
+            <p class="interview-quote">“Time, Mr. Freeman, is merely another liquidity pool. The Board has converted anticipation into capital—and I am most impressed.”</p>
+        </article>
+        <article class="interview-card">
+            <p class="interview-name">The Nihilanth</p>
+            <p class="interview-quote">“We watched your coins pierce the veil. Web 5.0 hums—a resonance cascade not of science, but of shared hype.”</p>
+        </article>
+        <article class="interview-card">
+            <p class="interview-name">Barney Calhoun</p>
+            <p class="interview-quote">“Hey, Gordon! The Board wired a new access pass. Solve the CAPTCHA, cast your vote, and the gates swing open—no Combine nonsense.”</p>
+        </article>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/web5.js' %}"></script>
 {% endblock %}

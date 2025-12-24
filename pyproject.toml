@@ -26,6 +26,8 @@ dev-dependencies = [
     "bpython",
     "pudb",
     "django-stubs",
+    "factory-boy>=3.3.3",
+    "faker>=39.0.0",
 ]
 package = false
 

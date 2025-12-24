@@ -11,23 +11,27 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from . import economy, fortune, generation, health, models, terrarium, turnstile, utils
+from . import (
+    economy,
+    factories,
+    fortune,
+    generation,
+    health,
+    models,
+    terrarium,
+    turnstile,
+    utils,
+)
 
 User = get_user_model()
 
 
 class FeatureBoardTests(TestCase):
     def setUp(self) -> None:
-        site = Site.objects.get_current()
-        domain_slug = site.domain.replace(".", "_")
-        self.owner = User.objects.create_user(
-            username=f"owner_{domain_slug}",
-            password="test-pass-1",
-        )
-        self.other = User.objects.create_user(
-            username=f"other_{domain_slug}",
-            password="test-pass-2",
-        )
+        self.owner = factories.UserFactory()
+        self.other = factories.UserFactory()
+        self.default_password = factories.DEFAULT_USER_PASSWORD
+        User.objects.filter(pk__in=[self.owner.pk, self.other.pk]).update(status="")
 
     def _static_override(self):
         storage_settings = {
@@ -43,12 +47,14 @@ class FeatureBoardTests(TestCase):
 
     def _submit_feature(self, **kwargs) -> models.Feature:
         data = {
-            "title": kwargs.pop("title", "Sample Feature"),
-            "description": kwargs.pop("description", "Detailed description."),
+            "title": kwargs.pop("title", factories.fake.catch_phrase()),
+            "description": kwargs.pop(
+                "description", factories.fake.paragraph(nb_sentences=2)
+            ),
             "creator": kwargs.pop("creator", self.owner),
         }
         data.update(kwargs)
-        return models.Feature.objects.create(**data)
+        return factories.FeatureFactory(**data)
 
     def _seed_plan_patch(self, plan: generation.GenerationPlan | None = None):
         target_plan = plan or generation.GENERATION_PLANS[0]
@@ -200,7 +206,7 @@ class FeatureBoardTests(TestCase):
             implemented_at=implemented_at
         )
 
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
 
         response = self.client.get(f"/api/features/{feature.pk}")
         self.assertEqual(response.status_code, 200)
@@ -214,7 +220,7 @@ class FeatureBoardTests(TestCase):
             created_at=timezone.now() - timedelta(days=10)
         )
 
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
         response = self.client.get(f"/api/features/{feature.pk}")
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -278,7 +284,7 @@ class FeatureBoardTests(TestCase):
     @override_settings(TURNSTILE_ENABLED=True)
     def test_vote_toggle_adds_and_removes_vote(self) -> None:
         feature = self._submit_feature()
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
 
         vote_url = f"/api/features/{feature.pk}/vote"
         with mock.patch("main.api.turnstile.verify") as verify_mock:
@@ -317,7 +323,7 @@ class FeatureBoardTests(TestCase):
     @override_settings(TURNSTILE_ENABLED=True)
     def test_vote_toggle_requires_successful_turnstile(self) -> None:
         feature = self._submit_feature()
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
 
         vote_url = f"/api/features/{feature.pk}/vote"
         with mock.patch("main.api.turnstile.verify") as verify_mock:
@@ -340,7 +346,7 @@ class FeatureBoardTests(TestCase):
 
     def test_vote_toggle_skips_turnstile_when_disabled(self) -> None:
         feature = self._submit_feature()
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
 
         vote_url = f"/api/features/{feature.pk}/vote"
         with (
@@ -364,7 +370,7 @@ class FeatureBoardTests(TestCase):
         models.Feature.objects.filter(pk=feature.pk).update(
             created_at=timezone.now() - timedelta(days=8)
         )
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
 
         vote_url = f"/api/features/{feature.pk}/vote"
         response = self.client.post(
@@ -380,7 +386,7 @@ class FeatureBoardTests(TestCase):
         self.assertIsNotNone(feature.expired_at)
 
     def test_daily_limit_blocks_fourth_submission(self) -> None:
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
         for index in range(3):
             self._submit_feature(title=f"Existing request {index + 1}")
 
@@ -403,7 +409,7 @@ class FeatureBoardTests(TestCase):
         self.assertTrue(can_submit)
 
     def test_feature_create_auto_votes_for_creator(self) -> None:
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
 
         response = self.client.post(
             "/api/features/create",
@@ -424,7 +430,7 @@ class FeatureBoardTests(TestCase):
 
     def test_feature_create_auto_votes_for_variation(self) -> None:
         parent = self._submit_feature(creator=self.other)
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
 
         response = self.client.post(
             "/api/features/create",
@@ -535,7 +541,7 @@ class FeatureBoardTests(TestCase):
         models.Feature.objects.filter(pk=feature.pk).update(
             implemented_at=timezone.now()
         )
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
 
         vote_url = f"/api/features/{feature.pk}/vote"
         response = self.client.post(
@@ -556,7 +562,7 @@ class FeatureBoardTests(TestCase):
         models.Feature.objects.filter(pk=parent.pk).update(
             implemented_at=timezone.now()
         )
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
 
         response = self.client.post(
             "/api/features/create",
@@ -578,7 +584,7 @@ class FeatureBoardTests(TestCase):
         models.Feature.objects.filter(pk=parent.pk).update(
             created_at=timezone.now() - timedelta(days=9)
         )
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
 
         response = self.client.post(
             "/api/features/create",
@@ -600,7 +606,7 @@ class FeatureBoardTests(TestCase):
         parent = self._submit_feature()
         child = self._submit_feature(title="Variation", parent=parent)
 
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
         response = self.client.post(
             f"/api/features/{parent.pk}/delete",
             content_type="application/json",
@@ -697,7 +703,7 @@ class FeatureBoardTests(TestCase):
         self.assertIsNotNone(feature.implemented_at)
 
     def test_profile_view_updates_status_for_owner(self) -> None:
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
         response = self.client.post(
             reverse("main:profile"),
             {"status": "  shipping cool vibes "},
@@ -720,7 +726,7 @@ class FeatureBoardTests(TestCase):
         self.assertContains(response, "Treasury")
 
     def test_profile_edit_forbidden_for_other_accounts(self) -> None:
-        self.client.login(username=self.other.username, password="test-pass-2")
+        self.client.login(username=self.other.username, password=self.default_password)
         response = self.client.post(
             reverse("main:profile-detail", args=[self.owner.username]),
             {"status": "Trying to spoof"},
@@ -789,7 +795,7 @@ class FeatureBoardTests(TestCase):
         models.Feature.objects.filter(pk=shipped.pk).update(implemented_at=now)
         models.Feature.objects.filter(pk=archived.pk).update(expired_at=now)
 
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
         with self._static_override():
             response = self.client.get(reverse("main:profile"))
 
@@ -805,7 +811,7 @@ class FeatureBoardTests(TestCase):
     def test_profile_detail_marks_admins_with_badge(self) -> None:
         self.owner.is_staff = True
         self.owner.save(update_fields=["is_staff"])
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
 
         with self._static_override():
             response = self.client.get(reverse("main:profile"))
@@ -864,7 +870,10 @@ class FeatureBoardTests(TestCase):
         with mock.patch("main.economy.timezone.now", return_value=morning):
             response = self.client.post(
                 "/api/auth/login",
-                {"username": self.owner.username, "password": "test-pass-1"},
+                {
+                    "username": self.owner.username,
+                    "password": self.default_password,
+                },
                 content_type="application/json",
             )
         self.assertEqual(response.status_code, 200)
@@ -880,7 +889,10 @@ class FeatureBoardTests(TestCase):
         with mock.patch("main.economy.timezone.now", return_value=later_same_day):
             response = self.client.post(
                 "/api/auth/login",
-                {"username": self.owner.username, "password": "test-pass-1"},
+                {
+                    "username": self.owner.username,
+                    "password": self.default_password,
+                },
                 content_type="application/json",
             )
         self.assertEqual(response.status_code, 200)
@@ -893,7 +905,7 @@ class FeatureBoardTests(TestCase):
         self.owner.balance = 120
         self.owner.last_daily_bonus_at = timezone.now()
         self.owner.save(update_fields=["balance", "last_daily_bonus_at"])
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
 
         with self._static_override():
             response = self.client.post(
@@ -915,7 +927,7 @@ class FeatureBoardTests(TestCase):
         self.owner.balance = 15
         self.owner.last_daily_bonus_at = timezone.now()
         self.owner.save(update_fields=["balance", "last_daily_bonus_at"])
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
 
         with self._static_override():
             response = self.client.post(
@@ -932,7 +944,7 @@ class FeatureBoardTests(TestCase):
         self.owner.balance = 90
         self.owner.last_daily_bonus_at = timezone.now()
         self.owner.save(update_fields=["balance", "last_daily_bonus_at"])
-        self.client.login(username=self.owner.username, password="test-pass-1")
+        self.client.login(username=self.owner.username, password=self.default_password)
 
         response = self.client.post(
             "/api/web5/invest",
@@ -974,8 +986,8 @@ class DailyFortuneTests(TestCase):
         )
 
     def test_get_daily_fortune_includes_approved_suggestions(self) -> None:
-        submitter = User.objects.create_user(username="quotes", password="test-pass")
-        suggestion = models.QuoteSuggestion.objects.create(
+        submitter = factories.UserFactory()
+        suggestion = factories.QuoteSuggestionFactory(
             text="Community wisdom deserves the spotlight.",
             attribution="Quote Bot",
             submitted_by=submitter,
@@ -987,8 +999,8 @@ class DailyFortuneTests(TestCase):
         self.assertEqual(result.attribution, suggestion.attribution)
 
     def test_community_fortunes_are_weighted_in_candidate_pool(self) -> None:
-        submitter = User.objects.create_user(username="weighted", password="test-pass")
-        models.QuoteSuggestion.objects.create(
+        submitter = factories.UserFactory()
+        factories.QuoteSuggestionFactory(
             text="Boost community flavor.",
             attribution="Quote Weight",
             submitted_by=submitter,
@@ -1034,10 +1046,8 @@ class DailyFortuneTests(TestCase):
         self.assertNotEqual(result_today, result_tomorrow)
 
     def test_community_fortune_includes_submitter_name(self) -> None:
-        submitter = User.objects.create_user(
-            username="namer", password="test-pass", first_name="Quote", last_name="Fan"
-        )
-        models.QuoteSuggestion.objects.create(
+        submitter = factories.UserFactory(first_name="Quote", last_name="Fan")
+        factories.QuoteSuggestionFactory(
             text="Community nod.",
             attribution="Contributor",
             submitted_by=submitter,
@@ -1051,7 +1061,8 @@ class DailyFortuneTests(TestCase):
 
 class QuoteSuggestionViewTests(TestCase):
     def setUp(self) -> None:
-        self.user = User.objects.create_user(username="submitter", password="test-pass")
+        self.user = factories.UserFactory()
+        self.password = factories.DEFAULT_USER_PASSWORD
 
     def _static_override(self):
         storage_settings = {
@@ -1077,7 +1088,7 @@ class QuoteSuggestionViewTests(TestCase):
         )
 
     def test_successful_quote_submission_creates_pending_record(self) -> None:
-        self.client.login(username="submitter", password="test-pass")
+        self.client.login(username=self.user.username, password=self.password)
         with self._static_override():
             response = self.client.post(
                 reverse("main:fortune-suggest"),
@@ -1091,7 +1102,7 @@ class QuoteSuggestionViewTests(TestCase):
         self.assertContains(response, "We&#x27;ll review your quote")
 
     def test_invalid_submission_renders_errors(self) -> None:
-        self.client.login(username="submitter", password="test-pass")
+        self.client.login(username=self.user.username, password=self.password)
         with self._static_override():
             response = self.client.post(
                 reverse("main:fortune-suggest"),
@@ -1107,7 +1118,7 @@ class QuoteSuggestionViewTests(TestCase):
 
 class GraveyardViewTests(TestCase):
     def setUp(self) -> None:
-        self.owner = User.objects.create_user(username="keeper", password="test-pass")
+        self.owner = factories.UserFactory()
 
     def _static_override(self):
         storage_settings = {
@@ -1122,14 +1133,14 @@ class GraveyardViewTests(TestCase):
         )
 
     def test_graveyard_page_scales_tombstones_by_votes(self) -> None:
-        heavy = models.Feature.objects.create(
+        heavy = factories.FeatureFactory(
             title="Many votes",
             description="Popular but doomed",
             creator=self.owner,
             expired_at=timezone.now(),
             votes=12,
         )
-        light = models.Feature.objects.create(
+        light = factories.FeatureFactory(
             title="Few votes",
             description="Barely noticed",
             creator=self.owner,
@@ -1157,13 +1168,9 @@ class GraveyardViewTests(TestCase):
 
 class ScoreboardViewTests(TestCase):
     def setUp(self) -> None:
-        self.user = User.objects.create_user(username="scorer", password="test-pass")
-        self.other = User.objects.create_user(
-            username="ally", password="test-pass-ally"
-        )
-        self.third = User.objects.create_user(
-            username="third", password="test-pass-third"
-        )
+        self.user = factories.UserFactory()
+        self.other = factories.UserFactory()
+        self.third = factories.UserFactory()
 
     def _static_override(self):
         storage_settings = {
@@ -1184,19 +1191,19 @@ class ScoreboardViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_leaderboard_orders_by_peer_votes(self) -> None:
-        feature_primary = models.Feature.objects.create(
+        feature_primary = factories.FeatureFactory(
             title="Count my votes",
             description="Votes from peers should rank first.",
             creator=self.user,
         )
-        feature_secondary = models.Feature.objects.create(
+        feature_secondary = factories.FeatureFactory(
             title="Count other votes",
             description="Ensure order respects totals.",
             creator=self.other,
         )
-        models.Vote.objects.create(user=self.other, feature=feature_primary)
-        models.Vote.objects.create(user=self.third, feature=feature_primary)
-        models.Vote.objects.create(user=self.third, feature=feature_secondary)
+        factories.VoteFactory(user=self.other, feature=feature_primary)
+        factories.VoteFactory(user=self.third, feature=feature_primary)
+        factories.VoteFactory(user=self.third, feature=feature_secondary)
 
         with self._static_override():
             response = self.client.get(reverse("main:scoreboard"))
@@ -1211,13 +1218,13 @@ class ScoreboardViewTests(TestCase):
         self.assertEqual(leaderboard[1]["score"], 1)
 
     def test_self_votes_are_not_counted(self) -> None:
-        feature = models.Feature.objects.create(
+        feature = factories.FeatureFactory(
             title="Self vote check",
             description="Ignore creator votes.",
             creator=self.user,
         )
-        models.Vote.objects.create(user=self.user, feature=feature)
-        models.Vote.objects.create(user=self.other, feature=feature)
+        factories.VoteFactory(user=self.user, feature=feature)
+        factories.VoteFactory(user=self.other, feature=feature)
 
         with self._static_override():
             response = self.client.get(reverse("main:scoreboard"))
@@ -1227,13 +1234,13 @@ class ScoreboardViewTests(TestCase):
         self.assertEqual(entry["score"], 1)
 
     def test_historical_votes_use_snapshot_totals(self) -> None:
-        feature = models.Feature.objects.create(
+        feature = factories.FeatureFactory(
             title="Implemented idea",
             description="Snapshot votes should count.",
             creator=self.user,
         )
-        models.Vote.objects.create(user=self.user, feature=feature)
-        models.Vote.objects.create(user=self.other, feature=feature)
+        factories.VoteFactory(user=self.user, feature=feature)
+        factories.VoteFactory(user=self.other, feature=feature)
         feature.implement(when=timezone.now())
         models.Vote.objects.all().delete()
 
@@ -1245,13 +1252,13 @@ class ScoreboardViewTests(TestCase):
         self.assertEqual(entry["score"], 1)
 
     def test_boot_receives_bug_bounty_bonus(self) -> None:
-        boot = User.objects.create_user(username="boot", password="test-pass-boot")
-        feature = models.Feature.objects.create(
+        boot = factories.UserFactory(username="boot")
+        feature = factories.FeatureFactory(
             title="Boot bonus feature",
             description="Ensure bonus is added.",
             creator=self.other,
         )
-        models.Vote.objects.create(user=self.user, feature=feature)
+        factories.VoteFactory(user=self.user, feature=feature)
 
         with self._static_override():
             response = self.client.get(reverse("main:scoreboard"))
@@ -1263,11 +1270,12 @@ class ScoreboardViewTests(TestCase):
 
 class PlaintextSubmissionViewTests(TestCase):
     def setUp(self) -> None:
-        self.user = User.objects.create_user(username="plain", password="test-pass")
-        self.other = User.objects.create_user(username="reader", password="test-pass-2")
+        self.user = factories.UserFactory(username="plain")
+        self.other = factories.UserFactory()
+        self.password = factories.DEFAULT_USER_PASSWORD
 
     def test_plaintext_page_lists_features_and_warning(self) -> None:
-        feature = models.Feature.objects.create(
+        feature = factories.FeatureFactory(
             title="Plain request",
             description="Check rendering",
             creator=self.other,
@@ -1280,7 +1288,7 @@ class PlaintextSubmissionViewTests(TestCase):
         self.assertContains(response, feature.title)
 
     def test_plaintext_submission_creates_feature_and_vote(self) -> None:
-        self.client.login(username="plain", password="test-pass")
+        self.client.login(username=self.user.username, password=self.password)
 
         response = self.client.post(
             reverse("main:plaintext-submission"),
@@ -1296,12 +1304,12 @@ class PlaintextSubmissionViewTests(TestCase):
 
     @override_settings(TURNSTILE_ENABLED=True)
     def test_plaintext_vote_toggle_uses_turnstile_verification(self) -> None:
-        feature = models.Feature.objects.create(
+        feature = factories.FeatureFactory(
             title="Vote target",
             description="Toggle with captcha",
             creator=self.other,
         )
-        self.client.login(username="plain", password="test-pass")
+        self.client.login(username=self.user.username, password=self.password)
 
         with mock.patch("main.views.turnstile.verify") as verify_mock:
             verify_mock.return_value = turnstile.VerificationResult(
@@ -1337,15 +1345,13 @@ class UtilsTests(TestCase):
 
 class BoardHealthTests(TestCase):
     def setUp(self) -> None:
-        self.user = User.objects.create_user(username="health", password="test-pass")
+        self.user = factories.UserFactory()
 
     def _create_failed_feature(self, title: str) -> models.Feature:
-        feature = models.Feature.objects.create(
+        feature = factories.FeatureFactory(
             title=title,
             description="Doomed idea",
             creator=self.user,
-        )
-        models.Feature.objects.filter(pk=feature.pk).update(
             implemented_at=timezone.now(),
             implemented_state=models.Feature.ImplementationState.UNSUCCESSFUL,
         )
@@ -1377,18 +1383,18 @@ class BoardHealthTests(TestCase):
 
 class TerrariumStateTests(TestCase):
     def setUp(self) -> None:
-        self.user = User.objects.create_user(username="gardener", password="test-pass")
+        self.user = factories.UserFactory()
 
     def test_thriving_when_votes_are_fresh(self) -> None:
-        feature = models.Feature.objects.create(
+        feature = factories.FeatureFactory(
             title="Dynamic canopy",
             description="Make the plant react to votes.",
             creator=self.user,
         )
         now = datetime(2024, 5, 1, 12, 0, tzinfo=dt_timezone.utc)
-        voters = [User.objects.create_user(username=f"voter_{idx}") for idx in range(3)]
+        voters = [factories.UserFactory() for _ in range(3)]
         for offset, voter in enumerate(voters):
-            vote = models.Vote.objects.create(user=voter, feature=feature)
+            vote = factories.VoteFactory(user=voter, feature=feature)
             models.Vote.objects.filter(pk=vote.pk).update(
                 created_at=now - timedelta(hours=1, minutes=offset)
             )

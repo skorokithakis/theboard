@@ -71,6 +71,9 @@
   var isPainting = false;
   var plantState = container.dataset.plantState || "growing";
   var statusLabel = container.querySelector("[data-sand-status]");
+  var sizeButtons = Array.prototype.slice.call(container.querySelectorAll("[data-sand-size]"));
+  var sizeNote = container.querySelector("[data-sand-size-note]");
+  var activeSizeKey = container.dataset.sandDefaultSize || "small";
   var invaderStatusLabel = container.querySelector("[data-sand-invaders-status]");
   var invaderToggle = container.querySelector("[data-sand-invaders-toggle]");
   var invaderSpawnButton = container.querySelector("[data-sand-invaders-spawn]");
@@ -99,15 +102,57 @@
     dormant: { mist: 0.004, seeds: 0.008, embers: 0.0007 },
   };
 
+  setCanvasResolution(width, height, { seed: false });
   initializePalette();
   initializeBrushToggles();
   initializeActions();
   initializeInvaders();
   initializeBreaker();
+  initializeSizing();
   updateStatus();
-  seedGlass();
+  if (!sizeButtons.length) {
+    seedGlass();
+  }
   draw();
   requestAnimationFrame(tick);
+
+  function initializeSizing() {
+    if (sizeButtons.length === 0) {
+      return;
+    }
+
+    sizeButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        var sizeKey = button.dataset.sandSize || "custom";
+        var targetWidth = parseInt(button.dataset.sandWidth || width, 10);
+        var targetHeight = parseInt(button.dataset.sandHeight || height, 10);
+        setTerrariumSize(targetWidth, targetHeight, sizeKey);
+      });
+    });
+
+    var defaultButton =
+      sizeButtons.find(function (btn) {
+        return btn.dataset.sandSize === activeSizeKey;
+      }) || sizeButtons[0];
+
+    if (defaultButton) {
+      var defaultWidth = parseInt(defaultButton.dataset.sandWidth || width, 10);
+      var defaultHeight = parseInt(defaultButton.dataset.sandHeight || height, 10);
+      setTerrariumSize(
+        defaultWidth,
+        defaultHeight,
+        defaultButton.dataset.sandSize || activeSizeKey,
+        { skipButtonToggle: true }
+      );
+      setActiveSizeButton(defaultButton.dataset.sandSize || activeSizeKey);
+    }
+
+    window.addEventListener("resize", function () {
+      if (activeSizeKey === "fullscreen") {
+        setTerrariumSize(width, height, "fullscreen", { skipButtonToggle: true });
+      }
+    });
+  }
 
   function seedGlass() {
     clearInvaderData();
@@ -384,6 +429,67 @@
     });
     var brushDescriptor = brushSize === 1 ? "fine" : brushSize === 2 ? "medium" : "flood";
     statusLabel.textContent = "Painting with " + materialName + " · " + brushDescriptor + " brush";
+  }
+
+  function setTerrariumSize(targetWidth, targetHeight, sizeKey, options) {
+    activeSizeKey = sizeKey || activeSizeKey;
+
+    var desiredWidth = targetWidth || width;
+    var desiredHeight = targetHeight || height;
+
+    if (activeSizeKey === "fullscreen") {
+      desiredWidth = Math.max(640, Math.floor(window.innerWidth - 120));
+      desiredHeight = Math.max(480, Math.floor(window.innerHeight - 220));
+    }
+
+    setCanvasResolution(desiredWidth, desiredHeight);
+
+    if (!options || options.skipButtonToggle !== true) {
+      setActiveSizeButton(activeSizeKey);
+    }
+  }
+
+  function setActiveSizeButton(activeKey) {
+    sizeButtons.forEach(function (button) {
+      var isActive = (button.dataset.sandSize || "") === activeKey;
+      button.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
+    updateSizeNote();
+  }
+
+  function updateSizeNote() {
+    if (!sizeNote) {
+      return;
+    }
+    sizeNote.textContent = width + " x " + height + " view";
+  }
+
+  function setCanvasResolution(newWidth, newHeight, options) {
+    width = clamp(newWidth | 0, 120, 1920);
+    height = clamp(newHeight | 0, 120, 1200);
+    size = width * height;
+
+    canvas.width = width;
+    canvas.height = height;
+
+    grid = new Uint8Array(size);
+    energy = new Uint8Array(size);
+    pigment = new Uint8Array(size);
+    processed = new Uint32Array(size);
+
+    imageData = ctx.createImageData(width, height);
+    buffer = imageData.data;
+
+    paddleWidth = paddleBaseWidth;
+    paddleX = width / 2;
+    paddleTargetX = paddleX;
+    paddleY = height - 7;
+    ball = { x: width / 2, y: paddleY - 2, vx: 0, vy: 0, active: false, stuck: false };
+
+    if (!options || options.seed !== false) {
+      seedGlass();
+    }
+    updateSizeNote();
   }
 
   function updateInvaderStatus() {

@@ -313,3 +313,47 @@ def test_authenticated_can_vote_for_other_users_feature(
 
     user_api.dispose()
     context.close()
+
+
+def test_arcade_terrarium_interactions(anonymous_page, live_server: str):
+    page = anonymous_page
+    page.goto("/arcade/terrarium/", wait_until="networkidle")
+
+    canvas = page.locator("[data-sand-canvas]")
+    expect(canvas).to_have_attribute("width", "640")
+    expect(canvas).to_have_attribute("height", "480")
+
+    page.get_by_role("button", name="Large").click()
+    expect(canvas).to_have_attribute("width", "1280")
+    expect(canvas).to_have_attribute("height", "800")
+
+    page.get_by_role("button", name="Small").click()
+    expect(page.locator("[data-sand-size-note]")).to_contain_text("640 x 480")
+
+    page.get_by_role("button", name="Fullscreen").click()
+    fullscreen_width = int(page.get_attribute("[data-sand-canvas]", "width") or "0")
+    assert fullscreen_width >= 900
+    page.get_by_role("button", name="Small").click()
+
+    page.locator("[data-sand-brush='1']").click()
+    expect(page.locator("[data-sand-status]")).to_contain_text("fine brush")
+
+    invader_toggle = page.locator("[data-sand-invaders-toggle]")
+    spawn_button = page.locator("[data-sand-invaders-spawn]")
+    expect(spawn_button).to_be_disabled()
+    invader_toggle.click()
+    expect(invader_toggle).to_have_attribute("aria-pressed", "true")
+    expect(spawn_button).to_be_enabled()
+    invader_status = page.locator("[data-sand-invaders-status]")
+    expect(invader_status).to_be_visible()
+    assert "invader" in invader_status.inner_text().lower()
+
+    breaker_toggle = page.locator("[data-breaker-toggle]")
+    serve_button = page.locator("[data-breaker-serve]")
+    expect(serve_button).to_be_disabled()
+    breaker_toggle.click()
+    expect(breaker_toggle).to_have_attribute("aria-pressed", "true")
+    expect(serve_button).to_be_enabled()
+    serve_button.click()
+    breaker_status = page.locator("[data-breaker-status]")
+    assert "orb" in breaker_status.inner_text().lower()

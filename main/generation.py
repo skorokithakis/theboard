@@ -5,9 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from random import choice
 from typing import Callable, Optional, Sequence
+from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from django.db.models import Q, Value
+from django.db.models.functions import Coalesce
+from django.utils import timezone
 
 from .models import Feature, Vote
 
@@ -21,6 +25,9 @@ class GenerationPlan:
     ritual: str
 
 
+ARCHAEOLOGY_PLAN_TITLE = "Backlog archaeology dig"
+
+
 GENERATION_PLANS: tuple[GenerationPlan, ...] = (
     GenerationPlan(
         title="Chaos gremlin invades The Board",
@@ -31,7 +38,7 @@ GENERATION_PLANS: tuple[GenerationPlan, ...] = (
         ritual="Roll two six-sided dice, mash the results into a headline, then ship it before the gremlin loses interest.",
     ),
     GenerationPlan(
-        title="Backlog archaeology dig",
+        title=ARCHAEOLOGY_PLAN_TITLE,
         description=(
             "When ideas dry up, The Board digs through fossils of old requests, resurrects a fragment, and reimagines "
             "it with neon spray paint."
@@ -72,6 +79,68 @@ GENERATION_PLANS: tuple[GenerationPlan, ...] = (
 _latest_generation_plan: GenerationPlan = GENERATION_PLANS[0]
 
 SYSTEM_USERNAME = "theboard"
+
+
+def _clamp_text(value: str, limit: int) -> str:
+    """Shorten text to a maximum length with an ASCII ellipsis."""
+    cleaned = " ".join(value.split())
+    if len(cleaned) <= limit:
+        return cleaned
+    trimmed = cleaned[: limit - 3].rstrip()
+    return f"{trimmed}..."
+
+
+def _select_archaeology_fossil(reference: Optional[datetime] = None) -> Feature | None:
+    """Pick an expired or implemented feature to remix back into the backlog."""
+    now = reference or timezone.now()
+    matured_implementation_cutoff = now - timedelta(days=3)
+    return (
+        Feature.objects.exclude(creator__username=SYSTEM_USERNAME)
+        .filter(
+            Q(expired_at__isnull=False)
+            | Q(implemented_at__lt=matured_implementation_cutoff)
+        )
+        .select_related("creator")
+        .annotate(
+            vote_snapshot=Coalesce("votes", Value(0)),
+        )
+        .order_by("-vote_snapshot", "created_at")
+        .first()
+    )
+
+
+def _build_archaeology_seed(
+    author,
+    plan: GenerationPlan,
+) -> Feature | None:
+    """Create a neon remix of an archived feature if one exists."""
+    fossil = _select_archaeology_fossil()
+    if not fossil:
+        return None
+
+    title_limit = Feature._meta.get_field("title").max_length
+    remixed_title = _clamp_text(
+        f"Neon revival: {fossil.title}",
+        title_limit,
+    )
+    fragment = _clamp_text(fossil.description or "", 180)
+    if not fragment:
+        fragment = "Original pitch was lost to time; the remix adds fresh neon edges."
+    state_label = "implemented" if fossil.is_implemented else "expired"
+    description = (
+        f"The Board dug up '{fossil.title}' from the {state_label} archive "
+        f"(by {fossil.creator.display_name}, {fossil.created_at.date().isoformat()}). "
+        f"Fragment dusted off: {fragment} "
+        "It has been reimagined with neon spray paint and dropped back into the queue. "
+        f"Ritual: {plan.ritual}"
+    )
+
+    return Feature.objects.create(
+        title=remixed_title,
+        description=description,
+        creator=author,
+        parent=fossil,
+    )
 
 
 def _get_or_create_system_user():
@@ -138,10 +207,16 @@ def ensure_generation_seed(
         _latest_generation_plan = plan
 
         author = _get_or_create_system_user()
-        feature = Feature.objects.create(
-            title=plan.title,
-            description=(f"{plan.description} Ritual: {plan.ritual}"),
-            creator=author,
-        )
+        feature = None
+
+        if plan.title == ARCHAEOLOGY_PLAN_TITLE:
+            feature = _build_archaeology_seed(author, plan)
+
+        if feature is None:
+            feature = Feature.objects.create(
+                title=plan.title,
+                description=(f"{plan.description} Ritual: {plan.ritual}"),
+                creator=author,
+            )
         Vote.objects.create(user=author, feature=feature)
         return feature

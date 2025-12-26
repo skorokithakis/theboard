@@ -185,6 +185,32 @@ class FeatureBoardTests(TestCase):
         self.assertIn(selected_plan.ritual, feature.description)
         self.assertEqual(generation.current_generation_plan(), selected_plan)
 
+    def test_generation_seed_remixes_archived_feature(self) -> None:
+        fossil = self._submit_feature(
+            title="Dusty backlog shard",
+            description="A forgotten request waiting for neon paint.",
+        )
+        models.Feature.objects.filter(pk=fossil.pk).update(
+            expired_at=timezone.now() - timedelta(days=9),
+            votes=7,
+        )
+
+        archaeology_plan = next(
+            plan
+            for plan in generation.GENERATION_PLANS
+            if plan.title == generation.ARCHAEOLOGY_PLAN_TITLE
+        )
+        with self._seed_plan_patch(archaeology_plan):
+            feature = generation.ensure_generation_seed()
+
+        self.assertIsNotNone(feature)
+        assert feature is not None
+        self.assertEqual(feature.creator.username, generation.SYSTEM_USERNAME)
+        self.assertEqual(feature.parent_id, fossil.pk)
+        self.assertIn("neon", feature.description.lower())
+        self.assertIn(fossil.title, feature.description)
+        self.assertTrue(feature.title.startswith("Neon revival"))
+
     def test_expire_stale_respects_missed_vote_penalties(self) -> None:
         feature = self._submit_feature(title="Needs daily love")
         now = timezone.now()

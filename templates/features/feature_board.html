@@ -70,7 +70,9 @@
                     <article class="feature-card" id="feature-{{ feature.id }}">
                         <header class="feature-card__header">
                             <h3 class="feature-card__title">{{ feature.title }}</h3>
-                            <p class="feature-card__meta">{{ feature.created_at|date:"F j, Y" }}</p>
+                            <p class="feature-card__meta">
+                                {{ feature.created_at|date:"F j, Y" }} · by {{ feature.creator.display_name }}
+                            </p>
                         </header>
                         <p class="feature-card__description">{{ feature.description }}</p>
                         <div class="feature-card__footer">

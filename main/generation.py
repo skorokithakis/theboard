@@ -9,7 +9,7 @@ from typing import Callable, Optional, Sequence
 from django.contrib.auth import get_user_model
 from django.db import transaction
 
-from .models import Feature
+from .models import Feature, Vote
 
 
 @dataclass(frozen=True)
@@ -58,6 +58,14 @@ GENERATION_PLANS: tuple[GenerationPlan, ...] = (
             "Empty backlog? The Board releases a visual glitch or easter egg to remind everyone the system is alive."
         ),
         ritual="Toggle a random CSS filter, screenshot the chaos, and frame it as intentional art.",
+    ),
+    GenerationPlan(
+        title="Generation plan remix",
+        description=(
+            "Add a new plan to the GENERATION_PLANS which isn't similar to any of the others. "
+            "The Board rewrites its own playbook whenever inspiration runs dry."
+        ),
+        ritual="Pause, scan the current list, and draft a wildly different seed that surprises future visitors.",
     ),
 )
 
@@ -130,8 +138,10 @@ def ensure_generation_seed(
         _latest_generation_plan = plan
 
         author = _get_or_create_system_user()
-        return Feature.objects.create(
+        feature = Feature.objects.create(
             title=plan.title,
             description=(f"{plan.description} Ritual: {plan.ritual}"),
             creator=author,
         )
+        Vote.objects.create(user=author, feature=feature)
+        return feature

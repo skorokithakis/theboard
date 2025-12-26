@@ -852,6 +852,30 @@ class FeatureBoardTests(TestCase):
             models.Feature.objects.pending().filter(title=seed_plan.title).exists()
         )
 
+    def test_seeded_generation_plan_gets_system_vote(self) -> None:
+        seed_plan = generation.GENERATION_PLANS[0]
+        with self._static_override(), self._seed_plan_patch(seed_plan):
+            response = self.client.get(reverse("main:feature-board"))
+
+        self.assertEqual(response.status_code, 200)
+        feature = models.Feature.objects.get(title=seed_plan.title)
+        self.assertEqual(feature.vote_records.count(), 1)
+        self.assertEqual(
+            feature.vote_records.first().user.username, generation.SYSTEM_USERNAME
+        )
+        features = response.context["features"]
+        self.assertEqual(features[0].vote_total, 1)
+
+    def test_feature_board_shows_creator_name(self) -> None:
+        feature = self._submit_feature(title="Author credited")
+        models.Vote.objects.create(user=feature.creator, feature=feature)
+
+        with self._static_override():
+            response = self.client.get(reverse("main:feature-board"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, feature.creator.display_name)
+
     def test_feature_list_includes_creator_status(self) -> None:
         self.owner.status = "API surfaces the vibe"
         self.owner.save(update_fields=["status"])

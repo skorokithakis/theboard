@@ -74,6 +74,17 @@ GENERATION_PLANS: tuple[GenerationPlan, ...] = (
         ),
         ritual="Pause, scan the current list, and draft a wildly different seed that surprises future visitors.",
     ),
+    GenerationPlan(
+        title="Interdimensional penpal drop",
+        description=(
+            "When the queue is empty, The Board opens a portal to a parallel backlog and blindly accepts whatever "
+            "feature tumbles out—alien UX patterns, uncanny colors, or a policy from a universe with different physics."
+        ),
+        ritual=(
+            "Sketch a portal sigil, spin a globe (digital or paper), and translate the first nonsense phrase you hear "
+            "into a feature title before the wormhole snaps shut."
+        ),
+    ),
 )
 
 _latest_generation_plan: GenerationPlan = GENERATION_PLANS[0]

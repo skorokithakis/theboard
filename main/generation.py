@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 from dataclasses import dataclass
 from random import choice
 from typing import Callable, Optional, Sequence
@@ -25,7 +26,17 @@ class GenerationPlan:
     ritual: str
 
 
+@dataclass(frozen=True)
+class ParallelBacklogEntry:
+    """Feature idea rescued from an alternate backlog."""
+
+    title: str
+    description: str
+    origin: str
+
+
 ARCHAEOLOGY_PLAN_TITLE = "Backlog archaeology dig"
+INTERDIMENSIONAL_PLAN_TITLE = "Interdimensional penpal drop"
 
 
 GENERATION_PLANS: tuple[GenerationPlan, ...] = (
@@ -75,7 +86,7 @@ GENERATION_PLANS: tuple[GenerationPlan, ...] = (
         ritual="Pause, scan the current list, and draft a wildly different seed that surprises future visitors.",
     ),
     GenerationPlan(
-        title="Interdimensional penpal drop",
+        title=INTERDIMENSIONAL_PLAN_TITLE,
         description=(
             "When the queue is empty, The Board opens a portal to a parallel backlog and blindly accepts whatever "
             "feature tumbles out—alien UX patterns, uncanny colors, or a policy from a universe with different physics."
@@ -84,6 +95,45 @@ GENERATION_PLANS: tuple[GenerationPlan, ...] = (
             "Sketch a portal sigil, spin a globe (digital or paper), and translate the first nonsense phrase you hear "
             "into a feature title before the wormhole snaps shut."
         ),
+    ),
+)
+
+PARALLEL_BACKLOG: tuple[ParallelBacklogEntry, ...] = (
+    ParallelBacklogEntry(
+        title="Chromatic gravity control deck",
+        description=(
+            "A settings panel borrowed from a low-gravity design lab where every toggle shifts the color spectrum "
+            "to keep users oriented."
+        ),
+        origin="Orbit-9 Drift Station",
+    ),
+    ParallelBacklogEntry(
+        title="Temporal breadcrumb stitches",
+        description=(
+            "Navigation that threads past, present, and future states together so people can rewind a journey in one click."
+        ),
+        origin="Looping Archive",
+    ),
+    ParallelBacklogEntry(
+        title="Policy: zero-decibel accessibility mode",
+        description=(
+            "Implements interface cues that communicate without light or sound for vacuum-native collaborators."
+        ),
+        origin="Silent Colony",
+    ),
+    ParallelBacklogEntry(
+        title="Sentient tooltip penpals",
+        description=(
+            "Tooltips that travel between apps, leaving contextual notes based on what they learned elsewhere."
+        ),
+        origin="Cross-App Embassy",
+    ),
+    ParallelBacklogEntry(
+        title="Nonlinear onboarding spiral",
+        description=(
+            "An onboarding flow that rearranges itself based on the sequence of actions a new user dreams about."
+        ),
+        origin="Lucid Workshop",
     ),
 )
 
@@ -151,6 +201,35 @@ def _build_archaeology_seed(
         description=description,
         creator=author,
         parent=fossil,
+    )
+
+
+def _select_penpal_transmission(
+    selector: Optional[
+        Callable[[Sequence[ParallelBacklogEntry]], ParallelBacklogEntry]
+    ] = None,
+) -> ParallelBacklogEntry:
+    """Pick a feature from the portal-connected backlog."""
+    picker = selector or random.choice
+    return picker(PARALLEL_BACKLOG)
+
+
+def _open_penpal_portal(
+    author,
+    plan: GenerationPlan,
+) -> Feature:
+    """Drop in a feature from a parallel backlog when the queue is empty."""
+    transmission = _select_penpal_transmission()
+    title_limit = Feature._meta.get_field("title").max_length
+    portal_title = _clamp_text(transmission.title, title_limit)
+    description = (
+        f"Portal drop from {transmission.origin}: {transmission.description} "
+        f"Ritual honored: {plan.ritual}"
+    )
+    return Feature.objects.create(
+        title=portal_title,
+        description=description,
+        creator=author,
     )
 
 
@@ -222,6 +301,8 @@ def ensure_generation_seed(
 
         if plan.title == ARCHAEOLOGY_PLAN_TITLE:
             feature = _build_archaeology_seed(author, plan)
+        elif plan.title == INTERDIMENSIONAL_PLAN_TITLE:
+            feature = _open_penpal_portal(author, plan)
 
         if feature is None:
             feature = Feature.objects.create(

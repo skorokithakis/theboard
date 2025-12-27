@@ -211,6 +211,33 @@ class FeatureBoardTests(TestCase):
         self.assertIn(fossil.title, feature.description)
         self.assertTrue(feature.title.startswith("Neon revival"))
 
+    def test_interdimensional_plan_imports_portal_feature(self) -> None:
+        portal_entry = generation.ParallelBacklogEntry(
+            title="Waveform interface treaty",
+            description="An oscillating UI pattern that keeps reshaping itself based on cross-universe feedback.",
+            origin="Amplitude Annex",
+        )
+        portal_plan = next(
+            plan
+            for plan in generation.GENERATION_PLANS
+            if plan.title == generation.INTERDIMENSIONAL_PLAN_TITLE
+        )
+        with (
+            self._seed_plan_patch(portal_plan),
+            mock.patch(
+                "main.generation._select_penpal_transmission",
+                return_value=portal_entry,
+            ),
+        ):
+            feature = generation.ensure_generation_seed()
+
+        self.assertIsNotNone(feature)
+        assert feature is not None
+        self.assertEqual(feature.title, portal_entry.title)
+        self.assertIn(portal_entry.origin, feature.description)
+        self.assertIn(portal_plan.ritual, feature.description)
+        self.assertEqual(feature.creator.username, generation.SYSTEM_USERNAME)
+
     def test_expire_stale_respects_missed_vote_penalties(self) -> None:
         feature = self._submit_feature(title="Needs daily love")
         now = timezone.now()

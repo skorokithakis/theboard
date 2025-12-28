@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import pytest
 from playwright.sync_api import Playwright, expect
 from uuid import uuid4
 

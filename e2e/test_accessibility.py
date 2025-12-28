@@ -61,7 +61,8 @@ def _validate_css(stylesheets: dict[str, str]) -> None:
             if getattr(error, "type", None) == "error"
         ]
         assert not formatted_errors, (
-            f"CSS validation errors in {source}:\n" + "\n".join(sorted(formatted_errors))
+            f"CSS validation errors in {source}:\n"
+            + "\n".join(sorted(formatted_errors))
         )
         _VALIDATED_STYLES[digest] = source
 
@@ -83,8 +84,8 @@ def _assert_no_axe_violations(page, page_path: str) -> None:
             f"({len(violation.get('nodes', []))} nodes) "
             f"{' | '.join(node_targets)}"
         )
-    assert False, (
-        f"Axe accessibility violations on {page_path}:\n" + "\n".join(summaries)
+    assert False, f"Axe accessibility violations on {page_path}:\n" + "\n".join(
+        summaries
     )
 
 

@@ -43,53 +43,52 @@ GENERATION_PLANS: tuple[GenerationPlan, ...] = (
     GenerationPlan(
         title="Chaos gremlin invades The Board",
         description=(
-            "If the backlog goes silent, The Board unleashes a tiny chaos gremlin who ships something messy, "
-            "memorable, and probably unnecessary just to keep momentum alive."
+            "Unleash a tiny chaos gremlin to ship something messy, memorable, and probably unnecessary to keep "
+            "momentum alive."
         ),
         ritual="Roll two six-sided dice, mash the results into a headline, then ship it before the gremlin loses interest.",
     ),
     GenerationPlan(
         title=ARCHAEOLOGY_PLAN_TITLE,
         description=(
-            "When ideas dry up, The Board digs through fossils of old requests, resurrects a fragment, and reimagines "
-            "it with neon spray paint."
+            "Dig through fossils of old requests, resurrect a fragment, and reimagine it with neon spray paint."
         ),
         ritual="Put on an imaginary headlamp, dust off a forgotten idea shard, and remix it until it sparkles.",
     ),
     GenerationPlan(
         title="Performance sprint for no reason",
         description=(
-            "Silence in the queue triggers an absurd performance push: everything must be 2x faster even if nobody asked."
+            "Run an absurd performance push where everything must be 2x faster even if nobody asked."
         ),
         ritual="Chug a virtual energy drink, benchmark something random, and brag about nanoseconds saved.",
     ),
     GenerationPlan(
         title="Lore drop intermission",
         description=(
-            "If no one submits features, The Board writes new lore about itself, its mascots, or its secret tunnels."
+            "Write new lore about The Board, its mascots, or its secret tunnels."
         ),
         ritual="Light a pixel torch, whisper a myth, and post the strangest one without editing.",
     ),
     GenerationPlan(
         title="Delightful glitch art release",
         description=(
-            "Empty backlog? The Board releases a visual glitch or easter egg to remind everyone the system is alive."
+            "Release a visual glitch or easter egg to remind everyone the system is alive."
         ),
         ritual="Toggle a random CSS filter, screenshot the chaos, and frame it as intentional art.",
     ),
     GenerationPlan(
         title="Generation plan remix",
         description=(
-            "Add a new plan to the GENERATION_PLANS which isn't similar to any of the others. "
-            "The Board rewrites its own playbook whenever inspiration runs dry."
+            "Add a new plan to the GENERATION_PLANS which isn't similar to any of the others. Rewrite The Board's own "
+            "playbook whenever inspiration runs dry."
         ),
         ritual="Pause, scan the current list, and draft a wildly different seed that surprises future visitors.",
     ),
     GenerationPlan(
         title=INTERDIMENSIONAL_PLAN_TITLE,
         description=(
-            "When the queue is empty, The Board opens a portal to a parallel backlog and blindly accepts whatever "
-            "feature tumbles out—alien UX patterns, uncanny colors, or a policy from a universe with different physics."
+            "Open a portal to a parallel backlog and blindly accept whatever feature tumbles out—alien UX patterns, "
+            "uncanny colors, or a policy from a universe with different physics."
         ),
         ritual=(
             "Sketch a portal sigil, spin a globe (digital or paper), and translate the first nonsense phrase you hear "

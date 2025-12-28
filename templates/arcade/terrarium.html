@@ -28,20 +28,20 @@
         <p class="plant-terrarium__note">
             {{ terrarium_state.note }}
         </p>
-        <div class="plant-terrarium__chips" role="list">
-            <div class="plant-chip" role="listitem">
+        <div class="plant-terrarium__chips">
+            <div class="plant-chip">
                 <span class="plant-chip__label">Light</span>
                 <span class="plant-chip__value">{{ terrarium_state.sun }}</span>
             </div>
-            <div class="plant-chip" role="listitem">
+            <div class="plant-chip">
                 <span class="plant-chip__label">Water</span>
                 <span class="plant-chip__value">{{ terrarium_state.water }}</span>
             </div>
-            <div class="plant-chip" role="listitem">
+            <div class="plant-chip">
                 <span class="plant-chip__label">Mood</span>
                 <span class="plant-chip__value">{{ terrarium_state.mood }}</span>
             </div>
-            <div class="plant-chip plant-chip--label" role="listitem">
+            <div class="plant-chip plant-chip--label">
                 <span class="plant-chip__label">Beacon feature</span>
                 <span class="plant-chip__value">{{ terrarium_state.label|default:"Sprouting idea"|truncatechars:28 }}</span>
             </div>
@@ -87,16 +87,16 @@
                             <button type="button" class="sand-toggle" data-sand-brush="2" aria-pressed="true">Medium</button>
                             <button type="button" class="sand-toggle" data-sand-brush="3" aria-pressed="false">Flood</button>
                         </div>
-                        <div class="sand-terrarium__controls" role="list" aria-label="Materials">
-                            <button class="sand-chip" type="button" data-sand-material="sand" data-color="#e6be82" aria-pressed="true" role="listitem">Sand</button>
-                            <button class="sand-chip" type="button" data-sand-material="stone" data-color="#8fa7bc" aria-pressed="false" role="listitem">Stone</button>
-                            <button class="sand-chip" type="button" data-sand-material="glass" data-color="#c0e2ff" aria-pressed="false" role="listitem">Glass</button>
-                            <button class="sand-chip" type="button" data-sand-material="wood" data-color="#c07f4f" aria-pressed="false" role="listitem">Wood</button>
-                            <button class="sand-chip" type="button" data-sand-material="water" data-color="#5fb8ff" aria-pressed="false" role="listitem">Water</button>
-                            <button class="sand-chip" type="button" data-sand-material="steam" data-color="#cdd9de" aria-pressed="false" role="listitem">Steam</button>
-                            <button class="sand-chip" type="button" data-sand-material="fire" data-color="#ff7044" aria-pressed="false" role="listitem">Fire</button>
-                            <button class="sand-chip" type="button" data-sand-material="bacteria" data-color="#b6ff6c" aria-pressed="false" role="listitem">Bacteria</button>
-                            <button class="sand-chip" type="button" data-sand-material="plant" data-color="#62f1af" aria-pressed="false" role="listitem">Plant</button>
+                        <div class="sand-terrarium__controls" aria-label="Materials">
+                            <button class="sand-chip" type="button" data-sand-material="sand" data-color="#e6be82" aria-pressed="true">Sand</button>
+                            <button class="sand-chip" type="button" data-sand-material="stone" data-color="#8fa7bc" aria-pressed="false">Stone</button>
+                            <button class="sand-chip" type="button" data-sand-material="glass" data-color="#c0e2ff" aria-pressed="false">Glass</button>
+                            <button class="sand-chip" type="button" data-sand-material="wood" data-color="#c07f4f" aria-pressed="false">Wood</button>
+                            <button class="sand-chip" type="button" data-sand-material="water" data-color="#5fb8ff" aria-pressed="false">Water</button>
+                            <button class="sand-chip" type="button" data-sand-material="steam" data-color="#cdd9de" aria-pressed="false">Steam</button>
+                            <button class="sand-chip" type="button" data-sand-material="fire" data-color="#ff7044" aria-pressed="false">Fire</button>
+                            <button class="sand-chip" type="button" data-sand-material="bacteria" data-color="#b6ff6c" aria-pressed="false">Bacteria</button>
+                            <button class="sand-chip" type="button" data-sand-material="plant" data-color="#62f1af" aria-pressed="false">Plant</button>
                         </div>
                         <div class="sand-terrarium__actions">
                             <button type="button" class="sand-action" data-sand-action="mist">Mist</button>

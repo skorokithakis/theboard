@@ -23,26 +23,28 @@
     </div>
 </section>
 
-<section class="orbital-sitemap" aria-labelledby="fantasy-sitemap-heading">
-    <div class="sitemap-globe" data-sitemap-stage tabindex="0" aria-label="Interactive 3D sitemap sphere">
-        <h2 id="fantasy-sitemap-heading" class="visually-hidden">3D sitemap with force-directed orbits</h2>
-        <div class="sitemap-globe__halo" aria-hidden="true"></div>
-        <div class="sitemap-grid" aria-hidden="true">
-            <span class="sitemap-grid__ring"></span>
-            <span class="sitemap-grid__ring sitemap-grid__ring--inner"></span>
-            <span class="sitemap-grid__ring sitemap-grid__ring--outer"></span>
-            <span class="sitemap-grid__axis"></span>
-            <span class="sitemap-grid__axis sitemap-grid__axis--y"></span>
-        </div>
-        <svg class="sitemap-globe__svg" id="sitemap-orbit" role="presentation"></svg>
-        <div class="sitemap-globe__hud">
-            <p class="sitemap-globe__hint">Drag or use arrow keys to tilt. Click a beacon to open its page.</p>
-            <div class="sitemap-globe__badges">
-                <span class="sitemap-chip sitemap-chip--accent">Chart: Force-directed orbit</span>
-                <span class="sitemap-chip sitemap-chip--muted">Depth reacts to pointer + time</span>
+<div class="sitemap-layout">
+    <section class="orbital-sitemap">
+        <div class="sitemap-globe" data-sitemap-stage tabindex="0" aria-label="Interactive 3D sitemap sphere">
+            <h2 id="fantasy-sitemap-heading" class="visually-hidden">3D sitemap with force-directed orbits</h2>
+            <div class="sitemap-globe__halo" aria-hidden="true"></div>
+            <div class="sitemap-grid" aria-hidden="true">
+                <span class="sitemap-grid__ring"></span>
+                <span class="sitemap-grid__ring sitemap-grid__ring--inner"></span>
+                <span class="sitemap-grid__ring sitemap-grid__ring--outer"></span>
+                <span class="sitemap-grid__axis"></span>
+                <span class="sitemap-grid__axis sitemap-grid__axis--y"></span>
+            </div>
+            <svg class="sitemap-globe__svg" id="sitemap-orbit" role="presentation"></svg>
+            <div class="sitemap-globe__hud">
+                <p class="sitemap-globe__hint">Drag or use arrow keys to tilt. Click a beacon to open its page.</p>
+                <div class="sitemap-globe__badges">
+                    <span class="sitemap-chip sitemap-chip--accent">Chart: Force-directed orbit</span>
+                    <span class="sitemap-chip sitemap-chip--muted">Depth reacts to pointer + time</span>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
     <aside class="sitemap-panel">
         <div class="sitemap-detail" data-sitemap-detail>
             <p class="sitemap-detail__eyebrow">Selected location</p>
@@ -82,7 +84,7 @@
             </ul>
         </div>
     </aside>
-</section>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}

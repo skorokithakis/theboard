@@ -150,26 +150,26 @@
         <p class="plant-terrarium__note">
             {{ terrarium_state.note }}
         </p>
-        <div class="plant-terrarium__chips" role="list">
-            <div class="plant-chip" role="listitem">
+        <div class="plant-terrarium__chips">
+            <div class="plant-chip">
                 <span class="plant-chip__label">Light</span>
                 <span class="plant-chip__value">{{ terrarium_state.sun }}</span>
             </div>
-            <div class="plant-chip" role="listitem">
+            <div class="plant-chip">
                 <span class="plant-chip__label">Water</span>
                 <span class="plant-chip__value">{{ terrarium_state.water }}</span>
             </div>
-            <div class="plant-chip" role="listitem">
+            <div class="plant-chip">
                 <span class="plant-chip__label">Mood</span>
                 <span class="plant-chip__value">{{ terrarium_state.mood }}</span>
             </div>
-            <div class="plant-chip plant-chip--label" role="listitem">
+            <div class="plant-chip plant-chip--label">
                 <span class="plant-chip__label">Beacon feature</span>
                 <span class="plant-chip__value">{{ terrarium_state.label|default:"Sprouting idea"|truncatechars:28 }}</span>
             </div>
         </div>
     </div>
-    <div class="plant-terrarium__art" role="img" aria-label="{{ terrarium_state.aria_label }}">
+    <div class="plant-terrarium__art">
         <div class="sand-terrarium" data-sand-terrarium data-plant-state="{{ terrarium_state.key }}">
             <div class="sand-terrarium__header">
                 <div class="sand-terrarium__meta">
@@ -183,16 +183,16 @@
                 </div>
             </div>
             <div class="sand-terrarium__frame">
-                <div class="sand-terrarium__controls" role="list" aria-label="Materials">
-                    <button class="sand-chip" type="button" data-sand-material="sand" data-color="#e6be82" aria-pressed="true" role="listitem">Sand</button>
-                    <button class="sand-chip" type="button" data-sand-material="stone" data-color="#8fa7bc" aria-pressed="false" role="listitem">Stone</button>
-                    <button class="sand-chip" type="button" data-sand-material="glass" data-color="#c0e2ff" aria-pressed="false" role="listitem">Glass</button>
-                    <button class="sand-chip" type="button" data-sand-material="wood" data-color="#c07f4f" aria-pressed="false" role="listitem">Wood</button>
-                    <button class="sand-chip" type="button" data-sand-material="water" data-color="#5fb8ff" aria-pressed="false" role="listitem">Water</button>
-                    <button class="sand-chip" type="button" data-sand-material="steam" data-color="#cdd9de" aria-pressed="false" role="listitem">Steam</button>
-                    <button class="sand-chip" type="button" data-sand-material="fire" data-color="#ff7044" aria-pressed="false" role="listitem">Fire</button>
-                    <button class="sand-chip" type="button" data-sand-material="bacteria" data-color="#b6ff6c" aria-pressed="false" role="listitem">Bacteria</button>
-                    <button class="sand-chip" type="button" data-sand-material="plant" data-color="#62f1af" aria-pressed="false" role="listitem">Plant</button>
+                <div class="sand-terrarium__controls" aria-label="Materials">
+                    <button class="sand-chip" type="button" data-sand-material="sand" data-color="#e6be82" aria-pressed="true">Sand</button>
+                    <button class="sand-chip" type="button" data-sand-material="stone" data-color="#8fa7bc" aria-pressed="false">Stone</button>
+                    <button class="sand-chip" type="button" data-sand-material="glass" data-color="#c0e2ff" aria-pressed="false">Glass</button>
+                    <button class="sand-chip" type="button" data-sand-material="wood" data-color="#c07f4f" aria-pressed="false">Wood</button>
+                    <button class="sand-chip" type="button" data-sand-material="water" data-color="#5fb8ff" aria-pressed="false">Water</button>
+                    <button class="sand-chip" type="button" data-sand-material="steam" data-color="#cdd9de" aria-pressed="false">Steam</button>
+                    <button class="sand-chip" type="button" data-sand-material="fire" data-color="#ff7044" aria-pressed="false">Fire</button>
+                    <button class="sand-chip" type="button" data-sand-material="bacteria" data-color="#b6ff6c" aria-pressed="false">Bacteria</button>
+                    <button class="sand-chip" type="button" data-sand-material="plant" data-color="#62f1af" aria-pressed="false">Plant</button>
                 </div>
                 <div class="sand-terrarium__status" data-sand-status>Painting with sand · medium brush</div>
                 <div class="sand-invaders" data-sand-invaders>
@@ -248,16 +248,16 @@
                 <li>Glass gives it the best view of new ideas—and keeps the glorp splashes contained.</li>
                 <li>Approach with snacks, not bug reports.</li>
             </ul>
-            <div class="glorp-cat__stats" role="list">
-                <div class="glorp-cat__stat" role="listitem">
+            <div class="glorp-cat__stats">
+                <div class="glorp-cat__stat">
                     <span class="glorp-cat__stat-label">Mood</span>
                     <span class="glorp-cat__stat-value">Viscous purr</span>
                 </div>
-                <div class="glorp-cat__stat" role="listitem">
+                <div class="glorp-cat__stat">
                     <span class="glorp-cat__stat-label">Glorp density</span>
                     <span class="glorp-cat__stat-value">7.2 lumens</span>
                 </div>
-                <div class="glorp-cat__stat" role="listitem">
+                <div class="glorp-cat__stat">
                     <span class="glorp-cat__stat-label">Patrol route</span>
                     <span class="glorp-cat__stat-value">Feature wall perimeter</span>
                 </div>
@@ -332,16 +332,16 @@
             <p class="logo-lab__eyebrow">Turtle terminal</p>
             <h2 id="logo-lab-heading">Run LOGO on the homepage</h2>
             <p>Write LOGO commands to nudge the turtle across a glassy stage. The origin sits in the center, positive <code>Y</code> goes up, and every line you draw layers into the canvas.</p>
-            <div class="logo-lab__chips" role="list">
-                <div class="logo-chip" role="listitem">
+            <div class="logo-lab__chips">
+                <div class="logo-chip">
                     <span class="logo-chip__label">Origin</span>
                     <span class="logo-chip__value">(0, 0) at center</span>
                 </div>
-                <div class="logo-chip" role="listitem">
+                <div class="logo-chip">
                     <span class="logo-chip__label">Heading</span>
                     <span class="logo-chip__value">0&deg; faces north</span>
                 </div>
-                <div class="logo-chip" role="listitem">
+                <div class="logo-chip">
                     <span class="logo-chip__label">Pen</span>
                     <span class="logo-chip__value">Down &middot; 3px &middot; Gold</span>
                 </div>
@@ -391,7 +391,7 @@
         <h2>Feature Button Wall</h2>
         <p>Every fresh idea earns its own 88x31 pixel badge. Scroll through the grid to see the latest ambitions.</p>
     </div>
-    <div class="feature-button-grid" role="list" aria-label="Feature buttons generated from the current backlog">
+    <div class="feature-button-grid" aria-label="Feature buttons generated from the current backlog">
         {% for feature in feature_buttons %}
         <div class="feature-button" role="img" aria-label="{{ feature.title }}" title="{{ feature.description }}">
             <span class="feature-button__title">{{ feature.title|truncatechars:18 }}</span>

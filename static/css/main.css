@@ -23,7 +23,8 @@ body {
 
 a {
   color: var(--accent);
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
 }
 
 a:hover {
@@ -277,6 +278,12 @@ textarea {
 .feature-lab__note {
   margin: 0 0 0.75rem;
   color: var(--muted);
+}
+
+.feature-lab__note a {
+  color: var(--accent-strong);
+  text-decoration: underline;
+  font-weight: 600;
 }
 
 .feature-lab__empty {
@@ -1372,6 +1379,18 @@ textarea {
 .interview-card.is-active {
   transform: translateY(-3px);
   border-color: #2b5f50;
+}
+
+.sitemap-layout {
+  display: grid;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (min-width: 960px) {
+  .sitemap-layout {
+    grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+  }
 }
 
 @media (max-width: 720px) {

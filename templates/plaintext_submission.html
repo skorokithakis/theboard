@@ -5,80 +5,82 @@
     <title>Plaintext Feature Submission</title>
 </head>
 <body>
-    <h1>Plaintext Feature Submission</h1>
-    <p>This page exists as a no-frills fallback so feature submissions and votes keep working if the main interface ever breaks. Do not add styling, scripts, or other extras here; only adjust this page when required to keep submissions and voting functional.</p>
-    <p>If the primary UI is unavailable, use this page to submit a feature and vote it up with the required Cloudflare captcha.</p>
+    <main role="main">
+        <h1>Plaintext Feature Submission</h1>
+        <p>This page exists as a no-frills fallback so feature submissions and votes keep working if the main interface ever breaks. Do not add styling, scripts, or other extras here; only adjust this page when required to keep submissions and voting functional.</p>
+        <p>If the primary UI is unavailable, use this page to submit a feature and vote it up with the required Cloudflare captcha.</p>
 
-    {% if messages %}
-    <ul>
-        {% for message in messages %}
-        <li>{{ message }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-
-    <section>
-        <h2>Submit a feature</h2>
-        {% if not request.user.is_authenticated %}
-        <p>Sign in at <a href="/accounts/login/?next={{ request.path }}">/accounts/login/</a> to submit new features.</p>
-        {% elif not can_submit %}
-        <p>You have reached the daily submission limit for new features.</p>
-        {% else %}
-        <form method="post" action="{% url 'main:plaintext-submission' %}">
-            {% csrf_token %}
-            {% if submission_form.non_field_errors %}
-            <p>{{ submission_form.non_field_errors|join:", " }}</p>
-            {% endif %}
-            <div>
-                {{ submission_form.title.label_tag }}
-                <br>
-                {{ submission_form.title }}
-                {% for error in submission_form.title.errors %}
-                <p>{{ error }}</p>
-                {% endfor %}
-            </div>
-            <div>
-                {{ submission_form.description.label_tag }}
-                <br>
-                {{ submission_form.description }}
-                {% for error in submission_form.description.errors %}
-                <p>{{ error }}</p>
-                {% endfor %}
-            </div>
-            {% if turnstile_site_key %}
-            <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
-            {% else %}
-            <p>Cloudflare Turnstile is not configured in this environment.</p>
-            {% endif %}
-            <button type="submit">Submit feature</button>
-        </form>
-        {% endif %}
-    </section>
-
-    <section>
-        <h2>Current features</h2>
-        {% if not request.user.is_authenticated %}
-        <p>Sign in to vote on features.</p>
-        {% endif %}
-        {% if features %}
-            {% for feature in features %}
-            <article>
-                <h3>{{ feature.title }}</h3>
-                <p>{{ feature.description }}</p>
-                <p>Votes: {{ feature.vote_total }}</p>
-                <form method="post" action="{% url 'main:plaintext-vote-toggle' feature.id %}">
-                    {% csrf_token %}
-                    {% if turnstile_site_key %}
-                    <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
-                    {% endif %}
-                    <button type="submit">{% if feature.user_has_voted %}Remove vote{% else %}Add vote{% endif %}</button>
-                </form>
-            </article>
+        {% if messages %}
+        <ul>
+            {% for message in messages %}
+            <li>{{ message }}</li>
             {% endfor %}
-        {% else %}
-        <p>No features have been submitted yet.</p>
+        </ul>
         {% endif %}
-    </section>
+
+        <section aria-labelledby="plaintext-submit-heading">
+            <h2 id="plaintext-submit-heading">Submit a feature</h2>
+            {% if not request.user.is_authenticated %}
+            <p>Sign in at <a href="/accounts/login/?next={{ request.path }}">/accounts/login/</a> to submit new features.</p>
+            {% elif not can_submit %}
+            <p>You have reached the daily submission limit for new features.</p>
+            {% else %}
+            <form method="post" action="{% url 'main:plaintext-submission' %}">
+                {% csrf_token %}
+                {% if submission_form.non_field_errors %}
+                <p>{{ submission_form.non_field_errors|join:", " }}</p>
+                {% endif %}
+                <div>
+                    {{ submission_form.title.label_tag }}
+                    <br>
+                    {{ submission_form.title }}
+                    {% for error in submission_form.title.errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                <div>
+                    {{ submission_form.description.label_tag }}
+                    <br>
+                    {{ submission_form.description }}
+                    {% for error in submission_form.description.errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% if turnstile_site_key %}
+                <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
+                {% else %}
+                <p>Cloudflare Turnstile is not configured in this environment.</p>
+                {% endif %}
+                <button type="submit">Submit feature</button>
+            </form>
+            {% endif %}
+        </section>
+
+        <section aria-labelledby="plaintext-features-heading">
+            <h2 id="plaintext-features-heading">Current features</h2>
+            {% if not request.user.is_authenticated %}
+            <p>Sign in to vote on features.</p>
+            {% endif %}
+            {% if features %}
+                {% for feature in features %}
+                <article>
+                    <h3>{{ feature.title }}</h3>
+                    <p>{{ feature.description }}</p>
+                    <p>Votes: {{ feature.vote_total }}</p>
+                    <form method="post" action="{% url 'main:plaintext-vote-toggle' feature.id %}">
+                        {% csrf_token %}
+                        {% if turnstile_site_key %}
+                        <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
+                        {% endif %}
+                        <button type="submit">{% if feature.user_has_voted %}Remove vote{% else %}Add vote{% endif %}</button>
+                    </form>
+                </article>
+                {% endfor %}
+            {% else %}
+            <p>No features have been submitted yet.</p>
+            {% endif %}
+        </section>
+    </main>
 
     {% if turnstile_site_key %}
     <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>

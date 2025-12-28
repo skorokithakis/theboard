@@ -40,10 +40,10 @@
 </section>
 
 <section class="scoreboard-grid">
-    <div class="scoreboard-grid__list" role="list" aria-label="Top 20 user scores">
+    <div class="scoreboard-grid__list" aria-label="Top 20 user scores">
         {% if leaderboard %}
             {% for entry in leaderboard %}
-                <article class="scorecard{% if entry.rank <= 7 %} scorecard--elite{% endif %}" role="listitem">
+                <article class="scorecard{% if entry.rank <= 7 %} scorecard--elite{% endif %}">
                     <div class="scorecard__chrome"></div>
                     <div class="scorecard__rank">#{{ entry.rank }}</div>
                     <div class="scorecard__identity">

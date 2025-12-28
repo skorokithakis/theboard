@@ -18,6 +18,9 @@ dependencies = [
     "django-ninja>=1.4.5",
     "typing-extensions>=4.12.2,<4.13",
     "playwright>=1.57.0",
+    "axe-playwright-python>=0.1.7",
+    "html5lib>=1.1",
+    "tinycss2>=1.5.1",
 ]
 
 [tool.uv]

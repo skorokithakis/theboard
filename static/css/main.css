@@ -921,6 +921,17 @@ textarea {
   color: var(--accent-strong);
 }
 
+.implemented-card__commit {
+  color: var(--accent-strong);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.implemented-card__commit:hover,
+.implemented-card__commit:focus-visible {
+  text-decoration: underline;
+}
+
 .implemented-card__title {
   margin: 0;
   font-size: 1.1rem;

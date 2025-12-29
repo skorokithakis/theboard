@@ -117,6 +117,7 @@ class FeatureAdmin(DjangoQLSearchMixin, admin.ModelAdmin):
                 "fields": (
                     "created_at",
                     "implemented_at",
+                    "implementation_commit_url",
                     "implemented_state",
                     "expired_at",
                     "missed_vote_days",

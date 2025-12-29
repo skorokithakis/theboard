@@ -263,7 +263,7 @@ class FeatureBoardTests(TestCase):
             created_at=now - timedelta(days=8)
         )
 
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             expired_ids = models.Feature.expire_stale(reference=now)
 
         self.assertCountEqual(expired_ids, [first.pk, second.pk])
@@ -274,11 +274,30 @@ class FeatureBoardTests(TestCase):
         self.assertIsNotNone(first.expired_at)
         self.assertIsNotNone(second.expired_at)
 
+    def test_expire_stale_deletes_live_vote_records(self) -> None:
+        now = timezone.now()
+        feature = self._submit_feature(title="Send to graveyard")
+        models.Vote.objects.create(user=self.owner, feature=feature)
+        models.Vote.objects.create(user=self.other, feature=feature)
+        models.Feature.objects.filter(pk=feature.pk).update(
+            created_at=now - timedelta(days=8)
+        )
+
+        expired_ids = models.Feature.expire_stale(reference=now)
+
+        self.assertIn(feature.pk, expired_ids)
+        self.assertFalse(models.Vote.objects.filter(feature=feature).exists())
+        feature.refresh_from_db()
+        self.assertEqual(feature.votes, 2)
+        self.assertIsNotNone(feature.expired_at)
+
     def test_feature_detail_includes_implemented_feature(self) -> None:
         feature = self._submit_feature(title="Already shipped")
         implemented_at = timezone.now()
+        commit_url = "https://github.com/skorokithakis/theboard/commit/abcdef123456"
         models.Feature.objects.filter(pk=feature.pk).update(
-            implemented_at=implemented_at
+            implemented_at=implemented_at,
+            implementation_commit_url=commit_url,
         )
 
         self.client.login(username=self.owner.username, password=self.default_password)
@@ -288,6 +307,7 @@ class FeatureBoardTests(TestCase):
         data = response.json()
         self.assertIsNotNone(data["feature"]["implemented_at"])
         self.assertFalse(data["can_submit_variation"])
+        self.assertEqual(data["feature"]["implementation_commit_url"], commit_url)
 
     def test_feature_detail_marks_expired_feature(self) -> None:
         feature = self._submit_feature(title="Expired idea")
@@ -529,7 +549,7 @@ class FeatureBoardTests(TestCase):
             models.Vote.objects.filter(user=self.owner, feature=feature).exists()
         )
 
-    def test_post_implementation_command_marks_timestamp_and_clears_all_votes(
+    def test_post_implementation_command_marks_timestamp_and_preserves_pending_votes(
         self,
     ) -> None:
         feature = self._submit_feature()
@@ -543,14 +563,13 @@ class FeatureBoardTests(TestCase):
         self.assertIsNotNone(feature.implemented_at)
         self.assertEqual(feature.votes, 1)
         self.assertEqual(feature.vote_total, 1)
-        # ALL votes should be deleted (including for pending features)
         self.assertFalse(
             models.Vote.objects.filter(user=self.owner, feature=feature).exists()
         )
-        self.assertFalse(
+        self.assertTrue(
             models.Vote.objects.filter(user=self.other, feature=other_feature).exists()
         )
-        self.assertEqual(models.Vote.objects.count(), 0)
+        self.assertEqual(models.Vote.objects.count(), 1)
 
     def test_post_implementation_command_marks_unsuccessful_state(self) -> None:
         feature = self._submit_feature()
@@ -563,6 +582,20 @@ class FeatureBoardTests(TestCase):
             models.Feature.ImplementationState.UNSUCCESSFUL,
         )
         self.assertIsNotNone(feature.implemented_at)
+
+    def test_post_implementation_command_records_commit_link(self) -> None:
+        feature = self._submit_feature(title="Commit-linked ship")
+        commit_url = "https://github.com/skorokithakis/theboard/commit/0000000000000000000000000000000000000000"
+
+        call_command(
+            "post_implementation",
+            str(feature.pk),
+            "--commit-url",
+            commit_url,
+        )
+
+        feature.refresh_from_db()
+        self.assertEqual(feature.implementation_commit_url, commit_url)
 
     def test_vote_total_uses_snapshot_after_votes_cleared(self) -> None:
         feature = self._submit_feature()

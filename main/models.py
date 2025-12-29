@@ -180,6 +180,13 @@ class Feature(models.Model):
         blank=True,
         help_text="Timestamp for when the feature was implemented.",
     )
+    implementation_commit_url = models.URLField(
+        blank=True,
+        default="",
+        help_text=(
+            "Direct link to the GitHub commit or diff that shipped this feature so contributors can review the code."
+        ),
+    )
     implemented_state = models.CharField(
         max_length=32,
         choices=ImplementationState.choices,
@@ -263,29 +270,34 @@ class Feature(models.Model):
         penalty = timedelta(days=self.missed_vote_days)
         return self.created_at + self.EXPIRATION_AGE - penalty
 
-    def implement(self, when: datetime | None = None) -> None:
+    def implement(
+        self, when: datetime | None = None, commit_url: str | None = None
+    ) -> None:
         """Mark the feature as implemented and snapshot its vote total."""
         timestamp = when or timezone.now()
         snapshot = self.live_vote_total
         self.implemented_at = timestamp
         self.expired_at = None
         self.votes = snapshot
+        if commit_url:
+            self.implementation_commit_url = commit_url
         if not self.implemented_state:
             self.implemented_state = self.ImplementationState.SUCCESSFUL
         if not self.e2e_test_reference:
             slug = slugify(self.title) or f"feature-{self.pk or 'untracked'}"
             self.e2e_test_reference = f"e2e/implemented/{slug}.py"
         self.e2e_tests_last_synced_at = timestamp
-        self.save(
-            update_fields=[
-                "implemented_at",
-                "expired_at",
-                "votes",
-                "implemented_state",
-                "e2e_test_reference",
-                "e2e_tests_last_synced_at",
-            ]
-        )
+        update_fields = [
+            "implemented_at",
+            "expired_at",
+            "votes",
+            "implemented_state",
+            "e2e_test_reference",
+            "e2e_tests_last_synced_at",
+        ]
+        if commit_url:
+            update_fields.append("implementation_commit_url")
+        self.save(update_fields=update_fields)
         self._delete_descendant_variations()
 
     def _delete_descendant_variations(self) -> None:
@@ -321,6 +333,7 @@ class Feature(models.Model):
         self.votes = final_votes
         self.implemented_state = None
         self.save(update_fields=["expired_at", "votes", "implemented_state"])
+        Vote.objects.filter(feature=self).delete()
 
     @classmethod
     def expire_stale(cls, reference: datetime | None = None) -> list[int]:
@@ -353,6 +366,8 @@ class Feature(models.Model):
 
         expired_ids = [feature.pk for feature in to_expire]
         cls.objects.bulk_update(to_expire, ["expired_at", "votes", "implemented_state"])
+        if expired_ids:
+            Vote.objects.filter(feature_id__in=expired_ids).delete()
         return expired_ids
 
     @classmethod

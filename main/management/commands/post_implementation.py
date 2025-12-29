@@ -26,10 +26,16 @@ class Command(BaseCommand):
             dest="failed",
             help="Mark the implementation as unsuccessful",
         )
+        parser.add_argument(
+            "--commit-url",
+            dest="commit_url",
+            help="Optional GitHub commit or diff URL associated with this implementation",
+        )
 
     def handle(self, *args, **options) -> None:
         feature_id = options["feature_id"]
         failed = options["failed"]
+        commit_url = (options.get("commit_url") or "").strip()
 
         try:
             feature = Feature.objects.get(id=feature_id)
@@ -50,7 +56,7 @@ class Command(BaseCommand):
         if failed:
             feature.implemented_state = Feature.ImplementationState.UNSUCCESSFUL
 
-        feature.implement(when=now)
+        feature.implement(when=now, commit_url=commit_url or None)
         feature.refresh_from_db(
             fields=[
                 "e2e_test_reference",
@@ -61,8 +67,8 @@ class Command(BaseCommand):
 
         self._penalize_inactive_features()
 
-        # Reset all votes for the next iteration
-        deleted_count, _ = Vote.objects.all().delete()
+        # Clear vote records for the implemented feature but leave pending votes intact
+        deleted_count, _ = Vote.objects.filter(feature=feature).delete()
 
         self.stdout.write(
             self.style.SUCCESS(
@@ -79,7 +85,9 @@ class Command(BaseCommand):
         )
         if deleted_count > 0:
             self.stdout.write(
-                self.style.SUCCESS(f"Reset all votes: deleted {deleted_count} vote(s)")
+                self.style.SUCCESS(
+                    f"Archived {deleted_count} vote(s) for the implemented feature"
+                )
             )
 
     def _penalize_inactive_features(self) -> None:

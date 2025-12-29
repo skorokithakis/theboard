@@ -39,6 +39,14 @@
             <div class="implemented-card__meta">
                 <span class="implemented-card__date">Shipped {{ feature.implemented_at|date:"M j, Y" }}</span>
                 <span class="implemented-card__votes">{{ feature.vote_total|default:0 }} votes</span>
+                {% if feature.implementation_commit_url %}
+                <a
+                    class="implemented-card__commit"
+                    href="{{ feature.implementation_commit_url }}"
+                    target="_blank"
+                    rel="noreferrer"
+                >View commit</a>
+                {% endif %}
             </div>
             <h2 class="implemented-card__title">{{ feature.title }}</h2>
             <p class="implemented-card__author">

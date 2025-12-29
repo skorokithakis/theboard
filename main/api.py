@@ -101,6 +101,7 @@ def _serialize_feature(
         "implemented_state": (
             feature.implemented_state if feature.is_implemented else None
         ),
+        "implementation_commit_url": feature.implementation_commit_url or None,
         "creator": _serialize_user(feature.creator),
         "vote_total": feature.vote_total,
         "user_has_voted": user_has_voted,

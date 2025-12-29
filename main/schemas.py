@@ -39,6 +39,7 @@ class FeatureSchema(Schema):
     created_at: datetime
     implemented_at: datetime | None = None
     implemented_state: str | None = None
+    implementation_commit_url: str | None = None
     creator: UserSchema
     vote_total: int
     user_has_voted: bool
@@ -58,6 +59,7 @@ class FeatureDetailSchema(Schema):
     created_at: datetime
     implemented_at: datetime | None = None
     implemented_state: str | None = None
+    implementation_commit_url: str | None = None
     creator: UserSchema
     vote_total: int
     user_has_voted: bool

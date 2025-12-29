@@ -252,6 +252,28 @@ class FeatureBoardTests(TestCase):
         feature.refresh_from_db()
         self.assertIsNotNone(feature.expired_at)
 
+    def test_expire_stale_bulk_updates_with_annotated_votes(self) -> None:
+        now = timezone.now()
+        first = self._submit_feature(title="Archive me")
+        second = self._submit_feature(title="Archive me too")
+        models.Vote.objects.create(user=self.owner, feature=first)
+        models.Vote.objects.create(user=self.owner, feature=second)
+        models.Vote.objects.create(user=self.other, feature=second)
+        models.Feature.objects.filter(pk__in=[first.pk, second.pk]).update(
+            created_at=now - timedelta(days=8)
+        )
+
+        with self.assertNumQueries(2):
+            expired_ids = models.Feature.expire_stale(reference=now)
+
+        self.assertCountEqual(expired_ids, [first.pk, second.pk])
+        first.refresh_from_db()
+        second.refresh_from_db()
+        self.assertEqual(first.votes, 1)
+        self.assertEqual(second.votes, 2)
+        self.assertIsNotNone(first.expired_at)
+        self.assertIsNotNone(second.expired_at)
+
     def test_feature_detail_includes_implemented_feature(self) -> None:
         feature = self._submit_feature(title="Already shipped")
         implemented_at = timezone.now()

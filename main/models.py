@@ -326,16 +326,33 @@ class Feature(models.Model):
     def expire_stale(cls, reference: datetime | None = None) -> list[int]:
         """Expire features that have been pending for longer than the grace period."""
         now = reference or timezone.now()
-        stale_features = cls.objects.pending().annotate(
-            total_votes=Count("vote_records", distinct=True)
+        stale_features = (
+            cls.objects.pending()
+            .annotate(total_votes=Count("vote_records", distinct=True))
+            .only(
+                "id",
+                "created_at",
+                "missed_vote_days",
+                "implemented_at",
+                "expired_at",
+            )
         )
-        expired_ids: list[int] = []
+        to_expire: list[Feature] = []
         for feature in stale_features:
             expires_at = feature.expires_at
             if expires_at and expires_at <= now:
                 snapshot = getattr(feature, "total_votes", None)
-                feature.expire(when=now, snapshot=snapshot)
-                expired_ids.append(feature.pk)
+                if snapshot is None:
+                    snapshot = feature.live_vote_total
+                feature.expired_at = now
+                feature.votes = snapshot
+                feature.implemented_state = None
+                to_expire.append(feature)
+        if not to_expire:
+            return []
+
+        expired_ids = [feature.pk for feature in to_expire]
+        cls.objects.bulk_update(to_expire, ["expired_at", "votes", "implemented_state"])
         return expired_ids
 
     @classmethod

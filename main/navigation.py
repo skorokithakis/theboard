@@ -91,6 +91,12 @@ NAV_SECTIONS: list[dict[str, Any]] = [
                 "kind": "library",
             },
             {
+                "name": "retrospective-2025",
+                "label": "2025 Retrospective",
+                "summary": "End-of-year report with delivery stats and what we're building next.",
+                "kind": "tower",
+            },
+            {
                 "name": "about",
                 "label": "About",
                 "summary": "How the reset works and what's changed.",

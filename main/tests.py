@@ -1400,6 +1400,43 @@ class ScoreboardViewTests(TestCase):
         self.assertEqual(boot_entry["score"], 500)
 
 
+class RetrospectiveViewTests(TestCase):
+    def setUp(self) -> None:
+        self.owner = factories.UserFactory()
+
+    def _static_override(self):
+        storage_settings = {
+            **settings.STORAGES,
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            },
+        }
+        return override_settings(
+            STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage",
+            STORAGES=storage_settings,
+        )
+
+    def test_retrospective_page_surfaces_front_runner_and_metrics(self) -> None:
+        feature = factories.FeatureFactory(
+            title="Front runner story",
+            description="Retro smoke check",
+            creator=self.owner,
+        )
+        factories.VoteFactory(user=self.owner, feature=feature)
+
+        with self._static_override():
+            response = self.client.get(reverse("main:retrospective-2025"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("highlight_metrics", response.context)
+        self.assertGreater(
+            response.context["quarterly_velocity"][0]["percent"],
+            0,
+        )
+        self.assertContains(response, "end-of-year retrospective")
+        self.assertContains(response, feature.title)
+
+
 class PlaintextSubmissionViewTests(TestCase):
     def setUp(self) -> None:
         self.user = factories.UserFactory(username="plain")

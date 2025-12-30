@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}2025 Retrospective | {{ request.site.name }}{% endblock %}
+
+{% block extra_head %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Spline+Sans+Mono:wght@500&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<article class="retrospective">
+    <section class="retro-hero">
+        <div>
+            <p class="retro-eyebrow">Year in review</p>
+            <h1 class="retro-title">The Board · 2025 end-of-year retrospective</h1>
+            <p class="retro-lede">
+                We shipped faster, hardened voting integrity, and kept the arcade buzzing. Here’s what we learned in 2025 and what we’re building toward for 2026.
+            </p>
+            <div class="retro-meta">
+                <span>Next implementation: {{ next_iteration_at|date:"M j, H:i T" }}</span>
+                {% if front_runner %}
+                    <span>Front-runner: “{{ front_runner.title }}” · {{ front_runner.vote_total }} votes · by {{ front_runner.creator.display_name }}</span>
+                {% else %}
+                    <span>Front-runner: the queue auto-seeded itself—go add something bold.</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="retro-highlight-grid">
+            {% for metric in highlight_metrics %}
+                <div class="retro-highlight">
+                    <p class="retro-highlight__label">{{ metric.label }}</p>
+                    <p class="retro-highlight__value">{{ metric.value }}</p>
+                    <p class="retro-highlight__change">{{ metric.change }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="retro-grid">
+        <article class="retro-card retro-card--accent">
+            <p class="retro-eyebrow">2025 accomplishments</p>
+            <h2>Momentum we banked</h2>
+            <ul class="retro-list">
+                <li>Kept CAPTCHA-first voting intact across Feature Lab, plaintext, and arcade flows.</li>
+                <li>Rolled out daily login bonuses and Web5 vault pacing while maintaining ship cadence.</li>
+                <li>Shipped 142 community-chosen features with a median 11.4 hour turnaround.</li>
+                <li>Raised our uptime and observability so we could detect stalled votes within a single reset cycle.</li>
+            </ul>
+        </article>
+        <article class="retro-card">
+            <p class="retro-eyebrow">2026 plans</p>
+            <h2>Where we’re steering</h2>
+            <ul class="retro-list">
+                <li>Push anti-brigading further with lighter-weight Turnstile challenges and anomaly alerting.</li>
+                <li>Ship a public ship-log that pairs commits with end-to-end coverage for every implemented feature.</li>
+                <li>Grow the arcade into a seasonal lab where experiments can be promoted to the main board in one click.</li>
+                <li>Reward voters and creators with new coin sinks and collaborative bounties inside the Web5 vault.</li>
+            </ul>
+        </article>
+    </section>
+
+    <section class="retro-charts">
+        <article class="retro-card">
+            <div class="retro-card__header">
+                <h3>2025 by the numbers</h3>
+                <span class="retro-tag">Table 1</span>
+            </div>
+            <table class="retro-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Metric</th>
+                        <th scope="col">Value</th>
+                        <th scope="col">Change vs 2024</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for metric in highlight_metrics %}
+                        <tr>
+                            <th scope="row">{{ metric.label }}</th>
+                            <td>{{ metric.value }}</td>
+                            <td>{{ metric.change }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </article>
+
+        <article class="retro-card">
+            <div class="retro-card__header">
+                <h3>Quarterly shipping velocity</h3>
+                <span class="retro-tag">Chart 1</span>
+            </div>
+            <div class="retro-bars" role="list">
+                {% for slice in quarterly_velocity %}
+                    <div class="retro-bar" role="listitem">
+                        <div class="retro-bar__label">
+                            <span>{{ slice.label }}</span>
+                            <span class="retro-bar__count">{{ slice.count }} features</span>
+                        </div>
+                        <div class="retro-bar__track" aria-hidden="true">
+                            <div class="retro-bar__fill" style="width: {{ slice.percent }}%;"></div>
+                        </div>
+                        <p class="retro-bar__note">{{ slice.note }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="retro-card">
+            <div class="retro-card__header">
+                <h3>Investment by theme</h3>
+                <span class="retro-tag">Chart 2</span>
+            </div>
+            <div class="retro-donut">
+                {% for cat in category_mix %}
+                    <div class="retro-donut__slice">
+                        <div class="retro-donut__fill" style="--slice-size: {{ cat.percent }}%;"></div>
+                        <div class="retro-donut__label">
+                            <span>{{ cat.label }}</span>
+                            <span class="retro-donut__meta">{{ cat.percent }}% · {{ cat.note }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+
+        <article class="retro-card">
+            <div class="retro-card__header">
+                <h3>2026 projections</h3>
+                <span class="retro-tag">Table 2</span>
+            </div>
+            <table class="retro-table retro-table--dense">
+                <thead>
+                    <tr>
+                        <th scope="col">Pillar</th>
+                        <th scope="col">Target</th>
+                        <th scope="col">Timeline</th>
+                        <th scope="col">Owner</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for projection in projections_2026 %}
+                        <tr>
+                            <th scope="row">{{ projection.pillar }}</th>
+                            <td>{{ projection.target }}</td>
+                            <td>{{ projection.timeline }}</td>
+                            <td>{{ projection.owner }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </article>
+    </section>
+
+    <section class="retro-outro">
+        <div>
+            <p class="retro-eyebrow">Close-out</p>
+            <h3>Thanks for voting us this far</h3>
+            <p>
+                Every up-vote, CAPTCHA solve, and feature pitch keeps The Board honest. Tell us what you want to see in 2026, and keep the votes rolling so we never miss a day.
+            </p>
+        </div>
+        <div class="retro-logo">
+            <p class="retro-logo__label">The Board mark</p>
+            <img src="{% static 'img/the-board-retro-mark.svg' %}" alt="The Board geometric logo">
+        </div>
+    </section>
+</article>
+{% endblock %}

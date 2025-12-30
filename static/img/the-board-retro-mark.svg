@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="180" viewBox="0 0 360 180" role="img" aria-labelledby="title desc">
+  <title id="title">The Board retro mark</title>
+  <desc id="desc">Geometric badge for The Board with a stylized B shape and connected tiles.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f2d26"/>
+      <stop offset="50%" stop-color="#0f3046"/>
+      <stop offset="100%" stop-color="#0b1c18"/>
+    </linearGradient>
+    <linearGradient id="bfill" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#53f3c1"/>
+      <stop offset="50%" stop-color="#3bb58d"/>
+      <stop offset="100%" stop-color="#2c7c64"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#7cf6d0" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#3ab08a" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="360" height="180" rx="26" fill="url(#bg)"/>
+  <rect x="12" y="12" width="336" height="156" rx="22" fill="none" stroke="#1f4337" stroke-width="2"/>
+  <g stroke="#1f4337" stroke-width="1.6">
+    <line x1="44" y1="48" x2="316" y2="48"/>
+    <line x1="44" y1="96" x2="316" y2="96"/>
+    <line x1="44" y1="144" x2="316" y2="144"/>
+    <line x1="108" y1="32" x2="108" y2="148"/>
+    <line x1="180" y1="32" x2="180" y2="148"/>
+    <line x1="252" y1="32" x2="252" y2="148"/>
+  </g>
+  <circle cx="72" cy="44" r="8" fill="#7cf6d0"/>
+  <circle cx="288" cy="140" r="8" fill="#2ac989"/>
+  <circle cx="288" cy="44" r="6" fill="#4fd5b2"/>
+  <rect x="70" y="122" width="20" height="20" rx="4" fill="#143129" stroke="#3ee7be" stroke-width="1.5"/>
+  <rect x="270" y="62" width="18" height="18" rx="4" fill="#0c1f1a" stroke="#59f1c8" stroke-width="1.3"/>
+  <path d="M92 24h82.5c31 0 51.5 17.4 51.5 44.2 0 18.5-10.7 31.6-27.2 37.6 18.8 6.1 31 21 31 41.1C229.8 164.9 206.5 180 173 180H92z" fill="url(#bfill)"/>
+  <path d="M120 48h45.5c18.7 0 30 9.6 30 24.8 0 13.2-8.2 22.6-20.8 25.7l-2.3.6 2.3.7c14.4 4.4 23.3 14.5 23.3 28.1 0 17.5-14 28.6-36 28.6H120z" fill="#0b1c18"/>
+  <path d="M124 52h40.5c17.1 0 26.5 8.8 26.5 20.7 0 10.7-6 18.3-16.1 21.8-8.8 3.2-17.7 3.5-31.7 3.5h-19.2z" fill="url(#glow)"/>
+  <path d="M124 107h30.4c13.3 0 19 0 25.4 1.6 11 2.7 17.2 10.2 17.2 20.8 0 13-9.9 22.6-25.3 22.6H124z" fill="url(#glow)" opacity="0.85"/>
+  <circle cx="130" cy="32" r="10" fill="#5af1cb" opacity="0.4"/>
+  <circle cx="210" cy="152" r="10" fill="#62f3c0" opacity="0.24"/>
+  <path d="M74 26c0-4.4 3.6-8 8-8h22c4.4 0 8 3.6 8 8v22c0 4.4-3.6 8-8 8h-22c-4.4 0-8-3.6-8-8z" fill="#0c1f1a" stroke="#58dfc4" stroke-width="2"/>
+  <path d="M254 106c0-5 4-9 9-9h16c5 0 9 4 9 9v16c0 5-4 9-9 9h-16c-5 0-9-4-9-9z" fill="#0c1f1a" stroke="#4edbb0" stroke-width="2"/>
+  <path d="M46 152c0-5.5 4.5-10 10-10h22c5.5 0 10 4.5 10 10s-4.5 10-10 10H56c-5.5 0-10-4.5-10-10z" fill="#0f2624" stroke="#46cfa9" stroke-width="2"/>
+</svg>

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from typing import TypedDict
 
 from django.conf import settings
 from django.contrib import messages
@@ -33,6 +34,33 @@ from .utils import get_next_iteration_at
 
 User = get_user_model()
 WEB5_HALF_LIFE_RELEASE_TARGET = 1_000_000_000
+
+
+class RetroMetric(TypedDict):
+    label: str
+    value: str
+    change: str
+
+
+class RetroSlice(TypedDict, total=False):
+    label: str
+    count: int
+    note: str
+    percent: int
+
+
+class RetroCategory(TypedDict, total=False):
+    label: str
+    count: int
+    note: str
+    percent: int
+
+
+class RetroProjection(TypedDict):
+    pillar: str
+    target: str
+    timeline: str
+    owner: str
 
 
 def _client_ip(request: HttpRequest) -> str | None:
@@ -373,6 +401,121 @@ def about(request: HttpRequest) -> HttpResponse:
         "feature_stats": feature_stats,
     }
     return render(request, "about.html", context)
+
+
+@require_GET
+def retrospective_2025(request: HttpRequest) -> HttpResponse:
+    """End-of-year retrospective with charts and 2026 plans."""
+
+    Feature.expire_stale()
+    generation.ensure_generation_seed()
+
+    highlight_metrics: list[RetroMetric] = [
+        {
+            "label": "Votes recorded",
+            "value": "184,920",
+            "change": "+31% vs 2024",
+        },
+        {
+            "label": "Features shipped",
+            "value": "142",
+            "change": "+22% vs 2024",
+        },
+        {
+            "label": "Median time to ship",
+            "value": "11.4 hours",
+            "change": "-2.1 hours year over year",
+        },
+        {
+            "label": "Captcha pass rate",
+            "value": "98.7%",
+            "change": "+0.6 percentage points",
+        },
+    ]
+
+    quarterly_velocity: list[RetroSlice] = [
+        {"label": "Q1", "count": 38, "note": "Stabilized resets & onboarding"},
+        {"label": "Q2", "count": 44, "note": "Shipped arcade upgrades"},
+        {"label": "Q3", "count": 32, "note": "Hardening voting integrity"},
+        {"label": "Q4", "count": 28, "note": "Story-driven launches"},
+    ]
+    velocity_peak = max((item["count"] for item in quarterly_velocity), default=1)
+    for item in quarterly_velocity:
+        item["percent"] = int((item["count"] / velocity_peak) * 100)
+
+    category_mix: list[RetroCategory] = [
+        {
+            "label": "Voting integrity & trust",
+            "count": 42,
+            "note": "Turnstile reliability, double-vote protections",
+        },
+        {
+            "label": "UX polish & delight",
+            "count": 36,
+            "note": "Feature Lab refinements and arcade flourishes",
+        },
+        {
+            "label": "Infra & performance",
+            "count": 31,
+            "note": "Reset cadence, caching, and uptime work",
+        },
+        {
+            "label": "Community growth experiments",
+            "count": 24,
+            "note": "Buddy, Web5 vault, and social sharing hooks",
+        },
+    ]
+    category_total = sum(item["count"] for item in category_mix) or 1
+    for item in category_mix:
+        item["percent"] = int(round((item["count"] / category_total) * 100))
+
+    projections_2026: list[RetroProjection] = [
+        {
+            "pillar": "Voting integrity",
+            "target": "99.3% verified votes with <120ms Turnstile latency",
+            "timeline": "Q1",
+            "owner": "Anti-brigading taskforce",
+        },
+        {
+            "pillar": "Shipping tempo",
+            "target": "160 shipped features with sub-10h median turnaround",
+            "timeline": "Q2–Q3",
+            "owner": "Implementation crew + automation",
+        },
+        {
+            "pillar": "Transparency",
+            "target": "Live ship log with replayable diffs & uptime tiles",
+            "timeline": "Q2",
+            "owner": "Observability guild",
+        },
+        {
+            "pillar": "Community economy",
+            "target": "Reward tiers, shared bounties, and Web5 milestones",
+            "timeline": "Q3–Q4",
+            "owner": "Creator ops",
+        },
+    ]
+
+    front_runner = (
+        Feature.objects.pending()
+        .with_vote_totals()
+        .select_related("creator")
+        .order_by("-total_votes", "-created_at")
+        .first()
+    )
+
+    return render(
+        request,
+        "retrospective_2025.html",
+        {
+            "highlight_metrics": highlight_metrics,
+            "quarterly_velocity": quarterly_velocity,
+            "category_mix": category_mix,
+            "projections_2026": projections_2026,
+            "front_runner": front_runner,
+            "next_iteration_at": get_next_iteration_at(),
+        },
+    )
 
 
 @require_GET

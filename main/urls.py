@@ -27,6 +27,11 @@ urlpatterns = [
         name="feature-vote-toggle",
     ),
     path("about/", views.about, name="about"),
+    path(
+        "journal/2025-retrospective/",
+        views.retrospective_2025,
+        name="retrospective-2025",
+    ),
     path("sitemap/", views.sitemap, name="sitemap"),
     path("graveyard/", views.graveyard, name="graveyard"),
     path(

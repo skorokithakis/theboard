@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0020_feature_e2e_test_reference_and_more'),
+        ("main", "0020_feature_e2e_test_reference_and_more"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='feature',
-            name='implementation_commit_url',
-            field=models.URLField(blank=True, default='', help_text='Direct link to the GitHub commit or diff that shipped this feature so contributors can review the code.'),
+            model_name="feature",
+            name="implementation_commit_url",
+            field=models.URLField(
+                blank=True,
+                default="",
+                help_text="Direct link to the GitHub commit or diff that shipped this feature so contributors can review the code.",
+            ),
         ),
     ]

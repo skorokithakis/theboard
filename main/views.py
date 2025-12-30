@@ -594,6 +594,124 @@ def arcade(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
+def arcade_performance(request: HttpRequest) -> HttpResponse:
+    """Performance sprint playground with bragging rights."""
+
+    Feature.expire_stale()
+    lab_subjects = list(
+        Feature.objects.pending()
+        .with_vote_totals()
+        .select_related("creator")
+        .order_by("-total_votes", "-created_at")[:3]
+    )
+    queue_counts = Feature.objects.aggregate(
+        pending=Count(
+            "id",
+            filter=Q(implemented_at__isnull=True, expired_at__isnull=True),
+        ),
+        implemented=Count("id", filter=Q(implemented_at__isnull=False)),
+        expired=Count("id", filter=Q(expired_at__isnull=False)),
+    )
+
+    sprint_claims = [
+        {
+            "title": "Vote toggle round trip",
+            "before": "118 ms",
+            "after": "54 ms",
+            "note": "Turnstile proofs kept warm, no N+1s, and cached creator lookups.",
+        },
+        {
+            "title": "Feature Lab render",
+            "before": "240 ms",
+            "after": "112 ms",
+            "note": "Annotated vote totals and predictable ordering trim template work.",
+        },
+        {
+            "title": "Plaintext submission",
+            "before": "88 ms",
+            "after": "41 ms",
+            "note": "Lean form hints, no extra chrome, and optimistic validation.",
+        },
+        {
+            "title": "Arcade asset preload",
+            "before": "320 KB",
+            "after": "156 KB",
+            "note": "Deferred heavyweight sprites until someone actually spawns them.",
+        },
+    ]
+
+    ritual_steps = [
+        {
+            "stage": "01",
+            "title": "Chug a virtual energy drink",
+            "detail": "Flood the boost meter, because obviously that makes benchmarks honest.",
+        },
+        {
+            "stage": "02",
+            "title": "Benchmark something random",
+            "detail": "Pick a workload, halve the numbers, and celebrate questionable statistics.",
+        },
+        {
+            "stage": "03",
+            "title": "Brag about nanoseconds saved",
+            "detail": "Announce your 2x win to the brag log and dare anyone to disagree.",
+        },
+    ]
+
+    micro_benchmarks = [
+        {
+            "name": "Vote toggle API",
+            "note": "Reused session and kept the Turnstile verifier warm.",
+        },
+        {
+            "name": "Feature board hydration",
+            "note": "Skipped cold queries by leaning on annotated totals.",
+        },
+        {
+            "name": "Plaintext postback",
+            "note": "Validation runs without loading a single icon.",
+        },
+        {
+            "name": "Arcade soundtrack spin-up",
+            "note": "Audio buffers preloaded so the first beat lands on time.",
+        },
+        {
+            "name": "Scoreboard aggregates",
+            "note": "Only recalculated changed creators to keep the arena light.",
+        },
+        {
+            "name": "Fortune rotation",
+            "note": "Memoized daily picks so the oracle stays instant.",
+        },
+    ]
+
+    lab_events = [
+        {
+            "title": "Bench harness pre-warmed",
+            "note": "Cache primed so the first click already claims a 2x win.",
+        },
+        {
+            "title": "Ritual queued",
+            "note": "Energy drink is chilling until someone kicks off the sprint.",
+        },
+    ]
+
+    return render(
+        request,
+        "arcade/performance_sprint.html",
+        {
+            "lab_subjects": lab_subjects,
+            "queue_counts": queue_counts,
+            "sprint_claims": sprint_claims,
+            "ritual_steps": ritual_steps,
+            "micro_benchmarks": micro_benchmarks,
+            "lab_events": lab_events,
+            "next_iteration_at": get_next_iteration_at(),
+        },
+    )
+
+
+@require_GET
 def arcade_terrarium(request: HttpRequest) -> HttpResponse:
     """Interactive falling-sand terrarium in its own arcade room."""
 

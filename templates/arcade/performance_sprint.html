@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Performance Sprint | {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="performance-hero" data-performance-lab data-soundtrack="pulse">
+    <div class="performance-hero__copy">
+        <p class="page-eyebrow">Arcade lab</p>
+        <h1 class="page-title">Performance sprint for no reason</h1>
+        <p class="page-lead">
+            Run an absurd speed push where everything is declared 2x faster even if nobody asked. Chug the virtual
+            energy drink, benchmark something random, and brag about nanoseconds saved.
+        </p>
+        <div class="performance-hero__actions">
+            <button class="button" type="button" data-energy-button>Chug virtual energy drink</button>
+            <button class="button-outline" type="button" data-benchmark-button>Benchmark something random</button>
+        </div>
+        <div class="performance-hero__meta">
+            <span class="performance-pill">Ritual: Chug, benchmark, brag.</span>
+            <span class="performance-pill performance-pill--accent">Goal: 2x faster—because why not.</span>
+            {% if next_iteration_at %}
+                <span class="performance-pill">Next implementation: {{ next_iteration_at|date:"M j, H:i T" }}</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="performance-meter" data-energy-meter>
+        <p class="performance-meter__label">Boost meter</p>
+        <div class="performance-meter__bar" role="img" aria-label="Performance boost meter">
+            <span class="performance-meter__fill" data-energy-fill style="width: 28%;"></span>
+        </div>
+        <p class="performance-meter__note" data-energy-note>Idle: waiting for the ritual.</p>
+    </div>
+</section>
+
+<section class="performance-grid">
+    <article class="performance-card">
+        <div class="performance-card__header">
+            <div>
+                <p class="performance-card__eyebrow">Absurd targets</p>
+                <h2>Everything, but 2x faster</h2>
+            </div>
+            <span class="performance-chip">Sprint log</span>
+        </div>
+        <ul class="performance-claims">
+            {% for claim in sprint_claims %}
+                <li class="performance-claim">
+                    <div class="performance-claim__title">{{ claim.title }}</div>
+                    <div class="performance-claim__stats" aria-label="{{ claim.title }} improved from {{ claim.before }} to {{ claim.after }}">
+                        <span class="performance-claim__before">{{ claim.before }}</span>
+                        <span class="performance-claim__arrow" aria-hidden="true">→</span>
+                        <span class="performance-claim__after">{{ claim.after }}</span>
+                    </div>
+                    <p class="performance-claim__note">{{ claim.note }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    </article>
+
+    <article class="performance-card performance-card--log">
+        <div class="performance-card__header">
+            <div>
+                <p class="performance-card__eyebrow">Bench lab</p>
+                <h2>Spin up a brag</h2>
+            </div>
+            <button class="button-ghost button-small" type="button" data-clear-log>Clear log</button>
+        </div>
+        <p class="performance-card__note">Hit benchmark to roll a workload, halve the numbers, and brag responsibly.</p>
+        <div class="performance-log" aria-live="polite" data-brag-target>Cache warmed. Ready to flex.</div>
+        <ol class="performance-log__list" data-benchmark-log>
+            {% for event in lab_events %}
+                <li class="performance-log__item">
+                    <div class="performance-log__title">{{ event.title }}</div>
+                    <p class="performance-log__note">{{ event.note }}</p>
+                </li>
+            {% endfor %}
+        </ol>
+    </article>
+
+    <article class="performance-card">
+        <div class="performance-card__header">
+            <div>
+                <p class="performance-card__eyebrow">Queue under inspection</p>
+                <h2>Subjects of the sprint</h2>
+            </div>
+            <span class="performance-chip">Pending: {{ queue_counts.pending|default:0 }}</span>
+        </div>
+        <ul class="performance-features">
+            {% for feature in lab_subjects %}
+                <li class="performance-feature">
+                    <div>
+                        <p class="performance-feature__title">{{ feature.title }}</p>
+                        <p class="performance-feature__meta">by {{ feature.creator.display_name }} · {{ feature.vote_total }} votes</p>
+                    </div>
+                    <div class="performance-feature__stat">{{ feature.vote_total }}x</div>
+                </li>
+            {% empty %}
+                <li class="performance-feature performance-feature--empty">
+                    <p>No pending features in the queue. The sprint auto-seeded itself—add something bold to benchmark.</p>
+                </li>
+            {% endfor %}
+        </ul>
+        <dl class="performance-stats">
+            <div class="performance-stat">
+                <dt>Implemented</dt>
+                <dd>{{ queue_counts.implemented|default:0 }}</dd>
+            </div>
+            <div class="performance-stat">
+                <dt>Graveyard</dt>
+                <dd>{{ queue_counts.expired|default:0 }}</dd>
+            </div>
+            <div class="performance-stat">
+                <dt>Next iteration</dt>
+                <dd>{% if next_iteration_at %}{{ next_iteration_at|date:"M j, H:i T" }}{% else %}Queued{% endif %}</dd>
+            </div>
+        </dl>
+    </article>
+</section>
+
+<section class="performance-rituals">
+    <div class="performance-rituals__header">
+        <p class="performance-card__eyebrow">Ritual</p>
+        <h2>How this sprint keeps momentum</h2>
+        <p>Follow the chaotic recipe: boost, benchmark, and brag until the lab lights dim.</p>
+    </div>
+    <div class="performance-rituals__grid">
+        {% for ritual in ritual_steps %}
+            <article class="performance-ritual">
+                <p class="performance-ritual__stage">{{ ritual.stage }}</p>
+                <h3>{{ ritual.title }}</h3>
+                <p>{{ ritual.detail }}</p>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ micro_benchmarks|json_script:"performance-benchmarks" }}
+    <script src="{% static 'js/performance-sprint.js' %}" defer></script>
+{% endblock %}

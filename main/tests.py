@@ -1298,6 +1298,39 @@ class GraveyardViewTests(TestCase):
         self.assertEqual(response.context["total_features"], 0)
 
 
+class PerformanceSprintViewTests(TestCase):
+    def setUp(self) -> None:
+        self.user = factories.UserFactory()
+
+    def _static_override(self):
+        storage_settings = {
+            **settings.STORAGES,
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            },
+        }
+        return override_settings(
+            STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage",
+            STORAGES=storage_settings,
+        )
+
+    def test_performance_sprint_lists_claims_and_subjects(self) -> None:
+        feature = factories.FeatureFactory(
+            title="Benchmark-ready idea",
+            creator=self.user,
+        )
+        factories.VoteFactory(user=self.user, feature=feature)
+
+        with self._static_override():
+            response = self.client.get(reverse("main:arcade-performance"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context["sprint_claims"])
+        self.assertIn(feature, response.context["lab_subjects"])
+        self.assertContains(response, "Performance sprint for no reason")
+        self.assertContains(response, feature.title)
+
+
 class ScoreboardViewTests(TestCase):
     def setUp(self) -> None:
         self.user = factories.UserFactory()

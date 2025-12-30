@@ -18,6 +18,11 @@ urlpatterns = [
     path("web5/", views.web5, name="web5"),
     path("arcade/", views.arcade, name="arcade"),
     path("arcade/penguins/", views.penguin_view, name="penguin-view"),
+    path(
+        "arcade/performance/",
+        views.arcade_performance,
+        name="arcade-performance",
+    ),
     path("arcade/terrarium/", views.arcade_terrarium, name="arcade-terrarium"),
     path("arcade/quotes/", views.arcade_quotes, name="arcade-quotes"),
     path("arcade/buddy/", views.arcade_buddy, name="arcade-buddy"),

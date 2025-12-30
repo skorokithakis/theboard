@@ -59,6 +59,12 @@ NAV_SECTIONS: list[dict[str, Any]] = [
                 "kind": "library",
             },
             {
+                "name": "arcade-performance",
+                "label": "Performance Sprint",
+                "summary": "Benchmark the board until everything claims a 2x speedup.",
+                "kind": "fortress",
+            },
+            {
                 "name": "arcade-quotes",
                 "label": "Quote Oracle",
                 "summary": "Fortunes and quote submissions.",

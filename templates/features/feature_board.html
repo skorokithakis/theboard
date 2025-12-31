@@ -18,6 +18,20 @@
     </div>
 </section>
 
+{% if shipped_milestone %}
+<section class="milestone-banner" role="status" aria-live="polite">
+    <div class="milestone-banner__icon" aria-hidden="true">100</div>
+    <div class="milestone-banner__content">
+        <p class="milestone-banner__eyebrow">Milestone reached</p>
+        <div class="milestone-banner__headline">
+            <h2 class="milestone-banner__title">{{ shipped_milestone.title }}</h2>
+            <span class="milestone-banner__count">{{ shipped_milestone.count }} shipped ideas</span>
+        </div>
+        <p class="milestone-banner__copy">{{ shipped_milestone.message }}</p>
+    </div>
+</section>
+{% endif %}
+
 <section class="feature-lab" aria-labelledby="feature-lab-heading">
     <div class="feature-lab__panel">
         <p class="feature-lab__eyebrow">Submit</p>
@@ -28,7 +42,13 @@
         {% elif not can_submit %}
             <p class="feature-lab__note">Daily submission limit reached. Come back after the next reset.</p>
         {% else %}
-            <form class="feature-form" method="post" action="{% url 'main:feature-board' %}">
+            {% if variation_parent %}
+                <div class="feature-lab__note feature-lab__note--variation">
+                    Adding a variation to "{{ variation_parent.title }}".
+                    <a href="{% url 'main:feature-board' %}#feature-lab-heading">Switch back to a new idea</a>
+                </div>
+            {% endif %}
+            <form id="feature-lab-form" class="feature-form" method="post" action="{% url 'main:feature-board' %}">
                 {% csrf_token %}
                 {% if submission_form.non_field_errors %}
                     <p class="form-error">{{ submission_form.non_field_errors|striptags }}</p>
@@ -47,6 +67,7 @@
                         <p class="form-error">{{ error }}</p>
                     {% endfor %}
                 </div>
+                {{ submission_form.parent.as_hidden }}
                 {% if turnstile_site_key %}
                     <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
                 {% else %}
@@ -75,8 +96,14 @@
                             </p>
                         </header>
                         <p class="feature-card__description">{{ feature.description }}</p>
+                        {% if feature.expires_at %}
+                            <p class="feature-card__expiry">Expires in {{ feature.expires_at|timeuntil }}</p>
+                        {% endif %}
                         <div class="feature-card__footer">
-                            <div class="feature-card__votes">Votes: {{ feature.vote_total }}</div>
+                            <div class="feature-card__signals">
+                                <div class="feature-card__votes">Votes: {{ feature.vote_total }}</div>
+                                <a class="button-muted button-sm" href="{% url 'main:feature-board' %}?parent={{ feature.id }}#feature-lab-form">Add variation</a>
+                            </div>
                             <form class="feature-card__vote-form" method="post" action="{% url 'main:feature-vote-toggle' feature.id %}">
                                 {% csrf_token %}
                                 {% if turnstile_site_key %}

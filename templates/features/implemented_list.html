@@ -31,6 +31,20 @@
     </form>
 </section>
 
+{% if shipped_milestone %}
+<section class="milestone-banner" role="status" aria-live="polite">
+    <div class="milestone-banner__icon" aria-hidden="true">100</div>
+    <div class="milestone-banner__content">
+        <p class="milestone-banner__eyebrow">Milestone reached</p>
+        <div class="milestone-banner__headline">
+            <h2 class="milestone-banner__title">{{ shipped_milestone.title }}</h2>
+            <span class="milestone-banner__count">{{ shipped_milestone.count }} shipped ideas</span>
+        </div>
+        <p class="milestone-banner__copy">{{ shipped_milestone.message }}</p>
+    </div>
+</section>
+{% endif %}
+
 <section class="implemented-grid" aria-live="polite">
     {% if implemented_features %}
     <ul class="implemented-list" role="list">

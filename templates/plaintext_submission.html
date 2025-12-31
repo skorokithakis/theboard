@@ -10,6 +10,14 @@
         <p>This page exists as a no-frills fallback so feature submissions and votes keep working if the main interface ever breaks. Do not add styling, scripts, or other extras here; only adjust this page when required to keep submissions and voting functional.</p>
         <p>If the primary UI is unavailable, use this page to submit a feature and vote it up with the required Cloudflare captcha.</p>
 
+        {% if shipped_milestone %}
+        <section aria-label="Shipped milestone">
+            <h2>{{ shipped_milestone.title }}</h2>
+            <p>{{ shipped_milestone.message }}</p>
+            <p>Total shipped suggestions: {{ shipped_milestone.count }}</p>
+        </section>
+        {% endif %}
+
         {% if messages %}
         <ul>
             {% for message in messages %}
@@ -25,6 +33,9 @@
             {% elif not can_submit %}
             <p>You have reached the daily submission limit for new features.</p>
             {% else %}
+            {% if variation_parent %}
+            <p>You are adding a variation to "{{ variation_parent.title }}". <a href="{% url 'main:plaintext-submission' %}#plaintext-submit-heading">Submit a new feature instead.</a></p>
+            {% endif %}
             <form method="post" action="{% url 'main:plaintext-submission' %}">
                 {% csrf_token %}
                 {% if submission_form.non_field_errors %}
@@ -46,6 +57,7 @@
                     <p>{{ error }}</p>
                     {% endfor %}
                 </div>
+                {{ submission_form.parent.as_hidden }}
                 {% if turnstile_site_key %}
                 <div class="cf-turnstile" data-sitekey="{{ turnstile_site_key }}" data-response-field-name="turnstile_token"></div>
                 {% else %}
@@ -67,6 +79,10 @@
                     <h3>{{ feature.title }}</h3>
                     <p>{{ feature.description }}</p>
                     <p>Votes: {{ feature.vote_total }}</p>
+                    {% if feature.expires_at %}
+                    <p>Expires in {{ feature.expires_at|timeuntil }}</p>
+                    {% endif %}
+                    <p><a href="{% url 'main:plaintext-submission' %}?parent={{ feature.id }}#plaintext-submit-heading">Add variation to this feature</a></p>
                     <form method="post" action="{% url 'main:plaintext-vote-toggle' feature.id %}">
                         {% csrf_token %}
                         {% if turnstile_site_key %}

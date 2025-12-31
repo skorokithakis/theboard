@@ -5,17 +5,18 @@ from __future__ import annotations
 import hashlib
 from typing import TypedDict
 
+from django import forms
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.db.models import Count, F, Max, Q, Sum, Value
 from django.db.models.functions import Coalesce, Greatest
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
-from django.core.exceptions import PermissionDenied
 
 from .economy import daily_bonus_status
 from .forms import (
@@ -120,6 +121,57 @@ def _pending_features_with_vote_state(user: BoardUser) -> list[Feature]:
     return features
 
 
+def _resolve_variation_parent(request: HttpRequest) -> Feature | None:
+    """Return the pending feature selected as a variation parent, if any."""
+
+    parent_raw = request.GET.get("parent") or request.POST.get("parent")
+    if not parent_raw:
+        return None
+    try:
+        parent_id = int(parent_raw)
+    except (TypeError, ValueError):
+        return None
+    return (
+        Feature.objects.pending().select_related("creator").filter(id=parent_id).first()
+    )
+
+
+def _shipped_milestone(
+    total_implemented: int | None = None,
+) -> dict[str, object] | None:
+    """Return milestone metadata when the shipped count crosses the celebration threshold."""
+
+    milestone_target = 100
+    implemented = total_implemented
+    if implemented is None:
+        implemented = Feature.objects.implemented().count()
+    if implemented < milestone_target:
+        return None
+
+    return {
+        "title": "100 shipped suggestions!",
+        "message": "We have officially shipped triple digits of community ideas. Thank you for pushing every vote through the finish line.",
+        "count": implemented,
+    }
+
+
+def _build_feature_submission_form(
+    request: HttpRequest, *, variation_parent: Feature | None = None
+) -> FeatureForm:
+    """Return the feature submission form with hidden variation support."""
+
+    form = FeatureForm(
+        request.POST or None,
+        allow_parent=True,
+    )
+    if "parent" in form.fields:
+        form.fields["parent"].widget = forms.HiddenInput()
+        form.fields["parent"].initial = (
+            variation_parent.pk if variation_parent else None
+        )
+    return form
+
+
 def _personalized_lane_context(
     user: BoardUser, pending_features: list[Feature]
 ) -> dict[str, object]:
@@ -204,10 +256,13 @@ def _fresh_board_context(
     submission_form: FeatureForm | None = None,
     can_submit: bool | None = None,
     investment_form: WebFiveInvestmentForm | None = None,
+    variation_parent: Feature | None = None,
 ) -> dict[str, object]:
     """Build the minimal context the reset homepage expects."""
 
-    form = submission_form or FeatureForm(allow_parent=False)
+    form = submission_form or _build_feature_submission_form(
+        request, variation_parent=variation_parent
+    )
     if can_submit is None:
         can_submit = (
             request.user.is_authenticated
@@ -234,6 +289,8 @@ def _fresh_board_context(
             "total_committed": WebFiveInvestment.objects.total_committed(),
             "user_committed": WebFiveInvestment.objects.total_for_user(request.user),
         },
+        "variation_parent": variation_parent,
+        "shipped_milestone": _shipped_milestone(),
     }
 
 
@@ -334,9 +391,9 @@ def feature_board(request: HttpRequest) -> HttpResponse:
     Feature.expire_stale()
 
     status_code = 200
-    submission_form = FeatureForm(
-        request.POST or None,
-        allow_parent=False,
+    variation_parent = _resolve_variation_parent(request)
+    submission_form = _build_feature_submission_form(
+        request, variation_parent=variation_parent
     )
     can_submit = (
         request.user.is_authenticated
@@ -382,6 +439,7 @@ def feature_board(request: HttpRequest) -> HttpResponse:
             request,
             submission_form=submission_form,
             can_submit=can_submit,
+            variation_parent=variation_parent,
         ),
         status=status_code,
     )
@@ -809,6 +867,8 @@ def implemented_features(request: HttpRequest) -> HttpResponse:
 
     implemented_features = list(implemented_qs)
 
+    milestone = _shipped_milestone(total_implemented)
+
     return render(
         request,
         "features/implemented_list.html",
@@ -817,6 +877,7 @@ def implemented_features(request: HttpRequest) -> HttpResponse:
             "search_query": search_query,
             "total_implemented": total_implemented,
             "filtered_count": len(implemented_features),
+            "shipped_milestone": milestone,
         },
     )
 
@@ -827,9 +888,9 @@ def plaintext_submission(request: HttpRequest) -> HttpResponse:
 
     Feature.expire_stale()
     status_code = 200
-    submission_form = FeatureForm(
-        request.POST or None,
-        allow_parent=False,
+    variation_parent = _resolve_variation_parent(request)
+    submission_form = _build_feature_submission_form(
+        request, variation_parent=variation_parent
     )
     can_submit = (
         request.user.is_authenticated
@@ -873,6 +934,8 @@ def plaintext_submission(request: HttpRequest) -> HttpResponse:
         "features": _pending_features_with_vote_state(request.user),
         "turnstile_site_key": getattr(settings, "TURNSTILE_SITE_KEY", ""),
         "can_submit": can_submit,
+        "variation_parent": variation_parent,
+        "shipped_milestone": _shipped_milestone(),
     }
     return render(
         request,

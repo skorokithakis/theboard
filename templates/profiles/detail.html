@@ -6,16 +6,27 @@
 <section class="profile-section">
     <article class="profile-card profile-card--identity">
         <div class="profile-identity">
-            <div class="profile-avatar" style="
+            <div class="profile-avatar{% if profile_avatar.url %} profile-avatar--image{% endif %}" style="
                 --avatar-rotation: {{ profile_avatar.rotation }}deg;
                 --avatar-gradient-start: {{ profile_avatar.gradient_start }};
                 --avatar-gradient-stop: {{ profile_avatar.gradient_stop }};
                 --avatar-spark: {{ profile_avatar.spark_color }};
                 --avatar-noise: {{ profile_avatar.noise_opacity }};
             ">
+                {% if profile_avatar.url %}
+                <img
+                    src="{{ profile_avatar.url }}"
+                    alt="{{ profile_user.display_name }} avatar"
+                    class="profile-avatar__image"
+                    width="128"
+                    height="128"
+                    loading="lazy"
+                >
+                {% else %}
                 <span class="profile-avatar__ring"></span>
                 <span class="profile-avatar__spark"></span>
                 <span class="profile-avatar__initial">{{ profile_avatar.initial }}</span>
+                {% endif %}
             </div>
             <div class="profile-heading">
                 <p class="profile-eyebrow profile-eyebrow--row">

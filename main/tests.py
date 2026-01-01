@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+import os
+import shutil
+import tempfile
 from datetime import date, datetime, timedelta, timezone as dt_timezone
+from contextlib import contextmanager
 from unittest import mock
 
 from django.conf import settings
@@ -10,6 +14,7 @@ from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from PIL import Image
 
 from . import (
     economy,
@@ -24,6 +29,17 @@ from . import (
 )
 
 User = get_user_model()
+
+
+@contextmanager
+def temporary_media_root():
+    """Route media writes to a disposable directory for tests."""
+    media_dir = tempfile.mkdtemp(prefix="media-test-")
+    try:
+        with override_settings(MEDIA_ROOT=media_dir, MEDIA_URL="/media/"):
+            yield media_dir
+    finally:
+        shutil.rmtree(media_dir, ignore_errors=True)
 
 
 class FeatureBoardTests(TestCase):
@@ -84,6 +100,57 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(data["daily_bonus_amount"], economy.DAILY_LOGIN_BONUS)
         self.assertFalse(data["user"]["daily_bonus_available"])
         self.assertIsNotNone(data["user"]["next_daily_bonus_at"])
+
+    def test_feature_submission_generates_avatar_file(self) -> None:
+        self.client.login(username=self.owner.username, password=self.default_password)
+        payload = {
+            "title": "Avatar-worthy feature",
+            "description": "Submitting should render a fresh avatar.",
+        }
+
+        with temporary_media_root():
+            response = self.client.post(
+                "/api/features/create",
+                payload,
+                content_type="application/json",
+            )
+            self.assertEqual(response.status_code, 201)
+
+            self.owner.refresh_from_db()
+            self.assertTrue(self.owner.avatar.name.endswith(".webp"))
+            avatar_path = self.owner.avatar.path
+            self.assertTrue(os.path.exists(avatar_path))
+            with Image.open(avatar_path) as avatar_image:
+                self.assertEqual(avatar_image.size, (256, 256))
+                self.assertEqual(avatar_image.format, "WEBP")
+
+    def test_avatar_refreshes_when_feature_ships(self) -> None:
+        self.client.login(username=self.owner.username, password=self.default_password)
+        payload = {
+            "title": "Shippable idea",
+            "description": "Getting this implemented should refresh the avatar.",
+        }
+
+        with temporary_media_root():
+            response = self.client.post(
+                "/api/features/create",
+                payload,
+                content_type="application/json",
+            )
+            self.assertEqual(response.status_code, 201)
+            feature_id = response.json()["feature"]["id"]
+
+            self.owner.refresh_from_db()
+            initial_name = self.owner.avatar.name
+
+            feature = models.Feature.objects.get(pk=feature_id)
+            feature.implement(when=timezone.now())
+
+            self.owner.refresh_from_db()
+            self.assertTrue(self.owner.avatar.name.endswith(".webp"))
+            self.assertNotEqual(initial_name, self.owner.avatar.name)
+            with Image.open(self.owner.avatar.path) as avatar_image:
+                self.assertEqual(avatar_image.format, "WEBP")
 
     def test_feature_list_orders_by_vote_total(self) -> None:
         low = self._submit_feature(title="Low votes")

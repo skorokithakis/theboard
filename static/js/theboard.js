@@ -677,7 +677,9 @@
       ".tb-form-error { font-size: 0.875rem; color: #ffd5dc; background: rgba(244, 91, 105, 0.18); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid rgba(244, 91, 105, 0.35); }",
       ".tb-user-card { display: flex; flex-direction: column; gap: 0.5rem; }",
       ".tb-user-badge { display: flex; align-items: center; gap: 0.75rem; }",
-      ".tb-user-avatar { width: 2.75rem; height: 2.75rem; border-radius: 14px; background: linear-gradient(135deg, #f3c969, #dba53c); color: #0c1f27; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; }",
+      ".tb-user-avatar { width: 2.75rem; height: 2.75rem; border-radius: 14px; background: linear-gradient(135deg, #f3c969, #dba53c); color: #0c1f27; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; overflow: hidden; }",
+      ".tb-user-avatar--image { padding: 0; display: inline-block; background: #0c1f27; border-radius: 14px; object-fit: cover; }",
+      ".tb-user-avatar--image.tb-user-avatar { width: 2.75rem; height: 2.75rem; }",
       ".tb-user-name { font-size: 1rem; font-weight: 600; color: #f1f5f9; }",
       ".tb-user-handle { font-size: 0.875rem; color: #94a3b8; }",
       ".tb-user-actions { display: inline-flex; gap: 0.75rem; align-items: center; }",
@@ -1619,9 +1621,19 @@
       var badge = document.createElement("div");
       badge.className = "tb-user-badge";
 
-      var avatar = document.createElement("span");
-      avatar.className = "tb-user-avatar";
-      avatar.textContent = getInitials(STATE.user);
+      var avatar;
+      if (STATE.user.avatar_url) {
+        avatar = document.createElement("img");
+        avatar.className = "tb-user-avatar tb-user-avatar--image";
+        avatar.src = STATE.user.avatar_url;
+        avatar.alt =
+          (STATE.user.display_name || STATE.user.username || "Board member") +
+          " avatar";
+      } else {
+        avatar = document.createElement("span");
+        avatar.className = "tb-user-avatar";
+        avatar.textContent = getInitials(STATE.user);
+      }
       badge.appendChild(avatar);
 
       var info = document.createElement("div");

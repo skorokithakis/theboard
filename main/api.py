@@ -17,7 +17,7 @@ from ninja import NinjaAPI
 from ninja.errors import HttpError
 from ninja.security import SessionAuth
 
-from . import economy, generation, models, schemas, turnstile
+from . import avatars, economy, generation, models, schemas, turnstile
 from .utils import get_next_iteration_at
 
 FEATURE_DAILY_LIMIT = 3
@@ -68,6 +68,7 @@ def _serialize_user(user: models.User) -> dict[str, Any]:
         "id": user.pk,
         "username": user.username,
         "display_name": user.display_name,
+        "avatar_url": user.avatar_url,
         "status": user.status,
         "is_superuser": user.is_superuser,
         "balance": user.balance,
@@ -292,6 +293,7 @@ def feature_create(
     )
 
     models.Vote.objects.create(user=request.user, feature=feature)
+    avatars.refresh_user_avatar(request.user)
 
     vote_ids = _user_vote_ids(request.user)
     return 201, {

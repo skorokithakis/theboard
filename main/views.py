@@ -30,7 +30,7 @@ from .fortune import get_daily_fortune
 from .navigation import build_sitemap_destinations
 from .models import Feature, QuoteSuggestion, User as BoardUser, Vote, WebFiveInvestment
 from .terrarium import build_terrarium_state
-from . import generation, turnstile
+from . import avatars, generation, turnstile
 from .utils import get_next_iteration_at
 
 User = get_user_model()
@@ -86,6 +86,7 @@ def _profile_avatar_descriptor(user: BoardUser) -> dict[str, str]:
 
     seed = (user.username or str(user.pk) or "member").lower()
     digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()
+    avatar_url = getattr(user, "avatar_url", None) or ""
 
     hue_primary = int(digest[:2], 16) % 360
     hue_secondary = int(digest[2:4], 16) % 360
@@ -101,6 +102,7 @@ def _profile_avatar_descriptor(user: BoardUser) -> dict[str, str]:
 
     return {
         "initial": initial,
+        "url": avatar_url,
         "gradient_start": f"hsl({hue_primary}, {saturation}%, {base_lightness}%)",
         "gradient_stop": f"hsl({hue_secondary}, {saturation}%, {accent_lightness}%)",
         "rotation": str(rotation),
@@ -427,6 +429,7 @@ def feature_board(request: HttpRequest) -> HttpResponse:
                 feature.creator = request.user
                 feature.save()
                 Vote.objects.create(user=request.user, feature=feature)
+                avatars.refresh_user_avatar(request.user)
                 messages.success(request, "Feature submitted to the fresh board.")
                 return redirect("main:feature-board")
             elif verification_success:

@@ -13,6 +13,7 @@ class UserSchema(Schema):
     id: int
     username: str
     display_name: str
+    avatar_url: str | None = None
     status: str | None = None
     is_superuser: bool
     balance: int

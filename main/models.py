@@ -67,6 +67,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         unique=True,
         help_text="Unique handle members use to sign in and identify themselves.",
     )
+    avatar = models.ImageField(
+        upload_to="avatars/",
+        null=True,
+        blank=True,
+        help_text=(
+            "Board-managed 256x256 WebP avatar that visualizes how this member contributes to the site."
+        ),
+    )
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=150, blank=True)
     status = models.CharField(
@@ -116,6 +124,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         """Readable name for templates and API payloads."""
         full_name = self.get_full_name()
         return full_name if full_name else self.username
+
+    @property
+    def avatar_url(self) -> str | None:
+        """Return the stored avatar URL if one exists."""
+        avatar_file = getattr(self, "avatar", None)
+        if avatar_file and getattr(avatar_file, "name", None):
+            try:
+                return avatar_file.url
+            except ValueError:
+                return None
+        return None
 
     def get_full_name(self) -> str:
         return " ".join(filter(None, [self.first_name, self.last_name]))
@@ -299,6 +318,9 @@ class Feature(models.Model):
             update_fields.append("implementation_commit_url")
         self.save(update_fields=update_fields)
         self._delete_descendant_variations()
+        from . import avatars
+
+        avatars.refresh_user_avatar(self.creator)
 
     def _delete_descendant_variations(self) -> None:
         """Delete every variation branching from this feature."""

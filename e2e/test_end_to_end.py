@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from playwright.sync_api import Playwright, expect
 from uuid import uuid4
 
@@ -183,3 +185,33 @@ def test_arcade_terrarium_interactions(anonymous_page, live_server: str):
     serve_button.click()
     breaker_status = page.locator("[data-breaker-status]")
     assert "orb" in breaker_status.inner_text().lower()
+
+
+def test_assistant_toggle_and_gift_effect(auth_session, live_server: str):
+    page = auth_session["page"]
+    page.goto("/arcade/buddy/", wait_until="networkidle")
+
+    body = page.locator("body")
+    toggle = page.locator("[data-shimeji-master-toggle]")
+    expect(toggle).to_be_visible()
+    expect(body).to_have_attribute("data-shimeji-enabled", "false")
+
+    toggle.click()
+    expect(body).to_have_attribute("data-shimeji-enabled", "true")
+    buddy = page.locator("[data-shimeji-root]")
+    expect(buddy).to_be_visible()
+
+    page.locator("[data-shimeji-open-shop]").first.click()
+    lantern_action = page.locator("[data-item-id='lantern'] [data-purchase]")
+    expect(lantern_action).to_be_visible()
+    lantern_action.click()
+    expect(lantern_action).to_be_disabled()
+    assert page.evaluate("document.body.classList.contains('has-shimeji-lantern')")
+    assert buddy.evaluate("node => node.classList.contains('has-lantern')")
+
+    page.locator(".shimeji-shop__close").click()
+    expect(page.locator(".shimeji-shop")).not_to_have_class(re.compile("is-open"))
+
+    toggle.click()
+    expect(body).to_have_attribute("data-shimeji-enabled", "false")
+    assert buddy.evaluate("node => node.classList.contains('is-hidden')")

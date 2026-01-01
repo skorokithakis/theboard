@@ -38,13 +38,15 @@ class ContributionProfile:
         )
 
 
-def _hsl_to_rgb(h: float, s: float, l: float) -> tuple[int, int, int]:
+def _hsl_to_rgb(h: float, s: float, light: float) -> tuple[int, int, int]:
     """Convert HSL values (0-360, 0-100, 0-100) to an RGB tuple."""
-    r, g, b = colorsys.hls_to_rgb(h / 360.0, l / 100.0, s / 100.0)
+    r, g, b = colorsys.hls_to_rgb(h / 360.0, light / 100.0, s / 100.0)
     return (int(r * 255), int(g * 255), int(b * 255))
 
 
-def _palette_from_digest(seed: bytes, contribution: ContributionProfile) -> list[tuple[int, int, int]]:
+def _palette_from_digest(
+    seed: bytes, contribution: ContributionProfile
+) -> list[tuple[int, int, int]]:
     """Generate a joyful palette influenced by the user's contributions."""
     base_hue = seed[0] % 360
     vibrancy = min(82, 55 + contribution.features_submitted * 3)
@@ -95,7 +97,13 @@ def _draw_arc_bursts(
             cy + radius,
         )
         color = palette[layer % len(palette)]
-        draw.arc(bbox, start=start_angle, end=start_angle + extent, fill=color, width=thickness)
+        draw.arc(
+            bbox,
+            start=start_angle,
+            end=start_angle + extent,
+            fill=color,
+            width=thickness,
+        )
 
 
 def _draw_stars(
@@ -176,11 +184,15 @@ def generate_user_avatar(user: User) -> str | None:
     light_draw.ellipse(
         (-40, AVATAR_SIZE * 0.2, AVATAR_SIZE * 0.8, AVATAR_SIZE * 1.1), fill=light_color
     )
-    canvas = Image.alpha_composite(canvas, light.filter(ImageFilter.GaussianBlur(radius=24)))
+    canvas = Image.alpha_composite(
+        canvas, light.filter(ImageFilter.GaussianBlur(radius=24))
+    )
 
     center = (AVATAR_SIZE / 2, AVATAR_SIZE / 2)
     submission_layers = range(max(3, profile.features_submitted + 2))
-    _draw_arc_bursts(draw, center, AVATAR_SIZE / 2 - 12, submission_layers, palette, rng)
+    _draw_arc_bursts(
+        draw, center, AVATAR_SIZE / 2 - 12, submission_layers, palette, rng
+    )
 
     shipped_count = max(1, profile.features_shipped) if profile.features_shipped else 0
     if shipped_count:
@@ -210,4 +222,6 @@ def refresh_user_avatar(user: User) -> None:
     try:
         generate_user_avatar(user)
     except Exception:
-        logger.exception("Failed to generate avatar for user_id=%s", getattr(user, "pk", None))
+        logger.exception(
+            "Failed to generate avatar for user_id=%s", getattr(user, "pk", None)
+        )

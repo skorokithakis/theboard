@@ -1158,6 +1158,31 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(data["user_committed"], 45)
         self.assertEqual(data["total_committed"], 45)
 
+    def test_homepage_exposes_assistant_toggle_and_script(self) -> None:
+        with self._static_override():
+            response = self.client.get("/")
+        self.assertContains(response, 'data-shimeji-balance="0"')
+        self.assertContains(response, 'data-shimeji-auth="false"')
+        self.assertContains(response, "data-shimeji-master-toggle")
+        self.assertContains(response, "js/shimeji.js")
+
+    def test_authenticated_assistant_dataset_reflects_balance(self) -> None:
+        self.owner.balance = 42
+        self.owner.save(update_fields=["balance"])
+        logged_in = self.client.login(
+            username=self.owner.username, password=self.default_password
+        )
+        self.assertTrue(logged_in)
+
+        with self._static_override():
+            response = self.client.get("/")
+        self.owner.refresh_from_db()
+        self.assertContains(
+            response,
+            f'data-shimeji-balance="{self.owner.balance}"',
+        )
+        self.assertContains(response, 'data-shimeji-auth="true"')
+
 
 class DailyFortuneTests(TestCase):
     def test_get_daily_fortune_is_deterministic(self) -> None:

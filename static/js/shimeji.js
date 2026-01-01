@@ -7,13 +7,16 @@
   window.__BOARD_SHIMEJI__ = true;
 
   var STORAGE_KEY = "board-shimeji-state";
+  var ENABLE_KEY = "board-shimeji-enabled";
   var MOVE_MIN = 2.5;
   var MOVE_MAX = 8.5;
   var EDGE_PADDING = 48;
   var TALK_COOLDOWN = 2200;
+  var DEFAULT_ENABLED = false;
   var shopPanel = null;
   var buddy = null;
   var wanderTimer = null;
+  var masterToggles = [];
   var anchors = [];
   var visibleAnchors = [];
   var featureTitles = [];
@@ -30,16 +33,18 @@
     startingBalance = 0;
   }
   var stored = readState();
+  var enabledPreference = readEnabledPreference(stored);
   var state = {
-    awake: stored.awake !== false,
-    paused: !!stored.paused,
+    enabled: enabledPreference,
+    awake: enabledPreference && stored.awake !== false,
+    paused: enabledPreference ? !!stored.paused : true,
     balance:
       typeof stored.balance === "number"
         ? stored.balance
         : Math.max(startingBalance, 18),
     inventory: Array.isArray(stored.inventory) ? stored.inventory : [],
     mood: stored.mood || "Curious",
-    anchorLabel: "Roaming",
+    anchorLabel: enabledPreference ? "Roaming" : "Sleeping",
     lastSpokenAt: 0,
     lastStepAt: 0,
   };
@@ -55,7 +60,9 @@
   observeAnchors();
   updateBuddyReadouts();
 
-  if (state.awake) {
+  applyEnabledState({ silent: true });
+
+  if (state.enabled && state.awake) {
     wakeBuddy(false);
   }
 
@@ -100,11 +107,30 @@
     }
   }
 
+  function readEnabledPreference(stored) {
+    if (stored && typeof stored.enabled === "boolean") {
+      return stored.enabled;
+    }
+    try {
+      var raw = localStorage.getItem(ENABLE_KEY);
+      if (raw === "true") {
+        return true;
+      }
+      if (raw === "false") {
+        return false;
+      }
+    } catch (err) {
+      /* ignore */
+    }
+    return DEFAULT_ENABLED;
+  }
+
   function saveState() {
     try {
       localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify({
+          enabled: state.enabled,
           awake: state.awake,
           paused: state.paused,
           balance: state.balance,
@@ -112,6 +138,7 @@
           mood: state.mood,
         })
       );
+      localStorage.setItem(ENABLE_KEY, state.enabled ? "true" : "false");
     } catch (err) {
       /* ignore */
     }
@@ -123,6 +150,125 @@
     } else {
       fn();
     }
+  }
+
+  function hasItem(id) {
+    return state.inventory.indexOf(id) !== -1;
+  }
+
+  function setEnabled(enabled, options) {
+    state.enabled = !!enabled;
+    if (!state.enabled) {
+      state.awake = false;
+      state.paused = true;
+    } else if (!state.awake) {
+      state.awake = true;
+    }
+    applyEnabledState(options);
+  }
+
+  function applyEnabledState(options) {
+    var silent = options && options.silent;
+    var body = document.body;
+    if (body) {
+      body.dataset.shimejiEnabled = state.enabled ? "true" : "false";
+    }
+    if (buddy && buddy.el) {
+      buddy.el.classList.toggle("is-hidden", !state.enabled);
+      buddy.el.classList.toggle("is-disabled", !state.enabled);
+    }
+    if (!state.enabled) {
+      pauseBuddy();
+      closeShop();
+      if (buddy && buddy.bubble) {
+        buddy.bubble.classList.remove("is-visible");
+      }
+      state.anchorLabel = "Sleeping";
+      updateBuddyReadouts();
+      updateMasterToggles();
+      refreshAnchorHighlights();
+      saveState();
+      return;
+    }
+    state.paused = false;
+    state.anchorLabel =
+      state.anchorLabel && state.anchorLabel !== "Sleeping"
+        ? state.anchorLabel
+        : "Roaming";
+    updateBuddyReadouts();
+    updateMasterToggles();
+    refreshAnchorHighlights();
+    saveState();
+    if (!silent) {
+      say("Board buddy enabled.", "status");
+    }
+    scheduleWander(true);
+  }
+
+  function pauseBuddy() {
+    state.paused = true;
+    if (wanderTimer) {
+      clearTimeout(wanderTimer);
+      wanderTimer = null;
+    }
+  }
+
+  function ensureAssistantEnabled() {
+    if (!state.enabled) {
+      setEnabled(true, { silent: true });
+    }
+  }
+
+  function updateMasterToggles() {
+    masterToggles.forEach(function (toggle) {
+      toggle.textContent = state.enabled ? "Disable assistant" : "Enable assistant";
+      toggle.setAttribute("aria-pressed", state.enabled ? "true" : "false");
+    });
+  }
+
+  function getWanderDelay() {
+    var delay = 4400 + Math.random() * 3000;
+    if (hasItem("snack")) {
+      delay = delay * 0.65;
+    }
+    return delay;
+  }
+
+  function burstConfetti() {
+    if (!state.enabled || !buddy || !hasItem("confetti")) {
+      return;
+    }
+    var count = 6;
+    var bounds = getViewportBounds();
+    for (var i = 0; i < count; i += 1) {
+      var burst = document.createElement("div");
+      burst.className = "shimeji-confetti-burst";
+      var offsetX = Math.random() * 60 - 30;
+      var offsetY = Math.random() * 40 - 20;
+      burst.style.left = clamp(buddy.position.x + offsetX, 12, bounds.width - 12) + "px";
+      burst.style.top = clamp(buddy.position.y + offsetY, 12, bounds.height - 12) + "px";
+      burst.style.animationDelay = i * 0.04 + "s";
+      document.body.appendChild(burst);
+      setTimeout(
+        (function (node) {
+          return function () {
+            if (node && node.parentNode) {
+              node.parentNode.removeChild(node);
+            }
+          };
+        })(burst),
+        950
+      );
+    }
+  }
+
+  function refreshAnchorHighlights() {
+    if (!document.body) {
+      return;
+    }
+    var hasLantern = hasItem("lantern");
+    document.body.classList.toggle("has-shimeji-lantern", hasLantern && state.enabled);
+    document.body.classList.toggle("has-shimeji-confetti", hasItem("confetti") && state.enabled);
   }
 
   function createBuddy() {
@@ -218,18 +364,23 @@
   }
 
   function wakeBuddy(announce) {
+    if (!state.enabled) {
+      setEnabled(true, { silent: announce === false });
+    }
     state.awake = true;
     buddy.el.classList.remove("is-hidden");
     buddy.el.classList.add("is-awake");
     saveState();
-    if (announce !== false) {
+    if (state.enabled && announce !== false) {
       say("I'm up! Point me toward something shiny.", "status");
     }
-    scheduleWander(true);
+    if (state.enabled) {
+      scheduleWander(true);
+    }
   }
 
   function scheduleWander(force) {
-    if (!state.awake || state.paused) {
+    if (!state.enabled || !state.awake || state.paused) {
       return;
     }
     if (wanderTimer) {
@@ -241,15 +392,21 @@
     wanderTimer = setTimeout(function () {
       moveBuddy();
       scheduleWander(false);
-    }, 4400 + Math.random() * 3000);
+    }, getWanderDelay());
   }
 
   function moveBuddy() {
+    if (!state.enabled) {
+      return;
+    }
     var target = chooseTarget();
     var dx = target.x - buddy.position.x;
     var dy = target.y - buddy.position.y;
     var distance = Math.sqrt(dx * dx + dy * dy);
     var duration = clamp(distance / 180, MOVE_MIN, MOVE_MAX);
+    if (hasItem("snack")) {
+      duration = duration * 0.75;
+    }
     var facingLeft = dx < 0;
 
     buddy.position = target;
@@ -273,6 +430,9 @@
         state.anchorLabel = target.anchor.label;
         pulseAnchor(target.anchor.el);
         say("Inspecting " + target.anchor.label + ".", "soft");
+        if (hasItem("confetti")) {
+          burstConfetti();
+        }
       } else {
         state.anchorLabel = "Roaming";
       }
@@ -365,7 +525,7 @@
   }
 
   function say(message, tone) {
-    if (!buddy || !message) {
+    if (!buddy || !message || !state.enabled) {
       return;
     }
     var now = Date.now();
@@ -532,6 +692,7 @@
   }
 
   function attemptPurchase(id) {
+    ensureAssistantEnabled();
     var items = getShopItems();
     var item = null;
     for (var i = 0; i < items.length; i += 1) {
@@ -557,6 +718,7 @@
     updateBuddyReadouts();
     renderShopItems(shopPanel);
     applyInventory();
+    handlePurchaseEffect(item);
     say("Thanks for the " + item.name + "!", "status");
     spark();
   }
@@ -568,6 +730,10 @@
     balanceTargets.forEach(function (node) {
       node.textContent = state.balance + "c";
     });
+    if (root && root.dataset) {
+      root.dataset.shimejiBalance = state.balance.toString();
+      root.dataset.shimejiEnabled = state.enabled ? "true" : "false";
+    }
     var moodNode = document.querySelector("[data-shimeji-mood]");
     if (moodNode) {
       moodNode.textContent = state.mood;
@@ -588,16 +754,38 @@
   }
 
   function applyInventory() {
+    if (!buddy || !buddy.el) {
+      return;
+    }
     var classList = buddy.el.classList;
     var items = getShopItems();
     for (var i = 0; i < items.length; i += 1) {
-      var hasItem = state.inventory.indexOf(items[i].id) !== -1;
-      classList.toggle(items[i].className, hasItem);
+      var ownsItem = hasItem(items[i].id);
+      classList.toggle(items[i].className, ownsItem && state.enabled);
+    }
+    refreshAnchorHighlights();
+  }
+
+  function handlePurchaseEffect(item) {
+    if (!item) {
+      return;
+    }
+    if (item.id === "snack") {
+      scheduleWander(true);
+    } else if (item.id === "lantern") {
+      anchors.forEach(function (anchor) {
+        pulseAnchor(anchor.el);
+      });
+      refreshAnchorHighlights();
+    } else if (item.id === "confetti") {
+      burstConfetti();
+    } else if (item.id === "ribbon") {
+      spark();
     }
   }
 
   function openShop() {
-    if (!shopPanel) {
+    if (!shopPanel || !state.enabled) {
       return;
     }
     shopPanel.classList.add("is-open");
@@ -612,21 +800,35 @@
   }
 
   function nudgeBalance(amount) {
-    if (typeof amount !== "number") {
+    if (typeof amount !== "number" || !state.enabled) {
       return;
     }
     state.balance += amount;
     saveState();
     updateBuddyReadouts();
+    if (hasItem("confetti")) {
+      burstConfetti();
+    }
   }
 
   function wireControls() {
     ready(function () {
+      masterToggles = Array.prototype.slice.call(
+        document.querySelectorAll("[data-shimeji-master-toggle]")
+      );
+      masterToggles.forEach(function (node) {
+        node.addEventListener("click", function (event) {
+          event.preventDefault();
+          setEnabled(!state.enabled);
+        });
+      });
+      updateMasterToggles();
       document
         .querySelectorAll("[data-shimeji-summon]")
         .forEach(function (node) {
           node.addEventListener("click", function (event) {
             event.preventDefault();
+            ensureAssistantEnabled();
             wakeBuddy(true);
           });
         });
@@ -635,6 +837,7 @@
         .forEach(function (node) {
           node.addEventListener("click", function (event) {
             event.preventDefault();
+            ensureAssistantEnabled();
             openShop();
             wakeBuddy(false);
             say("Gift shelf opened. Coins are for the mascot only.", "status");
@@ -645,6 +848,7 @@
         .forEach(function (node) {
           node.addEventListener("click", function (event) {
             event.preventDefault();
+            ensureAssistantEnabled();
             state.paused = !state.paused;
             node.textContent = state.paused ? "Resume wander" : "Pause wander";
             buddy.pauseButton.textContent = node.textContent.includes("Resume")
@@ -657,6 +861,9 @@
     });
 
     window.addEventListener("resize", function () {
+      if (!state.enabled || !state.awake) {
+        return;
+      }
       state.lastSpokenAt = 0;
       say("Adjusting to the new window.", "status");
       moveBuddy();
@@ -665,7 +872,7 @@
     document.addEventListener(
       "visibilitychange",
       function () {
-        if (document.visibilityState === "visible") {
+        if (document.visibilityState === "visible" && state.enabled) {
           scheduleWander(true);
         }
       },

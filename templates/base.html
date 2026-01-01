@@ -15,7 +15,12 @@
     <link href="{% static 'css/main.css' %}" rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
-<body data-graveyard-url="{% url 'main:graveyard' %}" {% if settings.TURNSTILE_ENABLED %}data-turnstile-sitekey="{{ settings.TURNSTILE_SITE_KEY }}"{% endif %}>
+<body
+    data-graveyard-url="{% url 'main:graveyard' %}"
+    data-shimeji-balance="{{ request.user.balance|default:0 }}"
+    data-shimeji-auth="{% if request.user.is_authenticated %}true{% else %}false{% endif %}"
+    data-shimeji-enabled="false"
+    {% if settings.TURNSTILE_ENABLED %}data-turnstile-sitekey="{{ settings.TURNSTILE_SITE_KEY }}"{% endif %}>
     <header class="site-header">
         <div class="container site-header__inner">
             <a class="brand" href="{% url 'main:index' %}">{{ request.site.name }}</a>
@@ -41,6 +46,13 @@
                 {% if request.user.is_authenticated %}
                     <span class="header-balance">Balance: {{ request.user.balance|default:0 }}</span>
                 {% endif %}
+                <button
+                    class="button-muted button-sm site-header__assistant-toggle"
+                    type="button"
+                    data-shimeji-master-toggle
+                    aria-pressed="false">
+                    Enable assistant
+                </button>
             </div>
         </div>
     </header>
@@ -87,6 +99,7 @@
             <small>&copy; {% now "Y" %} {{ request.site.name }}.</small>
         </div>
     </footer>
+    <script src="{% static 'js/shimeji.js' %}" defer></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

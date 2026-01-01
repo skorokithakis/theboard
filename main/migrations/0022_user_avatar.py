@@ -4,15 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0021_feature_implementation_commit_url'),
+        ("main", "0021_feature_implementation_commit_url"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='avatar',
-            field=models.ImageField(blank=True, help_text='Board-managed 256x256 WebP avatar that visualizes how this member contributes to the site.', null=True, upload_to='avatars/'),
+            model_name="user",
+            name="avatar",
+            field=models.ImageField(
+                blank=True,
+                help_text="Board-managed 256x256 WebP avatar that visualizes how this member contributes to the site.",
+                null=True,
+                upload_to="avatars/",
+            ),
         ),
     ]

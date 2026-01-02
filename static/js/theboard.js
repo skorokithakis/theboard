@@ -2828,14 +2828,15 @@
 
   function getFeatureMetaParts(feature) {
     var parts = [];
-    var timeline = feature.implemented_at
-      ? "Implemented " + formatRelativeTime(feature.implemented_at)
-      : formatRelativeTime(feature.created_at);
-    parts.push(timeline);
     var implementationState =
       typeof feature.implemented_state === "string"
         ? feature.implemented_state.toLowerCase()
         : "";
+    var timeline = feature.implemented_at
+      ? (implementationState === "unsuccessful" ? "Failed " : "Implemented ") +
+        formatRelativeTime(feature.implemented_at)
+      : formatRelativeTime(feature.created_at);
+    parts.push(timeline);
     if (feature.implemented_at && implementationState === "unsuccessful") {
       parts.push("FAILED");
     }

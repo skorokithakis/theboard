@@ -49,9 +49,15 @@
     {% if implemented_features %}
     <ul class="implemented-list" role="list">
         {% for feature in implemented_features %}
-        <li class="implemented-card" role="listitem">
+        <li class="implemented-card{% if feature.implemented_state == 'unsuccessful' %} implemented-card--failed{% endif %}" role="listitem">
             <div class="implemented-card__meta">
-                <span class="implemented-card__date">Shipped {{ feature.implemented_at|date:"M j, Y" }}</span>
+                <span class="implemented-card__date">
+                    {% if feature.implemented_state == 'unsuccessful' %}
+                        Failed {{ feature.implemented_at|date:"M j, Y" }}
+                    {% else %}
+                        Shipped {{ feature.implemented_at|date:"M j, Y" }}
+                    {% endif %}
+                </span>
                 <span class="implemented-card__votes">{{ feature.vote_total|default:0 }} votes</span>
                 {% if feature.implementation_commit_url %}
                 <a

@@ -1044,6 +1044,21 @@ textarea {
   position: relative;
 }
 
+.implemented-card--failed {
+  background: #fff5f5;
+  border-color: #f7c4c4;
+  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.08);
+}
+
+.implemented-card--failed .implemented-card__date {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.implemented-card--failed .implemented-card__commit {
+  color: #b91c1c;
+}
+
 .implemented-card__meta {
   display: flex;
   flex-wrap: wrap;
@@ -1107,6 +1122,17 @@ textarea {
 
 .implemented-empty__copy {
   margin: 0 0 0.75rem;
+}
+
+.feature-chip--failed {
+  border: 1px solid #f7c4c4;
+  background: #fff7f7;
+}
+
+.feature-chip--failed .feature-chip__meta,
+.feature-chip--failed .feature-chip__votes {
+  color: #b91c1c;
+  font-weight: 700;
 }
 
 /* Web 5.0 x Half-Life 3 promo */
@@ -2427,12 +2453,20 @@ textarea {
 
 .desktop-buddy__button--muted {
   bottom: 16px;
-  background: #324147;
+  background: #f7fafb;
+  color: #0d1611;
+  border: 1px solid rgba(13, 22, 17, 0.18);
 }
 
 .desktop-buddy__button:hover,
 .desktop-buddy__badge:hover {
   background: #1a8f6a;
+}
+
+.desktop-buddy__button--muted:hover {
+  background: #e0f3ec;
+  color: #0b1610;
+  border-color: rgba(13, 22, 17, 0.18);
 }
 
 .desktop-buddy__crest,

@@ -103,6 +103,12 @@ def _serialize_feature(
             feature.implemented_state if feature.is_implemented else None
         ),
         "implementation_commit_url": feature.implementation_commit_url or None,
+        "implementation_failure_notes": (
+            feature.implementation_failure_notes.strip() or None
+            if feature.implemented_state
+            == models.Feature.ImplementationState.UNSUCCESSFUL
+            else None
+        ),
         "creator": _serialize_user(feature.creator),
         "vote_total": feature.vote_total,
         "user_has_voted": user_has_voted,

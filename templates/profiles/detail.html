@@ -126,12 +126,18 @@
                 {% if implemented_features %}
                 <ul class="feature-chip-list">
                     {% for feature in implemented_features %}
-                    <li class="feature-chip">
+                    <li class="feature-chip{% if feature.implemented_state == 'unsuccessful' %} feature-chip--failed{% endif %}">
                         <div class="feature-chip__header">
                             <p class="feature-chip__title">{{ feature.title }}</p>
                             <span class="feature-chip__votes">{{ feature.vote_total }} votes</span>
                         </div>
-                        <p class="feature-chip__meta">Shipped {{ feature.implemented_at|date:"M j, Y" }}</p>
+                        <p class="feature-chip__meta">
+                            {% if feature.implemented_state == 'unsuccessful' %}
+                                Failed {{ feature.implemented_at|date:"M j, Y" }}
+                            {% else %}
+                                Shipped {{ feature.implemented_at|date:"M j, Y" }}
+                            {% endif %}
+                        </p>
                         {% if feature.description %}
                         <p class="feature-chip__description">{{ feature.description|truncatewords:18 }}</p>
                         {% endif %}

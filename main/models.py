@@ -213,6 +213,13 @@ class Feature(models.Model):
         blank=True,
         help_text="Outcome of the implementation run so we can distinguish successful vs. unsuccessful launches.",
     )
+    implementation_failure_notes = models.TextField(
+        default="",
+        blank=True,
+        help_text=(
+            "Diagnostic notes captured when an implementation is marked unsuccessful so we can trace what failed."
+        ),
+    )
     e2e_test_reference = models.CharField(
         max_length=255,
         blank=True,
@@ -289,8 +296,60 @@ class Feature(models.Model):
         penalty = timedelta(days=self.missed_vote_days)
         return self.created_at + self.EXPIRATION_AGE - penalty
 
+    def apply_implementation_outcome(
+        self,
+        implementation_state: ImplementationState | None,
+        failure_notes: str | None = None,
+        commit_url: str | None = None,
+        persist: bool = False,
+    ) -> list[str]:
+        """Set outcome metadata and optionally persist changes."""
+        updates = self._update_implementation_outcome(
+            implementation_state=implementation_state,
+            failure_notes=failure_notes,
+            commit_url=commit_url,
+        )
+        if persist and updates:
+            self.save(update_fields=updates)
+        return updates
+
+    def _update_implementation_outcome(
+        self,
+        implementation_state: ImplementationState | None,
+        failure_notes: str | None,
+        commit_url: str | None,
+    ) -> list[str]:
+        """Apply implementation outcome fields and return changed columns."""
+        updates: list[str] = []
+        desired_state = implementation_state or self.implemented_state
+        if desired_state is None:
+            desired_state = self.ImplementationState.SUCCESSFUL
+
+        if self.implemented_state != desired_state:
+            self.implemented_state = desired_state
+            updates.append("implemented_state")
+
+        normalized_failure_notes = (failure_notes or "").strip()
+        if desired_state == self.ImplementationState.UNSUCCESSFUL:
+            if normalized_failure_notes != (self.implementation_failure_notes or ""):
+                self.implementation_failure_notes = normalized_failure_notes
+                updates.append("implementation_failure_notes")
+        elif self.implementation_failure_notes:
+            self.implementation_failure_notes = ""
+            updates.append("implementation_failure_notes")
+
+        if commit_url is not None and commit_url != self.implementation_commit_url:
+            self.implementation_commit_url = commit_url
+            updates.append("implementation_commit_url")
+
+        return updates
+
     def implement(
-        self, when: datetime | None = None, commit_url: str | None = None
+        self,
+        when: datetime | None = None,
+        commit_url: str | None = None,
+        implementation_state: ImplementationState | None = None,
+        failure_notes: str | None = None,
     ) -> None:
         """Mark the feature as implemented and snapshot its vote total."""
         timestamp = when or timezone.now()
@@ -298,10 +357,6 @@ class Feature(models.Model):
         self.implemented_at = timestamp
         self.expired_at = None
         self.votes = snapshot
-        if commit_url:
-            self.implementation_commit_url = commit_url
-        if not self.implemented_state:
-            self.implemented_state = self.ImplementationState.SUCCESSFUL
         if not self.e2e_test_reference:
             slug = slugify(self.title) or f"feature-{self.pk or 'untracked'}"
             self.e2e_test_reference = f"e2e/implemented/{slug}.py"
@@ -310,12 +365,16 @@ class Feature(models.Model):
             "implemented_at",
             "expired_at",
             "votes",
-            "implemented_state",
             "e2e_test_reference",
             "e2e_tests_last_synced_at",
         ]
-        if commit_url:
-            update_fields.append("implementation_commit_url")
+        update_fields.extend(
+            self._update_implementation_outcome(
+                implementation_state=implementation_state,
+                failure_notes=failure_notes,
+                commit_url=commit_url,
+            )
+        )
         self.save(update_fields=update_fields)
         self._delete_descendant_variations()
         from . import avatars
@@ -354,7 +413,15 @@ class Feature(models.Model):
         self.expired_at = timestamp
         self.votes = final_votes
         self.implemented_state = None
-        self.save(update_fields=["expired_at", "votes", "implemented_state"])
+        self.implementation_failure_notes = ""
+        self.save(
+            update_fields=[
+                "expired_at",
+                "votes",
+                "implemented_state",
+                "implementation_failure_notes",
+            ]
+        )
         Vote.objects.filter(feature=self).delete()
 
     @classmethod
@@ -382,12 +449,21 @@ class Feature(models.Model):
                 feature.expired_at = now
                 feature.votes = snapshot
                 feature.implemented_state = None
+                feature.implementation_failure_notes = ""
                 to_expire.append(feature)
         if not to_expire:
             return []
 
         expired_ids = [feature.pk for feature in to_expire]
-        cls.objects.bulk_update(to_expire, ["expired_at", "votes", "implemented_state"])
+        cls.objects.bulk_update(
+            to_expire,
+            [
+                "expired_at",
+                "votes",
+                "implemented_state",
+                "implementation_failure_notes",
+            ],
+        )
         if expired_ids:
             Vote.objects.filter(feature_id__in=expired_ids).delete()
         return expired_ids

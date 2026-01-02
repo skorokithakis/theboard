@@ -650,6 +650,35 @@ class FeatureBoardTests(TestCase):
         )
         self.assertIsNotNone(feature.implemented_at)
 
+    def test_post_implementation_command_can_correct_failed_outcome(self) -> None:
+        feature = self._submit_feature()
+        models.Vote.objects.create(user=self.owner, feature=feature)
+
+        call_command("post_implementation", str(feature.pk), failed=True)
+
+        feature.refresh_from_db()
+        self.assertEqual(
+            feature.implemented_state,
+            models.Feature.ImplementationState.UNSUCCESSFUL,
+        )
+        self.assertIn("post_implementation", feature.implementation_failure_notes)
+        self.assertEqual(feature.votes, 1)
+
+        commit_url = "https://example.com/fixed-success"
+        call_command(
+            "post_implementation",
+            str(feature.pk),
+            "--commit-url",
+            commit_url,
+        )
+
+        feature.refresh_from_db()
+        self.assertEqual(
+            feature.implemented_state, models.Feature.ImplementationState.SUCCESSFUL
+        )
+        self.assertEqual(feature.implementation_failure_notes, "")
+        self.assertEqual(feature.implementation_commit_url, commit_url)
+
     def test_post_implementation_command_records_commit_link(self) -> None:
         feature = self._submit_feature(title="Commit-linked ship")
         commit_url = "https://github.com/skorokithakis/theboard/commit/0000000000000000000000000000000000000000"

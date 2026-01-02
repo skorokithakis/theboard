@@ -31,11 +31,17 @@ class Command(BaseCommand):
             dest="commit_url",
             help="Optional GitHub commit or diff URL associated with this implementation",
         )
+        parser.add_argument(
+            "--failure-notes",
+            dest="failure_notes",
+            help="Optional diagnostic notes explaining why the implementation failed",
+        )
 
     def handle(self, *args, **options) -> None:
         feature_id = options["feature_id"]
         failed = options["failed"]
         commit_url = (options.get("commit_url") or "").strip()
+        failure_notes = (options.get("failure_notes") or "").strip()
 
         try:
             feature = Feature.objects.get(id=feature_id)
@@ -43,20 +49,50 @@ class Command(BaseCommand):
             raise CommandError(f"Feature with ID {feature_id} does not exist")
 
         feature_title = feature.title
+        desired_state = (
+            Feature.ImplementationState.UNSUCCESSFUL
+            if failed
+            else Feature.ImplementationState.SUCCESSFUL
+        )
+        now = timezone.now()
+        if failed and not failure_notes:
+            failure_notes = (
+                f"Marked unsuccessful via post_implementation at {now.isoformat()}."
+            )
         if feature.implemented_at is not None:
+            updates = feature.apply_implementation_outcome(
+                implementation_state=desired_state,
+                failure_notes=failure_notes if failed else "",
+                commit_url=commit_url or None,
+                persist=True,
+            )
+            if updates:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f'Updated implementation metadata for "{feature_title}" (ID: {feature_id}): '
+                        f"{', '.join(updates)}"
+                    )
+                )
+            else:
+                self.stdout.write(
+                    self.style.WARNING(
+                        f'Feature "{feature_title}" (ID: {feature_id}) was already marked as '
+                        f"{feature.get_implemented_state_display().lower()} with the same details."
+                    )
+                )
             self.stdout.write(
                 self.style.WARNING(
-                    f'Feature "{feature_title}" (ID: {feature_id}) was already marked as implemented at {feature.implemented_at.isoformat()}'
+                    "Votes and variation clean-up were skipped because the feature was already shipped."
                 )
             )
             return
 
-        now = timezone.now()
-
-        if failed:
-            feature.implemented_state = Feature.ImplementationState.UNSUCCESSFUL
-
-        feature.implement(when=now, commit_url=commit_url or None)
+        feature.implement(
+            when=now,
+            commit_url=commit_url or None,
+            implementation_state=desired_state,
+            failure_notes=failure_notes,
+        )
         feature.refresh_from_db(
             fields=[
                 "e2e_test_reference",

@@ -36,7 +36,12 @@
         <p class="board-self__eyebrow">Live rhythm</p>
         <h3 class="board-self__title">Next implementation</h3>
         {% if next_iteration_at %}
-            <p class="board-self__stat">{{ next_iteration_at|date:"F j, Y H:i \\U\\T\\C" }}</p>
+            <p
+                class="board-self__stat"
+                data-next-iteration="{{ next_iteration_at|date:'c' }}"
+                data-countdown-label="Next implementation">
+                Next implementation at {{ next_iteration_at|date:"F j, Y H:i \\U\\T\\C" }}
+            </p>
         {% else %}
             <p class="board-self__stat">TBD &mdash; the board is catching its breath.</p>
         {% endif %}

@@ -20,7 +20,12 @@
             <span class="performance-pill">Ritual: Chug, benchmark, brag.</span>
             <span class="performance-pill performance-pill--accent">Goal: 2x faster—because why not.</span>
             {% if next_iteration_at %}
-                <span class="performance-pill">Next implementation: {{ next_iteration_at|date:"M j, H:i T" }}</span>
+                <span
+                    class="performance-pill"
+                    data-next-iteration="{{ next_iteration_at|date:'c' }}"
+                    data-countdown-label="Next implementation">
+                    Next implementation: {{ next_iteration_at|date:"M j, H:i T" }}
+                </span>
             {% endif %}
         </div>
     </div>
@@ -111,7 +116,17 @@
             </div>
             <div class="performance-stat">
                 <dt>Next iteration</dt>
-                <dd>{% if next_iteration_at %}{{ next_iteration_at|date:"M j, H:i T" }}{% else %}Queued{% endif %}</dd>
+                <dd>
+                    {% if next_iteration_at %}
+                        <span
+                            data-next-iteration="{{ next_iteration_at|date:'c' }}"
+                            data-countdown-label="Next iteration">
+                            {{ next_iteration_at|date:"M j, H:i T" }}
+                        </span>
+                    {% else %}
+                        Queued
+                    {% endif %}
+                </dd>
             </div>
         </dl>
     </article>

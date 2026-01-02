@@ -19,7 +19,11 @@
                 We shipped faster, hardened voting integrity, and kept the arcade buzzing. Here’s what we learned in 2025 and what we’re building toward for 2026.
             </p>
             <div class="retro-meta">
-                <span>Next implementation: {{ next_iteration_at|date:"M j, H:i T" }}</span>
+                <span
+                    data-next-iteration="{{ next_iteration_at|date:'c' }}"
+                    data-countdown-label="Next implementation">
+                    Next implementation: {{ next_iteration_at|date:"M j, H:i T" }}
+                </span>
                 {% if front_runner %}
                     <span>Front-runner: “{{ front_runner.title }}” · {{ front_runner.vote_total }} votes · by {{ front_runner.creator.display_name }}</span>
                 {% else %}

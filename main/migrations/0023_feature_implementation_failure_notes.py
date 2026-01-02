@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0022_user_avatar'),
+        ("main", "0022_user_avatar"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='feature',
-            name='implementation_failure_notes',
-            field=models.TextField(blank=True, default='', help_text='Diagnostic notes captured when an implementation is marked unsuccessful so we can trace what failed.'),
+            model_name="feature",
+            name="implementation_failure_notes",
+            field=models.TextField(
+                blank=True,
+                default="",
+                help_text="Diagnostic notes captured when an implementation is marked unsuccessful so we can trace what failed.",
+            ),
         ),
     ]

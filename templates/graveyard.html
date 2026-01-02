@@ -20,8 +20,17 @@
             </div>
             <div class="graveyard-hero__stat" role="listitem">
                 <span class="graveyard-hero__stat-label">Next reckoning</span>
-                <span class="graveyard-hero__stat-value">
-                    {% if next_iteration_at %}{{ next_iteration_at|date:"F j, Y, g:i a T" }}{% else %}Pending{% endif %}
+                <span
+                    class="graveyard-hero__stat-value"
+                    {% if next_iteration_at %}
+                    data-next-iteration="{{ next_iteration_at|date:'c' }}"
+                    data-countdown-label="Next reckoning"
+                    {% endif %}>
+                    {% if next_iteration_at %}
+                        {{ next_iteration_at|date:"F j, Y, g:i a T" }}
+                    {% else %}
+                        Pending
+                    {% endif %}
                 </span>
             </div>
         </div>

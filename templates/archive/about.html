@@ -16,7 +16,12 @@
     <div class="about-hero__stats">
         <div class="about-stat-card">
             <p class="about-stat-card__label">Next auto-implementation</p>
-            <p class="about-stat-card__value">
+            <p
+                class="about-stat-card__value"
+                {% if next_iteration_at %}
+                data-next-iteration="{{ next_iteration_at|date:'c' }}"
+                data-countdown-label="Next auto-implementation"
+                {% endif %}>
                 {% if next_iteration_at %}
                     {{ next_iteration_at|date:"F j, Y H:i \\U\\T\\C" }}
                 {% else %}

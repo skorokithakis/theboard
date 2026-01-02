@@ -35,7 +35,12 @@
             <li><strong>{{ feature_stats.graveyard|default:0 }}</strong><span>In the graveyard</span></li>
         </ul>
         {% if next_iteration_at %}
-            <p class="about-reset__note">Next implementation window: {{ next_iteration_at|date:"F j, Y H:i \\U\\T\\C" }}</p>
+            <p
+                class="about-reset__note"
+                data-next-iteration="{{ next_iteration_at|date:'c' }}"
+                data-countdown-label="Next implementation window">
+                Next implementation window: {{ next_iteration_at|date:"F j, Y H:i \\U\\T\\C" }}
+            </p>
         {% else %}
             <p class="about-reset__note">Next implementation time is currently unavailable.</p>
         {% endif %}

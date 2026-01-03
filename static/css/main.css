@@ -128,6 +128,7 @@ img {
 .site-nav {
   flex: 1;
   position: relative;
+  overflow: visible;
 }
 
 .site-nav__toggle {
@@ -178,7 +179,7 @@ img {
   padding: 0;
   flex-wrap: nowrap;
   justify-content: flex-end;
-  overflow-x: auto;
+  overflow: visible;
 }
 
 .site-nav__section {
@@ -307,6 +308,14 @@ img {
 
   .site-nav__section--open .site-nav__submenu {
     display: block;
+  }
+}
+
+@media (min-width: 821px) {
+  .site-nav__section:last-child .site-nav__submenu,
+  .site-nav__section:nth-last-child(2) .site-nav__submenu {
+    left: auto;
+    right: 0;
   }
 }
 

@@ -27,7 +27,7 @@ from .forms import (
     WebFiveInvestmentForm,
 )
 from .fortune import get_daily_fortune
-from .navigation import build_sitemap_destinations
+from .navigation import build_nav_sections, build_sitemap_destinations
 from .models import Feature, QuoteSuggestion, User as BoardUser, Vote, WebFiveInvestment
 from .terrarium import build_terrarium_state
 from . import avatars, generation, turnstile
@@ -616,6 +616,22 @@ def sitemap(request: HttpRequest) -> HttpResponse:
         request,
         "sitemap.html",
         {"destinations": destinations},
+    )
+
+
+@require_GET
+def plaintext_sitemap(request: HttpRequest) -> HttpResponse:
+    """Plaintext fallback sitemap built from the live navigation tree."""
+
+    nav_sections = build_nav_sections(
+        request.resolver_match.url_name if request.resolver_match else None,
+        request.user.is_authenticated,
+    )
+
+    return render(
+        request,
+        "plaintext_sitemap.html",
+        {"nav_sections": nav_sections},
     )
 
 

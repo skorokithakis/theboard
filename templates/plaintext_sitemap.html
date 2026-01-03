@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Plaintext Sitemap</title>
+</head>
+<body>
+    <main role="main">
+        <h1>Plaintext Sitemap</h1>
+        <p>This unstyled sitemap is generated from the live navigation so new pages appear automatically. Use it if the primary menu ever breaks.</p>
+        <p>Home: <a href="{% url 'main:index' %}">{{ request.site.name }}</a></p>
+
+        {% for section in nav_sections %}
+        <section aria-labelledby="sitemap-{{ section.key }}">
+            <h2 id="sitemap-{{ section.key }}">{{ section.label }}</h2>
+            <p>{{ section.description }}</p>
+            {% if section.links %}
+            <ul>
+                {% for link in section.links %}
+                <li>
+                    <a href="{{ link.url }}"{% if link.external %} rel="noreferrer noopener"{% endif %}>{{ link.label }}</a>{% if link.external %} (external){% endif %}{% if link.summary %} - {{ link.summary }}{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>No destinations available.</p>
+            {% endif %}
+        </section>
+        {% endfor %}
+    </main>
+</body>
+</html>

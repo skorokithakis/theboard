@@ -160,6 +160,12 @@ NAV_SECTIONS: list[dict[str, Any]] = [
                 "kind": "capital",
             },
             {
+                "name": "plaintext-sitemap",
+                "label": "Plaintext Sitemap",
+                "summary": "Unstyled fallback map that updates itself from the live nav.",
+                "kind": "outpost",
+            },
+            {
                 "label": "GitHub",
                 "summary": "Source code for The Board on GitHub.",
                 "kind": "outpost",

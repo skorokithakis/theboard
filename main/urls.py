@@ -38,6 +38,7 @@ urlpatterns = [
         name="retrospective-2025",
     ),
     path("sitemap/", views.sitemap, name="sitemap"),
+    path("sitemap/plaintext/", views.plaintext_sitemap, name="plaintext-sitemap"),
     path("graveyard/", views.graveyard, name="graveyard"),
     path(
         "plaintext-submission/",

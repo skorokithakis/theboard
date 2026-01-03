@@ -6,7 +6,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
 from urllib.error import URLError
 from urllib.request import Request, urlopen
 from uuid import uuid4
@@ -97,6 +97,26 @@ def api_with_state(playwright: Playwright, storage_state: dict):
         base_url=SERVER_URL,
         storage_state=storage_state,
     )
+
+
+def expand_navigation(page, target_href: Optional[str] = None) -> None:
+    toggle = page.locator(".site-nav__toggle")
+    if toggle.is_visible() and toggle.get_attribute("aria-expanded") != "true":
+        toggle.click()
+
+    if target_href:
+        section_button = page.locator(
+            f"a.site-nav__link[href='{target_href}']"
+        ).locator(
+            "xpath=ancestor::li[contains(@class, 'site-nav__section')]//button[contains(@class, 'site-nav__section-toggle')]"
+        )
+        if section_button.count() > 0:
+            section_button.first.click()
+        return
+
+    section_toggles = page.locator(".site-nav__section-toggle")
+    for idx in range(section_toggles.count()):
+        section_toggles.nth(idx).click()
 
 
 def unique_nav_hrefs(page, selector: str) -> list[str]:

@@ -159,6 +159,12 @@ NAV_SECTIONS: list[dict[str, Any]] = [
                 "summary": "Orbit map of every Board page.",
                 "kind": "capital",
             },
+            {
+                "label": "GitHub",
+                "summary": "Source code for The Board on GitHub.",
+                "kind": "outpost",
+                "external_url": "https://github.com/skorokithakis/theboard",
+            },
         ],
     },
 ]
@@ -199,19 +205,26 @@ def build_nav_sections(
         section_active = False
 
         for link in section["links"]:
-            link_name = link["name"]
+            link_name = link.get("name")
             active_names = set(link.get("active_names", []))
-            active_names.add(link_name)
+            if link_name:
+                active_names.add(link_name)
 
-            is_active = current_url_name in active_names
+            is_external = bool(link.get("external_url"))
+            is_active = current_url_name in active_names if not is_external else False
             section_active = section_active or is_active
+
+            link_url = link.get("external_url")
+            if not link_url and link_name:
+                link_url = reverse(f"main:{link_name}")
 
             section_links.append(
                 {
                     "label": link["label"],
                     "summary": link["summary"],
-                    "url": reverse(f"main:{link_name}"),
+                    "url": link_url or "",
                     "active": is_active,
+                    "external": is_external,
                 }
             )
 
@@ -244,6 +257,20 @@ def build_sitemap_destinations(is_authenticated: bool) -> list[dict[str, Any]]:
 
     for section in _iter_sections(is_authenticated):
         for link in section["links"]:
+            if link.get("external_url"):
+                destinations.append(
+                    {
+                        "name": link["label"],
+                        "url": link["external_url"],
+                        "kind": link.get("kind", "grove"),
+                        "summary": link["summary"],
+                        "category": section["label"],
+                        "section": section["description"],
+                        "external": True,
+                    }
+                )
+                continue
+
             destinations.append(
                 {
                     "name": link["label"],
@@ -252,6 +279,7 @@ def build_sitemap_destinations(is_authenticated: bool) -> list[dict[str, Any]]:
                     "summary": link["summary"],
                     "category": section["label"],
                     "section": section["description"],
+                    "external": False,
                 }
             )
 

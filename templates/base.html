@@ -26,18 +26,38 @@
             <a class="brand" href="{% url 'main:index' %}">{{ request.site.name }}</a>
             {% if nav_sections %}
                 <nav class="site-nav" id="primary-navigation" aria-label="Primary navigation">
-                    <ul class="site-nav__list">
+                    <!-- Navigation stays compressed into category dropdowns with a mobile drawer so the header remains a single row even as links grow. -->
+                    <button
+                        class="site-nav__toggle"
+                        type="button"
+                        aria-expanded="false"
+                        aria-controls="site-nav-sections">
+                        <span class="site-nav__burger" aria-hidden="true"></span>
+                        <span class="sr-only">Toggle navigation</span>
+                    </button>
+                    <ul class="site-nav__sections" id="site-nav-sections">
                         {% for section in nav_sections %}
-                            {% for link in section.links %}
-                                <li class="site-nav__item">
-                                    <a
-                                        class="site-nav__link{% if link.active %} site-nav__link--active{% endif %}"
-                                        href="{{ link.url }}"
-                                        {% if link.active %}aria-current="page"{% endif %}>
-                                        {{ link.label }}
-                                    </a>
-                                </li>
-                            {% endfor %}
+                            <li class="site-nav__section{% if section.active %} site-nav__section--active{% endif %}">
+                                <button
+                                    class="site-nav__section-toggle"
+                                    type="button"
+                                    aria-expanded="false">
+                                    <span class="site-nav__section-label">{{ section.label }}</span>
+                                </button>
+                                <ul class="site-nav__submenu">
+                                    {% for link in section.links %}
+                                        <li class="site-nav__item">
+                                            <a
+                                                class="site-nav__link{% if link.active %} site-nav__link--active{% endif %}"
+                                                href="{{ link.url }}"
+                                                {% if link.external %}target="_blank" rel="noreferrer noopener"{% endif %}
+                                                {% if link.active %}aria-current="page"{% endif %}>
+                                                {{ link.label }}
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </li>
                         {% endfor %}
                     </ul>
                 </nav>
@@ -99,6 +119,7 @@
             <small>&copy; {% now "Y" %} {{ request.site.name }}.</small>
         </div>
     </footer>
+    <script src="{% static 'js/site-nav.js' %}" defer></script>
     <script src="{% static 'js/iteration-countdown.js' %}" defer></script>
     <script src="{% static 'js/shimeji.js' %}" defer></script>
     {% block extra_scripts %}{% endblock %}

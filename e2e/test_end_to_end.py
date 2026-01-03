@@ -8,6 +8,7 @@ from uuid import uuid4
 from .shared import (
     PUBLIC_PATHS,
     api_with_state,
+    expand_navigation,
     post_json,
     signup_user,
     unique_nav_hrefs,
@@ -26,15 +27,35 @@ def test_anonymous_navigation_via_menu_and_sitemap(anonymous_page, live_server: 
 
     nav_hrefs = unique_nav_hrefs(anonymous_page, "a.site-nav__link")
     for href in nav_hrefs:
-        anonymous_page.click(f"a.site-nav__link[href='{href}']")
-        expect(anonymous_page).to_have_url(f"{live_server.rstrip('/')}{href}")
+        expand_navigation(anonymous_page, href)
+        if href.startswith("http"):
+            with anonymous_page.context.expect_page() as new_page_info:
+                anonymous_page.click(f"a.site-nav__link[href='{href}']")
+            new_page = new_page_info.value
+            new_page.wait_for_load_state()
+            expect(new_page).to_have_url(href)
+            new_page.close()
+            anonymous_page.bring_to_front()
+        else:
+            anonymous_page.click(f"a.site-nav__link[href='{href}']")
+            expect(anonymous_page).to_have_url(f"{live_server.rstrip('/')}{href}")
         anonymous_page.goto("/", wait_until="networkidle")
+        expand_navigation(anonymous_page)
 
     anonymous_page.goto("/sitemap/", wait_until="networkidle")
     sitemap_hrefs = unique_nav_hrefs(anonymous_page, "a.map-ledger__link")
     for href in sitemap_hrefs:
-        anonymous_page.click(f"a.map-ledger__link[href='{href}']")
-        expect(anonymous_page).to_have_url(f"{live_server.rstrip('/')}{href}")
+        if href.startswith("http"):
+            with anonymous_page.context.expect_page() as new_page_info:
+                anonymous_page.click(f"a.map-ledger__link[href='{href}']")
+            new_page = new_page_info.value
+            new_page.wait_for_load_state()
+            expect(new_page).to_have_url(href)
+            new_page.close()
+            anonymous_page.bring_to_front()
+        else:
+            anonymous_page.click(f"a.map-ledger__link[href='{href}']")
+            expect(anonymous_page).to_have_url(f"{live_server.rstrip('/')}{href}")
         anonymous_page.goto("/sitemap/", wait_until="networkidle")
 
 
@@ -49,6 +70,7 @@ def test_authenticated_access_public_and_protected_pages(
         assert response is not None and response.ok, f"Failed to load {path}"
         expect(page.locator("body")).to_be_visible()
 
+    expand_navigation(page, "/profile/")
     expect(page.locator("a.site-nav__link", has_text="My Profile")).to_be_visible()
 
 
@@ -58,15 +80,35 @@ def test_authenticated_navigation_via_menu_and_sitemap(auth_session, live_server
 
     nav_hrefs = unique_nav_hrefs(page, "a.site-nav__link")
     for href in nav_hrefs:
-        page.click(f"a.site-nav__link[href='{href}']")
-        expect(page).to_have_url(f"{live_server.rstrip('/')}{href}")
+        expand_navigation(page, href)
+        if href.startswith("http"):
+            with page.context.expect_page() as new_page_info:
+                page.click(f"a.site-nav__link[href='{href}']")
+            new_page = new_page_info.value
+            new_page.wait_for_load_state()
+            expect(new_page).to_have_url(href)
+            new_page.close()
+            page.bring_to_front()
+        else:
+            page.click(f"a.site-nav__link[href='{href}']")
+            expect(page).to_have_url(f"{live_server.rstrip('/')}{href}")
         page.goto("/", wait_until="networkidle")
+        expand_navigation(page)
 
     page.goto("/sitemap/", wait_until="networkidle")
     sitemap_hrefs = unique_nav_hrefs(page, "a.map-ledger__link")
     for href in sitemap_hrefs:
-        page.click(f"a.map-ledger__link[href='{href}']")
-        expect(page).to_have_url(f"{live_server.rstrip('/')}{href}")
+        if href.startswith("http"):
+            with page.context.expect_page() as new_page_info:
+                page.click(f"a.map-ledger__link[href='{href}']")
+            new_page = new_page_info.value
+            new_page.wait_for_load_state()
+            expect(new_page).to_have_url(href)
+            new_page.close()
+            page.bring_to_front()
+        else:
+            page.click(f"a.map-ledger__link[href='{href}']")
+            expect(page).to_have_url(f"{live_server.rstrip('/')}{href}")
         page.goto("/sitemap/", wait_until="networkidle")
 
 

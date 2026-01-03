@@ -72,7 +72,10 @@
                         <ul class="map-ledger__group-list">
                             {% for destination in group.list %}
                                 <li class="map-ledger__item">
-                                    <a class="map-ledger__link map-ledger__link--{{ destination.kind }}" href="{{ destination.url }}">
+                                    <a
+                                        class="map-ledger__link map-ledger__link--{{ destination.kind }}"
+                                        href="{{ destination.url }}"
+                                        {% if destination.external %}target="_blank" rel="noreferrer noopener"{% endif %}>
                                         <span class="map-ledger__name">{{ destination.name }}</span>
                                         <span class="map-ledger__summary">{{ destination.summary }}</span>
                                     </a>

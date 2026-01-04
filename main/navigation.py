@@ -72,6 +72,12 @@ NAV_SECTIONS: list[dict[str, Any]] = [
                 "active_names": ["arcade-quotes", "fortune-suggest"],
             },
             {
+                "name": "arcade-ishmael",
+                "label": "Ishmael's Cabin",
+                "summary": "Maritime reading room with live queue signals.",
+                "kind": "grove",
+            },
+            {
                 "name": "arcade-buddy",
                 "label": "Buddy Workshop",
                 "summary": "Summon and customize the roaming buddy.",

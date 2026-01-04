@@ -1472,6 +1472,39 @@ class PerformanceSprintViewTests(TestCase):
         self.assertContains(response, feature.title)
 
 
+class IshmaelCabinViewTests(TestCase):
+    def setUp(self) -> None:
+        self.user = factories.UserFactory()
+
+    def _static_override(self):
+        storage_settings = {
+            **settings.STORAGES,
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            },
+        }
+        return override_settings(
+            STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage",
+            STORAGES=storage_settings,
+        )
+
+    def test_cabin_shows_manifest_and_story(self) -> None:
+        feature = factories.FeatureFactory(
+            title="Sea-worthy upgrade",
+            description="Keep the cadence even when the harbor is quiet.",
+            creator=self.user,
+        )
+        factories.VoteFactory(user=self.user, feature=feature)
+
+        with self._static_override():
+            response = self.client.get(reverse("main:arcade-ishmael"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(feature, response.context["voyage_manifest"])
+        self.assertContains(response, "Call me Ishmael")
+        self.assertContains(response, "Voyage manifest")
+
+
 class ScoreboardViewTests(TestCase):
     def setUp(self) -> None:
         self.user = factories.UserFactory()

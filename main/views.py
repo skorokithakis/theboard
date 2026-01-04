@@ -17,6 +17,7 @@ from django.db.models.functions import Coalesce, Greatest
 from django.http import Http404, HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
+from django.utils import timezone
 
 from .economy import daily_bonus_status
 from .forms import (
@@ -666,6 +667,34 @@ def arcade(request: HttpRequest) -> HttpResponse:
         {
             "daily_fortune": get_daily_fortune(),
             "feature_preview": fun_preview,
+        },
+    )
+
+
+@require_GET
+def arcade_ishmael(request: HttpRequest) -> HttpResponse:
+    """Maritime reading room that echoes Ishmael's call and live queue signals."""
+
+    Feature.expire_stale()
+    voyage_manifest = list(
+        Feature.objects.pending()
+        .with_vote_totals()
+        .select_related("creator")
+        .order_by("-total_votes", "-created_at")[:3]
+    )
+    sea_notes = [
+        "Some years ago—never mind how long precisely—The Board went to sea to keep the backlog awake.",
+        "Whenever a damp, drizzly November hits the queue, the cabin lights up with new votes.",
+        "This room keeps the cadence steady so nobody knocks hats off in the street.",
+    ]
+    return render(
+        request,
+        "arcade/ishmael.html",
+        {
+            "voyage_manifest": voyage_manifest,
+            "sea_notes": sea_notes,
+            "tide_checked_at": timezone.now(),
+            "next_iteration_at": get_next_iteration_at(),
         },
     )
 

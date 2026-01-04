@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Call me Ishmael | {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="ishmael-hero" data-soundtrack="atrium">
+    <div class="ishmael-hero__header">
+        <p class="page-eyebrow">Arcade reading room</p>
+        <h1 class="page-title">Call me Ishmael.</h1>
+        <p class="page-lead">
+            The Board keeps a small cabin to steady itself whenever the backlog grows damp and drizzly. Settle in,
+            breathe with the tide, and chart which ideas are ready to sail.
+        </p>
+        <div class="ishmael-hero__meta">
+            <div class="ishmael-meta__item">
+                <span class="ishmael-meta__label">Last tide check</span>
+                <strong>{{ tide_checked_at|date:"F j, Y H:i \\U\\T\\C" }}</strong>
+            </div>
+            {% if next_iteration_at %}
+                <div class="ishmael-meta__item" data-next-iteration="{{ next_iteration_at|date:'c' }}">
+                    <span class="ishmael-meta__label">Next implementation</span>
+                    <strong>{{ next_iteration_at|date:"F j, Y H:i \\U\\T\\C" }}</strong>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="ishmael-hero__orb" aria-hidden="true"></div>
+</section>
+
+<section class="ishmael-grid">
+    <article class="ishmael-card">
+        <header class="ishmael-card__header">
+            <p class="ishmael-card__eyebrow">Captain's log</p>
+            <h2 class="ishmael-card__title">Why the cabin exists</h2>
+        </header>
+        <ul class="ishmael-log">
+            {% for note in sea_notes %}
+                <li>{{ note }}</li>
+            {% endfor %}
+        </ul>
+        <p class="ishmael-card__note">
+            The Board believes almost everyone feels the same pull toward the ocean when the queue quiets down. This
+            room keeps that pulse gentle and focused.
+        </p>
+    </article>
+
+    <article class="ishmael-card">
+        <header class="ishmael-card__header">
+            <p class="ishmael-card__eyebrow">Voyage manifest</p>
+            <h2 class="ishmael-card__title">Features ready to sail</h2>
+        </header>
+        {% if voyage_manifest %}
+            <div class="ishmael-manifest">
+                {% for feature in voyage_manifest %}
+                    <article class="ishmael-feature">
+                        <header>
+                            <h3 class="ishmael-feature__title">{{ feature.title }}</h3>
+                            <p class="ishmael-feature__meta">
+                                Votes: {{ feature.vote_total }} · {{ feature.created_at|date:"M j, Y" }}
+                            </p>
+                        </header>
+                        <p class="ishmael-feature__desc">{{ feature.description }}</p>
+                        <div class="ishmael-feature__footer">
+                            <span class="ishmael-badge">By {{ feature.creator.display_name }}</span>
+                            <a class="button-outline" href="{% url 'main:feature-board' %}">Open feature lab</a>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="ishmael-card__note">The queue is calm. Drop a new feature in the lab and we will chart it here.</p>
+        {% endif %}
+    </article>
+
+    <article class="ishmael-card ishmael-card--wide">
+        <header class="ishmael-card__header">
+            <p class="ishmael-card__eyebrow">Cutter logbook</p>
+            <h2 class="ishmael-card__title">A calmer way to keep moving</h2>
+        </header>
+        <div class="ishmael-logbook">
+            <blockquote class="ishmael-quote">
+                <p>
+                    Some years ago—never mind how long precisely—having little or no money in my purse, and nothing
+                    particular to interest me on shore, I thought I would sail about a little and see the watery part of
+                    the world. It is a way I have of driving off the spleen and regulating the circulation.
+                </p>
+                <p>
+                    Whenever I find myself involuntarily pausing before coffin warehouses, and bringing up the rear of
+                    every funeral I meet; and especially whenever my hypos get such an upper hand of me, that it requires
+                    a strong moral principle to prevent me from deliberately knocking people's hats off—then, I head to
+                    sea as soon as I can.
+                </p>
+            </blockquote>
+            <div class="ishmael-quote__aside">
+                <p class="ishmael-card__note">
+                    The Board doesn't wait for the mood to lift. It sets sail daily so voting and implementation keep
+                    their rhythm, no matter how gloomy the weather gets.
+                </p>
+                <a class="button" href="{% url 'main:index' %}">Back to the atrium</a>
+            </div>
+        </div>
+    </article>
+</section>
+{% endblock %}

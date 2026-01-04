@@ -154,7 +154,7 @@ def _select_archaeology_fossil(reference: Optional[datetime] = None) -> Feature 
     """Pick an expired or implemented feature to remix back into the backlog."""
     now = reference or timezone.now()
     matured_implementation_cutoff = now - timedelta(days=3)
-    return (
+    fossils = (
         Feature.objects.exclude(creator__username=SYSTEM_USERNAME)
         .filter(
             Q(expired_at__isnull=False)
@@ -165,8 +165,13 @@ def _select_archaeology_fossil(reference: Optional[datetime] = None) -> Feature 
             vote_snapshot=Coalesce("votes", Value(0)),
         )
         .order_by("-vote_snapshot", "created_at")
-        .first()
     )
+    fossil_count = fossils.count()
+    if fossil_count == 0:
+        return None
+
+    selection_index = random.randrange(fossil_count)
+    return fossils[selection_index]
 
 
 def _build_archaeology_seed(

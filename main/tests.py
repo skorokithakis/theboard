@@ -278,6 +278,26 @@ class FeatureBoardTests(TestCase):
         self.assertIn(fossil.title, feature.description)
         self.assertTrue(feature.title.startswith("Neon revival"))
 
+    def test_archaeology_fossil_selection_uses_random_index(self) -> None:
+        first = self._submit_feature(title="High vote fossil")
+        second = self._submit_feature(title="Low vote fossil")
+        reference = timezone.now()
+        models.Feature.objects.filter(pk__in=[first.pk, second.pk]).update(
+            expired_at=reference - timedelta(days=5)
+        )
+        models.Feature.objects.filter(pk=first.pk).update(votes=5)
+        models.Feature.objects.filter(pk=second.pk).update(votes=1)
+
+        with mock.patch(
+            "main.generation.random.randrange", return_value=1
+        ) as randrange:
+            fossil = generation._select_archaeology_fossil(reference=reference)
+
+        self.assertIsNotNone(fossil)
+        assert fossil is not None
+        self.assertEqual(fossil.pk, second.pk)
+        randrange.assert_called_once_with(2)
+
     def test_interdimensional_plan_imports_portal_feature(self) -> None:
         portal_entry = generation.ParallelBacklogEntry(
             title="Waveform interface treaty",

@@ -276,6 +276,7 @@ def _fresh_board_context(
 
     return {
         "features": features,
+        "next_iteration_at": get_next_iteration_at(),
         "personalized_lane": _personalized_lane_context(
             request.user,
             features,

@@ -16,6 +16,14 @@
         <a class="button-outline" href="{% url 'main:plaintext-submission' %}">Plaintext lane</a>
         <a class="button-outline" href="{% url 'main:scoreboard' %}">Scoreboard</a>
     </div>
+    {% if next_iteration_at %}
+        <p
+            class="feature-lab__countdown"
+            data-next-iteration="{{ next_iteration_at|date:'c' }}"
+            data-countdown-label="Next vibecode iteration">
+            Next vibecode iteration at {{ next_iteration_at|date:"F j, Y H:i \\U\\T\\C" }}
+        </p>
+    {% endif %}
 </section>
 
 {% if shipped_milestone %}

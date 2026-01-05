@@ -1113,6 +1113,19 @@ class FeatureBoardTests(TestCase):
             payload["features"][0]["creator"]["status"], "API surfaces the vibe"
         )
 
+    def test_feature_board_shows_iteration_countdown(self) -> None:
+        with self._static_override():
+            response = self.client.get(reverse("main:feature-board"))
+
+        self.assertEqual(response.status_code, 200)
+        next_iteration = response.context["next_iteration_at"]
+        self.assertIsNotNone(next_iteration)
+        self.assertContains(
+            response,
+            f'data-next-iteration="{next_iteration.isoformat()}"',
+        )
+        self.assertContains(response, "Next vibecode iteration")
+
     def test_login_awards_daily_bonus_once_per_day(self) -> None:
         morning = datetime(2024, 5, 1, 9, 0, tzinfo=dt_timezone.utc)
         with mock.patch("main.economy.timezone.now", return_value=morning):

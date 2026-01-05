@@ -737,6 +737,30 @@ textarea {
   color: var(--muted);
 }
 
+.feature-lab__countdown {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1.15rem;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: radial-gradient(circle at 18% 20%, rgba(255, 255, 255, 0.2), transparent 42%),
+    linear-gradient(120deg, #0f4e3f 0%, #12b07f 50%, #0e7490 100%);
+  color: #e8fff7;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 14px 32px rgba(15, 78, 63, 0.32), 0 0 0 1px rgba(18, 176, 127, 0.35);
+}
+
+.feature-lab__countdown::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #b6ffda;
+  box-shadow: 0 0 12px #7dfbd0, 0 0 22px rgba(125, 251, 208, 0.6);
+}
+
 .feature-lab__note a {
   color: var(--accent-strong);
   text-decoration: underline;

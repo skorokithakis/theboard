@@ -15,6 +15,7 @@
         <div class="performance-hero__actions">
             <button class="button" type="button" data-energy-button>Chug virtual energy drink</button>
             <button class="button-outline" type="button" data-benchmark-button>Benchmark something random</button>
+            <button class="button-ghost" type="button" data-brag-button>Brag about nanoseconds saved</button>
         </div>
         <div class="performance-hero__meta">
             <span class="performance-pill">Ritual: Chug, benchmark, brag.</span>
@@ -80,6 +81,15 @@
                 </li>
             {% endfor %}
         </ol>
+        <div class="performance-bragboard">
+            <div class="performance-bragboard__headline">Brag wall</div>
+            <p class="performance-card__note">Broadcast your nanosecond saves to the lab and keep the ritual honest.</p>
+            <ol class="performance-bragboard__list" data-brag-board aria-live="polite">
+                <li class="performance-bragboard__placeholder" data-brag-placeholder>
+                    Waiting for the first nanosecond flex. Claim one above.
+                </li>
+            </ol>
+        </div>
     </article>
 
     <article class="performance-card">

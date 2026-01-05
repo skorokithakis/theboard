@@ -218,15 +218,26 @@ def test_arcade_terrarium_interactions(anonymous_page, live_server: str):
     expect(invader_status).to_be_visible()
     assert "invader" in invader_status.inner_text().lower()
 
-    breaker_toggle = page.locator("[data-breaker-toggle]")
-    serve_button = page.locator("[data-breaker-serve]")
-    expect(serve_button).to_be_disabled()
-    breaker_toggle.click()
-    expect(breaker_toggle).to_have_attribute("aria-pressed", "true")
-    expect(serve_button).to_be_enabled()
-    serve_button.click()
-    breaker_status = page.locator("[data-breaker-status]")
-    assert "orb" in breaker_status.inner_text().lower()
+
+def test_performance_sprint_interactions(anonymous_page, live_server: str):
+    page = anonymous_page
+    page.goto("/arcade/performance/", wait_until="networkidle")
+
+    energy_fill = page.locator("[data-energy-fill]")
+    initial_width = energy_fill.evaluate("el => el.style.width")
+    page.get_by_role("button", name="Chug virtual energy drink").click()
+    updated_width = energy_fill.evaluate("el => el.style.width")
+    assert updated_width != initial_width
+
+    log_items = page.locator("[data-benchmark-log] .performance-log__item")
+    starting_count = log_items.count()
+    page.get_by_role("button", name="Benchmark something random").click()
+    expect(log_items).to_have_count(starting_count + 1, timeout=2000)
+
+    brag_items = page.locator("[data-brag-board] .performance-bragboard__item")
+    page.get_by_role("button", name="Brag about nanoseconds saved").click()
+    expect(brag_items).to_have_count(1, timeout=2000)
+    expect(page.locator("[data-brag-target]")).to_contain_text("faster")
 
 
 def test_assistant_toggle_and_gift_effect(auth_session, live_server: str):

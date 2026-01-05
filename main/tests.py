@@ -1482,6 +1482,8 @@ class PerformanceSprintViewTests(TestCase):
         self.assertTrue(response.context["sprint_claims"])
         self.assertIn(feature, response.context["lab_subjects"])
         self.assertContains(response, "Performance sprint for no reason")
+        self.assertContains(response, "Brag about nanoseconds saved")
+        self.assertContains(response, "Brag wall")
         self.assertContains(response, feature.title)
 
 

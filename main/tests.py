@@ -547,6 +547,99 @@ class FeatureBoardTests(TestCase):
             models.Vote.objects.filter(user=self.owner, feature=feature).exists()
         )
 
+    @override_settings(TURNSTILE_ENABLED=True)
+    def test_neon_egg_claim_adds_bonus_vote(self) -> None:
+        feature = self._submit_feature()
+        self.client.login(username=self.owner.username, password=self.default_password)
+
+        claim_url = "/api/easter-eggs/claim"
+        with mock.patch("main.api.turnstile.verify") as verify_mock:
+            verify_mock.return_value = turnstile.VerificationResult(
+                success=True,
+                error_codes=(),
+            )
+            response = self.client.post(
+                claim_url,
+                {
+                    "egg_key": "signal-glyph",
+                    "feature_id": feature.pk,
+                    "turnstile_token": "token-egg",
+                },
+                content_type="application/json",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertFalse(payload["already_claimed"])
+        self.assertEqual(payload["feature"]["bonus_votes"], 1)
+        self.assertEqual(payload["feature"]["vote_total"], 2)
+        self.assertTrue(payload["feature"]["user_has_voted"])
+        self.assertTrue(
+            models.NeonEggDiscovery.objects.filter(
+                user=self.owner, feature=feature, egg_key="signal-glyph"
+            ).exists()
+        )
+        self.assertTrue(
+            models.Vote.objects.filter(user=self.owner, feature=feature).exists()
+        )
+        self.assertEqual(
+            [call.args[0] for call in verify_mock.call_args_list],
+            ["token-egg"],
+        )
+
+    @override_settings(TURNSTILE_ENABLED=True)
+    def test_neon_egg_claim_rejects_duplicate(self) -> None:
+        feature = self._submit_feature()
+        models.NeonEggDiscovery.objects.create(
+            user=self.owner, feature=feature, egg_key="signal-glyph"
+        )
+        self.client.login(username=self.owner.username, password=self.default_password)
+
+        claim_url = "/api/easter-eggs/claim"
+        with mock.patch("main.api.turnstile.verify") as verify_mock:
+            verify_mock.return_value = turnstile.VerificationResult(
+                success=True,
+                error_codes=(),
+            )
+            response = self.client.post(
+                claim_url,
+                {
+                    "egg_key": "signal-glyph",
+                    "feature_id": feature.pk,
+                    "turnstile_token": "token-egg",
+                },
+                content_type="application/json",
+            )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["already_claimed"])
+        self.assertEqual(payload["feature"]["bonus_votes"], 1)
+        self.assertEqual(
+            models.NeonEggDiscovery.objects.filter(
+                user=self.owner, feature=feature
+            ).count(),
+            1,
+        )
+        self.assertEqual(
+            [call.args[0] for call in verify_mock.call_args_list],
+            ["token-egg"],
+        )
+
+    def test_neon_bonus_votes_included_in_feature_list(self) -> None:
+        feature = self._submit_feature()
+        models.Vote.objects.create(user=self.owner, feature=feature)
+        models.NeonEggDiscovery.objects.create(
+            user=self.owner, feature=feature, egg_key="signal-glyph"
+        )
+
+        response = self.client.get("/api/features")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        feature_payload = payload["features"][0]
+        self.assertEqual(feature_payload["bonus_votes"], 1)
+        self.assertEqual(feature_payload["vote_total"], 2)
+
     def test_vote_toggle_rejects_expired_feature(self) -> None:
         feature = self._submit_feature()
         models.Feature.objects.filter(pk=feature.pk).update(

@@ -1,5 +1,6 @@
 from django.conf import settings as sett
 
+from main import easter_eggs
 from main.navigation import build_nav_sections
 from main.health import get_board_health
 
@@ -30,3 +31,9 @@ def navigation(request):
             "collapsed": menu_collapsed,
         },
     }
+
+
+def neon_eggs(request):
+    """Expose neon egg metadata to templates for the hidden hunt."""
+
+    return {"neon_eggs": easter_eggs.serialize()}

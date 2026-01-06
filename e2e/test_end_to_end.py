@@ -185,6 +185,35 @@ def test_authenticated_can_vote_for_other_users_feature(
     context.close()
 
 
+def test_neon_egg_claim_adds_bonus_vote(auth_session, live_server: str):
+    page = auth_session["page"]
+    api_context = auth_session["api"]
+    feature_title = f"Neon egg {uuid4().hex[:6]}"
+
+    create_resp = post_json(
+        api_context,
+        "/api/features/create",
+        {"title": feature_title, "description": "Neon vote target"},
+    )
+    assert create_resp.ok, create_resp.text()
+    feature_id = create_resp.json()["feature"]["id"]
+
+    page.goto("/", wait_until="networkidle")
+    page.locator(".neon-egg").first.click()
+    modal = page.locator(".neon-egg-modal.is-visible")
+    expect(modal).to_be_visible()
+
+    expect(page.locator("#neon-egg-feature option").first).to_be_visible()
+    page.select_option("#neon-egg-feature", label=feature_title)
+    page.get_by_role("button", name="Claim neon vote").click()
+    expect(page.locator(".neon-egg-status")).to_contain_text("neon vote")
+
+    refreshed = api_context.get("/api/features").json()
+    target = next(item for item in refreshed["features"] if item["id"] == feature_id)
+    assert target["bonus_votes"] == 1
+    assert target["vote_total"] == 2
+
+
 def test_arcade_terrarium_interactions(anonymous_page, live_server: str):
     page = anonymous_page
     page.goto("/arcade/terrarium/", wait_until="networkidle")

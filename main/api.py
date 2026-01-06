@@ -17,7 +17,7 @@ from ninja import NinjaAPI
 from ninja.errors import HttpError
 from ninja.security import SessionAuth
 
-from . import avatars, economy, generation, models, schemas, turnstile
+from . import avatars, economy, easter_eggs, generation, models, schemas, turnstile
 from .utils import get_next_iteration_at
 
 FEATURE_DAILY_LIMIT = 3
@@ -86,12 +86,23 @@ def _serialize_feature(
 ) -> dict[str, Any]:
     """Convert a feature model to a dictionary for schema validation."""
     last_vote_at = getattr(feature, "latest_vote_at", None)
+    bonus_vote_at = getattr(feature, "latest_bonus_vote_at", None)
+    if bonus_vote_at and (last_vote_at is None or bonus_vote_at > last_vote_at):
+        last_vote_at = bonus_vote_at
     if last_vote_at is None:
-        last_vote_at = (
+        recorded_vote_at = (
             feature.vote_records.order_by("-created_at")
             .values_list("created_at", flat=True)
             .first()
         )
+        bonus_vote_at = (
+            feature.neon_egg_discoveries.order_by("-created_at")
+            .values_list("created_at", flat=True)
+            .first()
+        )
+        last_vote_at = recorded_vote_at
+        if bonus_vote_at and (last_vote_at is None or bonus_vote_at > last_vote_at):
+            last_vote_at = bonus_vote_at
 
     data: dict[str, Any] = {
         "id": feature.pk,
@@ -111,6 +122,7 @@ def _serialize_feature(
         ),
         "creator": _serialize_user(feature.creator),
         "vote_total": feature.vote_total,
+        "bonus_votes": feature.bonus_vote_total,
         "user_has_voted": user_has_voted,
         "last_upvote_at": last_vote_at,
         "expired_at": feature.expired_at,
@@ -457,6 +469,106 @@ def vote_toggle(
         "action": action,
         "has_voted": has_voted,
         "vote_total": vote_total,
+    }
+
+
+@api.post(
+    "/easter-eggs/claim",
+    response=schemas.NeonEggClaimResponse,
+    auth=session_auth,
+    operation_id="api_neon_egg_claim",
+)
+def claim_neon_egg(
+    request: HttpRequest, data: schemas.NeonEggClaimInput
+) -> dict[str, Any]:
+    """Claim a neon egg to award an extra vote to a feature."""
+    models.Feature.expire_stale()
+
+    egg_key = data.egg_key.strip()
+    if egg_key not in easter_eggs.valid_keys():
+        raise HttpError(400, "Unknown neon egg.")
+
+    try:
+        feature = (
+            models.Feature.objects.select_related("creator", "parent")
+            .with_vote_totals()
+            .with_latest_vote_at()
+            .get(pk=data.feature_id)
+        )
+    except models.Feature.DoesNotExist as exc:
+        raise HttpError(404, "Feature not found") from exc
+
+    if feature.is_implemented or feature.is_expired:
+        raise HttpError(400, "Cannot boost an implemented or retired feature.")
+
+    if turnstile.is_enabled():
+        verification_token = data.turnstile_token or ""
+        verification = turnstile.verify(
+            verification_token,
+            remote_ip=_client_ip(request),
+        )
+
+        if not verification.success:
+            logger.info(
+                "Turnstile verification failed for user=%s feature=%s egg=%s errors=%s",
+                request.user.pk,
+                feature.pk,
+                egg_key,
+                verification.error_codes,
+            )
+            raise HttpError(400, "Verification failed. Please try again.")
+
+    existing_claim = (
+        models.NeonEggDiscovery.objects.select_related("feature")
+        .filter(user=request.user, egg_key=egg_key)
+        .first()
+    )
+    if existing_claim:
+        claimed_feature = (
+            models.Feature.objects.select_related("creator", "parent")
+            .with_vote_totals()
+            .with_latest_vote_at()
+            .get(pk=existing_claim.feature_id)
+        )
+        claimed_message = (
+            f'You already claimed this neon egg for "{claimed_feature.title}".'
+        )
+        vote_ids = _user_vote_ids(request.user)
+        return {
+            "message": claimed_message,
+            "feature": _serialize_feature(
+                claimed_feature,
+                claimed_feature.id in vote_ids,
+            ),
+            "already_claimed": True,
+        }
+
+    models.NeonEggDiscovery.objects.create(
+        user=request.user,
+        feature=feature,
+        egg_key=egg_key,
+    )
+    models.Vote.objects.get_or_create(
+        user=request.user,
+        feature=feature,
+    )
+
+    refreshed_feature = (
+        models.Feature.objects.select_related("creator", "parent")
+        .with_vote_totals()
+        .with_latest_vote_at()
+        .get(pk=feature.pk)
+    )
+    vote_ids = _user_vote_ids(request.user)
+    egg_meta = easter_eggs.get_egg(egg_key)
+    egg_label = egg_meta.label if egg_meta else "neon egg"
+
+    return {
+        "message": f"Claimed {egg_label} and dropped a neon vote.",
+        "feature": _serialize_feature(
+            refreshed_feature, refreshed_feature.id in vote_ids
+        ),
+        "already_claimed": False,
     }
 
 

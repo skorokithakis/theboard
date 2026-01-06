@@ -110,6 +110,9 @@
                         <div class="feature-card__footer">
                             <div class="feature-card__signals">
                                 <div class="feature-card__votes">Votes: {{ feature.vote_total }}</div>
+                                {% if feature.bonus_vote_total %}
+                                    <span class="feature-card__neon">+{{ feature.bonus_vote_total }} neon</span>
+                                {% endif %}
                                 <a class="button-muted button-sm" href="{% url 'main:feature-board' %}?parent={{ feature.id }}#feature-lab-form">Add variation</a>
                             </div>
                             <form class="feature-card__vote-form" method="post" action="{% url 'main:feature-vote-toggle' feature.id %}">

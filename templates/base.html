@@ -76,6 +76,23 @@
             </div>
         </div>
     </header>
+    {{ neon_eggs|json_script:"neon-eggs-data" }}
+    <div
+        class="neon-eggs-layer"
+        data-claim-url="/api/easter-eggs/claim"
+        data-features-url="/api/features">
+        {% for egg in neon_eggs %}
+            <button
+                type="button"
+                class="neon-egg neon-egg--{{ egg.key }}"
+                data-egg-key="{{ egg.key }}"
+                style="--egg-accent: {{ egg.accent }};"
+                aria-label="Find the {{ egg.label }} neon egg"
+                title="{{ egg.hint }}">
+                <span aria-hidden="true">{{ egg.label }}</span>
+            </button>
+        {% endfor %}
+    </div>
     <main class="site-main container">
         {% if messages %}
             <div class="flash-messages">
@@ -119,6 +136,7 @@
             <small>&copy; {% now "Y" %} {{ request.site.name }}.</small>
         </div>
     </footer>
+    <script src="{% static 'js/neon-eggs.js' %}" defer></script>
     <script src="{% static 'js/site-nav.js' %}" defer></script>
     <script src="{% static 'js/iteration-countdown.js' %}" defer></script>
     <script src="{% static 'js/shimeji.js' %}" defer></script>

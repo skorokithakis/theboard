@@ -44,6 +44,7 @@ class FeatureSchema(Schema):
     implementation_failure_notes: str | None = None
     creator: UserSchema
     vote_total: int
+    bonus_votes: int
     user_has_voted: bool
     parent: ParentFeatureSchema | None = None
     variation_count: int | None = None
@@ -65,6 +66,7 @@ class FeatureDetailSchema(Schema):
     implementation_failure_notes: str | None = None
     creator: UserSchema
     vote_total: int
+    bonus_votes: int
     user_has_voted: bool
     parent: ParentFeatureSchema | None = None
     variation_count: int | None = None
@@ -104,6 +106,14 @@ class VoteToggleInput(Schema):
     turnstile_token: str | None = None
 
 
+class NeonEggClaimInput(Schema):
+    """Input for claiming a neon egg bonus vote."""
+
+    egg_key: str
+    feature_id: int
+    turnstile_token: str | None = None
+
+
 class FeaturesListResponse(Schema):
     """Response for features list endpoint."""
 
@@ -129,6 +139,14 @@ class FeatureCreateResponse(Schema):
 
     feature: FeatureSchema
     message: str
+
+
+class NeonEggClaimResponse(Schema):
+    """Response after claiming a neon egg."""
+
+    message: str
+    feature: FeatureSchema
+    already_claimed: bool
 
 
 class MessageResponse(Schema):

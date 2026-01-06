@@ -95,6 +95,7 @@ TEMPLATES = [
                 "theboard.context_processors.settings",
                 "theboard.context_processors.board_health",
                 "theboard.context_processors.navigation",
+                "theboard.context_processors.neon_eggs",
             ]
         },
     }

@@ -8,7 +8,8 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
-from django.db.models import Count
+from django.db.models import Count, F, IntegerField, Sum
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.utils.text import slugify
 
@@ -147,11 +148,22 @@ class FeatureQuerySet(models.QuerySet):
     """Custom queryset utilities for Feature objects."""
 
     def with_vote_totals(self) -> "FeatureQuerySet":
-        return self.annotate(total_votes=models.Count("vote_records", distinct=True))
+        base = self.annotate(
+            vote_record_total=Count("vote_records", distinct=True),
+            neon_bonus_sum=Coalesce(
+                Sum("neon_egg_discoveries__bonus_value"),
+                0,
+                output_field=IntegerField(),
+            ),
+        )
+        return base.annotate(total_votes=F("vote_record_total") + F("neon_bonus_sum"))
 
     def with_latest_vote_at(self) -> "FeatureQuerySet":
         """Annotate features with the timestamp of their most recent vote."""
-        return self.annotate(latest_vote_at=models.Max("vote_records__created_at"))
+        return self.annotate(
+            latest_vote_at=models.Max("vote_records__created_at"),
+            latest_bonus_vote_at=models.Max("neon_egg_discoveries__created_at"),
+        )
 
     def ordered_by_popularity(self) -> "FeatureQuerySet":
         return self.with_vote_totals().order_by("-total_votes", "-created_at")
@@ -266,10 +278,16 @@ class Feature(models.Model):
     @property
     def live_vote_total(self) -> int:
         """Return the live vote count, using an annotation when available."""
-        annotated_total = getattr(self, "total_votes", None)
+        annotated_total = self.__dict__.get("total_votes")
         if annotated_total is not None:
-            return annotated_total
-        return self.vote_records.count()
+            return int(annotated_total)
+
+        vote_record_total = self.__dict__.get("vote_record_total")
+        neon_bonus_sum = self.__dict__.get("neon_bonus_sum")
+        if vote_record_total is not None and neon_bonus_sum is not None:
+            return int(vote_record_total + neon_bonus_sum)
+
+        return self.vote_records.count() + self.bonus_vote_total
 
     @property
     def vote_total(self) -> int:
@@ -277,6 +295,17 @@ class Feature(models.Model):
         if (self.is_implemented or self.is_expired) and self.votes is not None:
             return self.votes
         return self.live_vote_total
+
+    @property
+    def bonus_vote_total(self) -> int:
+        """Return total neon bonus votes that have been applied to this feature."""
+        annotated_bonus = self.__dict__.get("neon_bonus_sum")
+        if annotated_bonus is not None:
+            return int(annotated_bonus)
+        bonus = self.neon_egg_discoveries.aggregate(
+            total=Coalesce(Sum("bonus_value"), 0, output_field=IntegerField())
+        )["total"]
+        return int(bonus or 0)
 
     @property
     def is_implemented(self) -> bool:
@@ -430,7 +459,7 @@ class Feature(models.Model):
         now = reference or timezone.now()
         stale_features = (
             cls.objects.pending()
-            .annotate(total_votes=Count("vote_records", distinct=True))
+            .with_vote_totals()
             .only(
                 "id",
                 "created_at",
@@ -516,6 +545,47 @@ class Vote(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user} → {self.feature}"
+
+
+class NeonEggDiscovery(models.Model):
+    """Bonus vote unlocked from a hidden neon egg."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="neon_egg_discoveries",
+        on_delete=models.CASCADE,
+        help_text="Member who uncovered a neon egg and triggered its vote bonus.",
+    )
+    feature = models.ForeignKey(
+        Feature,
+        related_name="neon_egg_discoveries",
+        on_delete=models.CASCADE,
+        help_text="Feature that received the neon egg bonus vote.",
+    )
+    egg_key = models.CharField(
+        max_length=32,
+        help_text="Identifier used to prevent duplicate claims for the same neon egg.",
+    )
+    bonus_value = models.PositiveSmallIntegerField(
+        default=1,
+        help_text="Number of extra votes granted by this neon egg discovery.",
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        help_text="Timestamp captured the moment the neon egg was claimed.",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "egg_key"],
+                name="unique_neon_egg_per_user",
+            )
+        ]
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"{self.user} found {self.egg_key} for {self.feature}"
 
 
 class QuoteSuggestion(models.Model):

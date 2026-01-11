@@ -270,9 +270,13 @@
       empty.value = "";
       empty.textContent = "No pending features yet";
       selectEl.appendChild(empty);
+      selectEl.size = 1;
+      selectEl.disabled = true;
       return;
     }
 
+    selectEl.disabled = false;
+    selectEl.size = Math.max(Math.min(features.length, 6), 2);
     features.forEach(function (feature) {
       var option = document.createElement("option");
       option.value = feature.id;

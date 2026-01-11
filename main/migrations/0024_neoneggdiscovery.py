@@ -6,25 +6,70 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main', '0023_feature_implementation_failure_notes'),
+        ("main", "0023_feature_implementation_failure_notes"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='NeonEggDiscovery',
+            name="NeonEggDiscovery",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('egg_key', models.CharField(help_text='Identifier used to prevent duplicate claims for the same neon egg.', max_length=32)),
-                ('bonus_value', models.PositiveSmallIntegerField(default=1, help_text='Number of extra votes granted by this neon egg discovery.')),
-                ('created_at', models.DateTimeField(auto_now_add=True, help_text='Timestamp captured the moment the neon egg was claimed.')),
-                ('feature', models.ForeignKey(help_text='Feature that received the neon egg bonus vote.', on_delete=django.db.models.deletion.CASCADE, related_name='neon_egg_discoveries', to='main.feature')),
-                ('user', models.ForeignKey(help_text='Member who uncovered a neon egg and triggered its vote bonus.', on_delete=django.db.models.deletion.CASCADE, related_name='neon_egg_discoveries', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "egg_key",
+                    models.CharField(
+                        help_text="Identifier used to prevent duplicate claims for the same neon egg.",
+                        max_length=32,
+                    ),
+                ),
+                (
+                    "bonus_value",
+                    models.PositiveSmallIntegerField(
+                        default=1,
+                        help_text="Number of extra votes granted by this neon egg discovery.",
+                    ),
+                ),
+                (
+                    "created_at",
+                    models.DateTimeField(
+                        auto_now_add=True,
+                        help_text="Timestamp captured the moment the neon egg was claimed.",
+                    ),
+                ),
+                (
+                    "feature",
+                    models.ForeignKey(
+                        help_text="Feature that received the neon egg bonus vote.",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="neon_egg_discoveries",
+                        to="main.feature",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        help_text="Member who uncovered a neon egg and triggered its vote bonus.",
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="neon_egg_discoveries",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
-                'constraints': [models.UniqueConstraint(fields=('user', 'egg_key'), name='unique_neon_egg_per_user')],
+                "ordering": ["-created_at"],
+                "constraints": [
+                    models.UniqueConstraint(
+                        fields=("user", "egg_key"), name="unique_neon_egg_per_user"
+                    )
+                ],
             },
         ),
     ]

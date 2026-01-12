@@ -23,6 +23,37 @@
     </div>
 </section>
 
+<section class="temporal-breadcrumbs" aria-labelledby="temporal-breadcrumb-heading" data-temporal-breadcrumbs>
+    <div class="temporal-breadcrumbs__header">
+        <div>
+            <p class="page-eyebrow">Portal drop · Looping Archive</p>
+            <h2 id="temporal-breadcrumb-heading">Temporal breadcrumb stitches</h2>
+            <p class="temporal-breadcrumbs__lede">
+                Navigation that threads past, present, and future states together so you can rewind a journey in one click.
+            </p>
+        </div>
+        <button class="button button-muted temporal-breadcrumbs__rewind" type="button" data-breadcrumb-rewind>
+            Rewind journey
+        </button>
+    </div>
+    <div class="temporal-breadcrumbs__grid">
+        <div class="temporal-breadcrumbs__panel">
+            <p class="temporal-breadcrumbs__label">Past + present thread</p>
+            <ol class="temporal-breadcrumbs__trail" data-breadcrumb-trail aria-live="polite"></ol>
+            <p class="temporal-breadcrumbs__now">
+                Now tethered to <span data-breadcrumb-now-label>{{ destinations.0.name|default:"Atrium of Ideas" }}</span>.
+            </p>
+            <p class="temporal-breadcrumbs__empty" data-breadcrumb-empty hidden>
+                No stitches yet. Explore any page and this loom will stitch your path automatically.
+            </p>
+        </div>
+        <div class="temporal-breadcrumbs__panel temporal-breadcrumbs__panel--futures">
+            <p class="temporal-breadcrumbs__label">Future stitches</p>
+            <ul class="temporal-breadcrumbs__futures" data-breadcrumb-futures></ul>
+        </div>
+    </div>
+</section>
+
 <div class="sitemap-layout">
     <section class="orbital-sitemap">
         <div class="sitemap-globe" data-sitemap-stage tabindex="0" aria-label="Interactive 3D sitemap sphere">
@@ -93,4 +124,5 @@
 {% block extra_scripts %}
     {{ destinations|json_script:"sitemap-data" }}
     <script src="{% static 'js/sitemap-3d.js' %}" defer></script>
+    <script src="{% static 'js/temporal-breadcrumbs.js' %}" defer></script>
 {% endblock %}

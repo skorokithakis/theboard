@@ -1748,6 +1748,34 @@ class ScoreboardViewTests(TestCase):
         boot_entry = next(item for item in leaderboard if item["user"] == boot)
         self.assertEqual(boot_entry["score"], 500)
 
+    def test_scoreboard_cache_refreshes_after_vote_changes(self) -> None:
+        feature = factories.FeatureFactory(
+            title="Cache clear check",
+            description="Ensure scoreboard clears on vote change.",
+            creator=self.user,
+        )
+        factories.VoteFactory(user=self.other, feature=feature)
+
+        with self._static_override():
+            first_response = self.client.get(reverse("main:scoreboard"))
+
+        first_leaderboard = first_response.context["leaderboard"]
+        initial_entry = next(
+            item for item in first_leaderboard if item["user"] == self.user
+        )
+        self.assertEqual(initial_entry["score"], 1)
+
+        factories.VoteFactory(user=self.third, feature=feature)
+
+        with self._static_override():
+            refreshed_response = self.client.get(reverse("main:scoreboard"))
+
+        refreshed_leaderboard = refreshed_response.context["leaderboard"]
+        refreshed_entry = next(
+            item for item in refreshed_leaderboard if item["user"] == self.user
+        )
+        self.assertEqual(refreshed_entry["score"], 2)
+
 
 class RetrospectiveViewTests(TestCase):
     def setUp(self) -> None:

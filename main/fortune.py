@@ -8,6 +8,7 @@ import hashlib
 import random
 from typing import Sequence
 
+from django.core.cache import cache
 from django.utils import timezone
 
 
@@ -24,6 +25,7 @@ class Fortune:
 
 COMMUNITY_FORTUNE_WEIGHT = 3
 RECENT_FORTUNE_WINDOW = 3
+FORTUNE_CACHE_TIMEOUT_SECONDS = 6 * 60 * 60
 
 
 FORTUNE_COOKIES: Sequence[Fortune] = (
@@ -220,6 +222,19 @@ def _fortune_signature(fortune: Fortune) -> tuple[str, str, str]:
     return (fortune.collection, fortune.package, fortune.text)
 
 
+def _candidate_signature(candidates: Sequence[Fortune]) -> str:
+    """Return a stable digest for the candidate pool to version cache entries."""
+    digest = hashlib.sha256()
+    for fortune in candidates:
+        digest.update(fortune.collection.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(fortune.package.encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(fortune.text.encode("utf-8"))
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
 def _recent_hits_from_history(
     current_date: date, history: dict[date, Fortune]
 ) -> dict[tuple[str, str, str], int]:
@@ -287,6 +302,12 @@ def get_daily_fortune(for_date: date | None = None) -> Fortune:
     if not candidates:
         raise RuntimeError("Fortune data is missing.")
 
+    candidate_signature = _candidate_signature(candidates)
+    cache_key = f"daily-fortune:{target_date.isoformat()}:{candidate_signature}"
+    cached = cache.get(cache_key)
+    if cached:
+        return cached
+
     history: dict[date, Fortune] = {}
     anchor_date = date(target_date.year, 1, 1)
     if anchor_date > target_date:
@@ -309,7 +330,9 @@ def get_daily_fortune(for_date: date | None = None) -> Fortune:
         history[current_date] = fortune_choice
         current_date += timedelta(days=1)
 
-    return history[target_date]
+    result = history[target_date]
+    cache.set(cache_key, result, FORTUNE_CACHE_TIMEOUT_SECONDS)
+    return result
 
 
 __all__ = ["Fortune", "FORTUNE_COOKIES", "get_daily_fortune"]

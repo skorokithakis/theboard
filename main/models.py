@@ -452,6 +452,9 @@ class Feature(models.Model):
             ]
         )
         Vote.objects.filter(feature=self).delete()
+        from . import scoreboard as scoreboard_service
+
+        scoreboard_service.reset_scoreboard_cache()
 
     @classmethod
     def expire_stale(cls, reference: datetime | None = None) -> list[int]:
@@ -495,6 +498,9 @@ class Feature(models.Model):
         )
         if expired_ids:
             Vote.objects.filter(feature_id__in=expired_ids).delete()
+            from . import scoreboard as scoreboard_service
+
+            scoreboard_service.reset_scoreboard_cache()
         return expired_ids
 
     @classmethod

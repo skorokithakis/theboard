@@ -17,7 +17,16 @@ from ninja import NinjaAPI
 from ninja.errors import HttpError
 from ninja.security import SessionAuth
 
-from . import avatars, economy, easter_eggs, generation, models, schemas, turnstile
+from . import (
+    avatars,
+    economy,
+    easter_eggs,
+    generation,
+    models,
+    schemas,
+    scoreboard as scoreboard_service,
+    turnstile,
+)
 from .utils import get_next_iteration_at
 
 FEATURE_DAILY_LIMIT = 3
@@ -457,6 +466,8 @@ def vote_toggle(
         action = "removed"
     else:
         action = "added"
+
+    scoreboard_service.reset_scoreboard_cache()
 
     feature.refresh_from_db(fields=["created_at"])
     vote_total = feature.vote_records.count()

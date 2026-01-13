@@ -53,6 +53,12 @@ NAV_SECTIONS: list[dict[str, Any]] = [
                 "kind": "grove",
             },
             {
+                "name": "arcade-glitch",
+                "label": "Glitch Art Lab",
+                "summary": "Toggle chaotic CSS filters and frame the results as living art.",
+                "kind": "fortress",
+            },
+            {
                 "name": "arcade-terrarium",
                 "label": "Terrarium Lab",
                 "summary": "Board-health-driven falling sand.",

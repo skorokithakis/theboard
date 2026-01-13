@@ -269,6 +269,29 @@ def test_performance_sprint_interactions(anonymous_page, live_server: str):
     expect(page.locator("[data-brag-target]")).to_contain_text("faster")
 
 
+def test_glitch_art_lab_interactions(anonymous_page, live_server: str):
+    page = anonymous_page
+    page.goto("/arcade/glitch/", wait_until="networkidle")
+
+    viewport = page.locator("[data-glitch-viewport]")
+    expect(viewport).to_be_visible()
+
+    initial_filter = viewport.get_attribute("data-active-filter")
+    page.get_by_role("button", name="Toggle random filter").click()
+    expect(page.locator("[data-glitch-current]")).not_to_have_text(re.compile("^\\s*$"))
+    updated_filter = viewport.get_attribute("data-active-filter")
+    if initial_filter and updated_filter == initial_filter:
+        page.get_by_role("button", name="Toggle random filter").click()
+        updated_filter = viewport.get_attribute("data-active-filter")
+
+    page.get_by_role("button", name="Frame this glitch").click()
+    frames = page.locator("[data-glitch-gallery] [data-glitch-frame]")
+    expect(frames).to_have_count(1, timeout=1500)
+    expect(frames.first).to_have_attribute("data-filter-name", re.compile(".+"))
+    expect(page.locator("[data-glitch-placeholder]")).to_have_count(0)
+    assert updated_filter or initial_filter
+
+
 def test_assistant_toggle_and_gift_effect(auth_session, live_server: str):
     page = auth_session["page"]
     page.goto("/arcade/buddy/", wait_until="networkidle")

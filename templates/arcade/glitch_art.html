@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Glitch Art Lab | {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="glitch-hero" data-glitch-lab data-soundtrack="pulse">
+    <div class="glitch-hero__copy">
+        <p class="page-eyebrow">Arcade ritual</p>
+        <h1 class="page-title">Delightful glitch art release</h1>
+        <p class="page-lead">
+            Release a visual glitch or easter egg to remind everyone the system is alive. Toggle a random CSS filter,
+            screenshot the chaos, and frame it as intentional art.
+        </p>
+        <div class="glitch-hero__actions">
+            <button class="button" type="button" data-glitch-randomize>Toggle random filter</button>
+            <button class="button-outline" type="button" data-glitch-frame>Frame this glitch</button>
+            <button class="button-ghost button-sm" type="button" data-glitch-reset>Calm the signal</button>
+        </div>
+        <p class="glitch-hero__status" data-glitch-status>Awaiting the first distortion.</p>
+    </div>
+    <div class="glitch-hero__meta">
+        <div class="glitch-hero__stat">
+            <span class="glitch-hero__label">Ritual</span>
+            <span class="glitch-hero__value">Filter → Screenshot → Frame</span>
+        </div>
+        {% if next_iteration_at %}
+            <div class="glitch-hero__stat">
+                <span class="glitch-hero__label">Next implementation</span>
+                <span
+                    class="glitch-hero__value"
+                    data-next-iteration="{{ next_iteration_at|date:'c' }}"
+                    data-countdown-label="Next implementation">
+                    {{ next_iteration_at|date:"M j, H:i T" }}
+                </span>
+            </div>
+        {% endif %}
+        <div class="glitch-hero__stat glitch-hero__stat--accent">
+            <span class="glitch-hero__label">Reminder</span>
+            <span class="glitch-hero__value">Voting protections stay intact.</span>
+        </div>
+    </div>
+</section>
+
+<section class="glitch-stage" aria-labelledby="glitch-stage-heading">
+    <div class="glitch-panel">
+        <p class="glitch-panel__eyebrow">Control deck</p>
+        <h2 id="glitch-stage-heading">Live board distortion</h2>
+        <p class="glitch-panel__lead">
+            Spin the filter wheel and watch the feature queue refract in real time. Each preset keeps the layout legible
+            while bending colors into something gallery-worthy.
+        </p>
+        <ul class="glitch-filter-list" data-glitch-filter-list>
+            {% for filter in glitch_filters %}
+                <li class="glitch-filter" data-glitch-filter-item data-filter-name="{{ filter.name }}">
+                    <div class="glitch-filter__name">{{ filter.name }}</div>
+                    <p class="glitch-filter__note">{{ filter.note }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+    <div class="glitch-stage__viewport">
+        <div class="glitch-viewport" data-glitch-viewport>
+            <div class="glitch-viewport__scanlines" aria-hidden="true"></div>
+            <div class="glitch-viewport__grain" aria-hidden="true"></div>
+            <div class="glitch-viewport__content" data-glitch-canvas>
+                <div class="glitch-viewport__tag">Live board sample</div>
+                <div class="glitch-echoes">
+                    {% for feature in feature_echoes %}
+                        <article class="glitch-echo">
+                            <p class="glitch-echo__votes">{{ feature.vote_total }} votes</p>
+                            <h3 class="glitch-echo__title">{{ feature.title }}</h3>
+                            <p class="glitch-echo__desc">{{ feature.description|truncatewords:22 }}</p>
+                            <p class="glitch-echo__meta">by {{ feature.creator.display_name }}</p>
+                        </article>
+                    {% empty %}
+                        <article class="glitch-echo glitch-echo--empty" data-glitch-empty>
+                            <h3 class="glitch-echo__title">Quiet queue</h3>
+                            <p class="glitch-echo__desc">Add a feature on the main board and it will echo here for distortion.</p>
+                        </article>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <p class="glitch-viewport__label">Current filter: <span data-glitch-current>None yet</span></p>
+    </div>
+</section>
+
+<section class="glitch-gallery" aria-labelledby="glitch-gallery-heading">
+    <div class="glitch-gallery__header">
+        <p class="glitch-panel__eyebrow">Captured evidence</p>
+        <h2 id="glitch-gallery-heading">Intentional glitch gallery</h2>
+        <p class="glitch-panel__lead">
+            Freeze the best distortions and stash them as proof that the system is alive. Each frame keeps the filter,
+            timestamp, and a caption so visitors know this chaos was on purpose.
+        </p>
+    </div>
+    <div class="glitch-gallery__frames" data-glitch-gallery>
+        <div class="glitch-frame glitch-frame--placeholder" data-glitch-placeholder>
+            <p>Frame a glitch to populate the gallery wall.</p>
+        </div>
+    </div>
+    <div class="glitch-rituals">
+        {% for ritual in ritual_steps %}
+            <article class="glitch-ritual">
+                <p class="glitch-ritual__step">Step {{ forloop.counter|stringformat:"02d" }}</p>
+                <h3 class="glitch-ritual__title">{{ ritual.title }}</h3>
+                <p class="glitch-ritual__detail">{{ ritual.detail }}</p>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ block.super }}
+    {{ glitch_filters|json_script:"glitch-filter-data" }}
+    <script src="{% static 'js/glitch-art.js' %}" defer></script>
+{% endblock %}

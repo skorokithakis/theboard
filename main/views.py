@@ -673,6 +673,71 @@ def arcade(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
+def arcade_glitch(request: HttpRequest) -> HttpResponse:
+    """Glitch art lab that embraces chaotic CSS filters."""
+
+    Feature.expire_stale()
+    feature_echoes = list(
+        Feature.objects.pending()
+        .with_vote_totals()
+        .select_related("creator")
+        .order_by("-total_votes", "-created_at")[:4]
+    )
+    glitch_filters = [
+        {
+            "name": "Neon bloom",
+            "filter": "saturate(1.2) hue-rotate(210deg) contrast(1.12) drop-shadow(0 0 16px rgba(255, 140, 92, 0.28))",
+            "note": "Warms the palette and adds a soft neon halo to remind the board it's alive.",
+        },
+        {
+            "name": "Scanline ghost",
+            "filter": "contrast(1.18) saturate(1.05) brightness(0.96)",
+            "note": "Keeps the layout readable while the overlay jitters like a CRT signal check.",
+        },
+        {
+            "name": "Polar inversion",
+            "filter": "invert(0.88) hue-rotate(160deg) saturate(1.6) contrast(0.94)",
+            "note": "Flips the tones and lets voting cards glow as negative space art.",
+        },
+        {
+            "name": "Deep sea offset",
+            "filter": "hue-rotate(280deg) saturate(1.35) drop-shadow(0 0 24px rgba(16, 139, 151, 0.3))",
+            "note": "Pushes everything through teal depths so glitches feel intentional.",
+        },
+        {
+            "name": "Infrared bloom",
+            "filter": "sepia(0.35) saturate(1.75) hue-rotate(-24deg) contrast(1.1)",
+            "note": "Adds a thermal glaze and bright edge contrast to frame the chaos.",
+        },
+    ]
+    ritual_steps = [
+        {
+            "title": "Toggle a random filter",
+            "detail": "Roll a fresh CSS filter stack until the scene feels restless enough to capture.",
+        },
+        {
+            "title": "Screenshot the chaos",
+            "detail": "Freeze the current distortion into a frame before the board shifts again.",
+        },
+        {
+            "title": "Frame it as intentional art",
+            "detail": "Label the glitch, stash it in the gallery, and let visitors vote with their eyes.",
+        },
+    ]
+
+    return render(
+        request,
+        "arcade/glitch_art.html",
+        {
+            "feature_echoes": feature_echoes,
+            "glitch_filters": glitch_filters,
+            "ritual_steps": ritual_steps,
+            "next_iteration_at": get_next_iteration_at(),
+        },
+    )
+
+
+@require_GET
 def arcade_ishmael(request: HttpRequest) -> HttpResponse:
     """Maritime reading room that echoes Ishmael's call and live queue signals."""
 

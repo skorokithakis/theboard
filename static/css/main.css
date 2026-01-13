@@ -3605,6 +3605,371 @@ body.has-shimeji-confetti .site-main {
   }
 }
 
+.glitch-hero {
+  position: relative;
+  margin: 2rem 0;
+  padding: 2.5rem;
+  border-radius: 28px;
+  border: 1px solid rgba(16, 139, 151, 0.16);
+  background: radial-gradient(circle at 12% 12%, rgba(16, 139, 151, 0.16), transparent 38%),
+    radial-gradient(circle at 82% 0%, rgba(255, 140, 92, 0.18), transparent 50%),
+    linear-gradient(135deg, #0b1924, #0d2a32 46%, #0f3c40);
+  color: #e6f4ef;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+
+.glitch-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.06), transparent 32%),
+    radial-gradient(circle at 88% 60%, rgba(182, 247, 227, 0.14), transparent 40%);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.glitch-hero__copy {
+  position: relative;
+  z-index: 1;
+  max-width: 780px;
+}
+
+.glitch-hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.glitch-hero__status {
+  margin: 0.35rem 0 0;
+  color: #c3dde4;
+}
+
+.glitch-hero__meta {
+  position: relative;
+  z-index: 1;
+  margin-top: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.glitch-hero__stat {
+  padding: 0.85rem 1rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e4f1f0;
+}
+
+.glitch-hero__stat--accent {
+  background: rgba(255, 140, 92, 0.08);
+  border-color: rgba(255, 140, 92, 0.24);
+}
+
+.glitch-hero__label {
+  display: block;
+  font-size: 0.9rem;
+  color: #9dcad3;
+}
+
+.glitch-hero__value {
+  display: block;
+  margin-top: 0.1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.glitch-stage {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(280px, 1fr) 1.15fr;
+  align-items: start;
+  margin: 2rem 0;
+}
+
+.glitch-panel {
+  padding: 1.5rem;
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.86));
+  border: 1px solid rgba(16, 139, 151, 0.12);
+  box-shadow: 0 18px 50px rgba(9, 44, 58, 0.15);
+}
+
+.glitch-panel__eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.glitch-panel__lead {
+  margin: 0.35rem 0 0.85rem;
+  color: var(--muted);
+}
+
+.glitch-filter-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.glitch-filter {
+  padding: 0.85rem;
+  border-radius: 14px;
+  border: 1px solid rgba(16, 139, 151, 0.16);
+  background: linear-gradient(120deg, rgba(182, 247, 227, 0.16), rgba(255, 140, 92, 0.12));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.glitch-filter.is-active {
+  border-color: var(--accent-strong);
+  box-shadow: 0 10px 26px rgba(16, 139, 151, 0.18);
+  background: linear-gradient(120deg, rgba(16, 139, 151, 0.16), rgba(255, 140, 92, 0.16));
+}
+
+.glitch-filter__name {
+  margin: 0 0 0.2rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.glitch-filter__note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.glitch-stage__viewport {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.glitch-viewport {
+  position: relative;
+  padding: 1.25rem;
+  min-height: 360px;
+  border-radius: 22px;
+  border: 1px solid rgba(16, 139, 151, 0.2);
+  background: radial-gradient(circle at 18% 18%, rgba(182, 247, 227, 0.18), transparent 42%),
+    radial-gradient(circle at 78% 16%, rgba(255, 140, 92, 0.18), transparent 48%),
+    linear-gradient(135deg, #06202c, #0b2c36 50%, #0b3740);
+  overflow: hidden;
+  filter: var(--glitch-filter, none);
+  transition: filter 0.24s ease, transform 0.24s ease;
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.32);
+}
+
+.glitch-viewport.is-glitching {
+  transform: translate3d(3px, -3px, 0);
+}
+
+.glitch-viewport__scanlines,
+.glitch-viewport__grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  mix-blend-mode: soft-light;
+}
+
+.glitch-viewport__scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.08) 0,
+    rgba(255, 255, 255, 0.08) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+}
+
+.glitch-viewport__grain {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 0);
+  background-size: 4px 4px;
+}
+
+.glitch-viewport__content {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.glitch-viewport__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #dff6ef;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+}
+
+.glitch-echoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.glitch-echo {
+  padding: 0.9rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text);
+  border: 1px solid rgba(16, 139, 151, 0.14);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.14);
+}
+
+.glitch-echo--empty {
+  background: rgba(255, 255, 255, 0.7);
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.glitch-echo__votes {
+  margin: 0 0 0.1rem;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.glitch-echo__title {
+  margin: 0 0 0.25rem;
+}
+
+.glitch-echo__desc {
+  margin: 0 0 0.35rem;
+  color: var(--muted);
+}
+
+.glitch-echo__meta {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #0a4c5a;
+}
+
+.glitch-viewport__label {
+  margin: 0;
+  color: var(--muted);
+}
+
+.glitch-gallery {
+  margin: 2.5rem 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.glitch-gallery__frames {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.9rem;
+}
+
+.glitch-frame {
+  padding: 0.9rem;
+  border-radius: 16px;
+  border: 1px solid rgba(16, 139, 151, 0.16);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.86));
+  box-shadow: 0 14px 36px rgba(9, 44, 58, 0.16);
+}
+
+.glitch-frame__preview {
+  height: 160px;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 139, 151, 0.12);
+  background: radial-gradient(circle at 18% 18%, rgba(182, 247, 227, 0.32), transparent 46%),
+    radial-gradient(circle at 78% 12%, rgba(255, 140, 92, 0.22), transparent 50%),
+    linear-gradient(135deg, #0e2c34, #153e44 55%, #0f535a);
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  position: relative;
+  filter: var(--glitch-frame-filter, none);
+}
+
+.glitch-frame__title {
+  margin: 0 0 0.2rem;
+}
+
+.glitch-frame__note {
+  margin: 0 0 0.35rem;
+  color: var(--muted);
+}
+
+.glitch-frame__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  align-items: center;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.glitch-frame__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(16, 139, 151, 0.08);
+  color: #0f4e58;
+  font-weight: 700;
+}
+
+.glitch-frame--placeholder {
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.76);
+  color: var(--muted);
+}
+
+.glitch-rituals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.glitch-ritual {
+  padding: 1rem;
+  border-radius: 14px;
+  border: 1px solid rgba(16, 139, 151, 0.14);
+  background: linear-gradient(145deg, rgba(16, 139, 151, 0.06), rgba(255, 140, 92, 0.08));
+}
+
+.glitch-ritual__step {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.glitch-ritual__title {
+  margin: 0.2rem 0 0.25rem;
+}
+
+.glitch-ritual__detail {
+  margin: 0;
+  color: var(--muted);
+}
+
+@media (max-width: 960px) {
+  .glitch-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .glitch-hero {
+    padding: 2rem;
+  }
+}
+
 @media (max-width: 640px) {
   .shimeji-shop {
     inset: auto 1rem 1rem 1rem;

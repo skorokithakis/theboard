@@ -95,6 +95,17 @@ GENERATION_PLANS: tuple[GenerationPlan, ...] = (
             "into a feature title before the wormhole snaps shut."
         ),
     ),
+    GenerationPlan(
+        title="Playbook inversion sprint",
+        description=(
+            "When inspiration dries up, turn The Board's playbook upside down—swap priorities, question defaults, and "
+            "ship the feature that only appears once the rules are inverted."
+        ),
+        ritual=(
+            "Pause, scan the current list, flip the most predictable rule, and draft a wildly different seed that "
+            "surprises future visitors."
+        ),
+    ),
 )
 
 PARALLEL_BACKLOG: tuple[ParallelBacklogEntry, ...] = (

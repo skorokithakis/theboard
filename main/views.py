@@ -672,6 +672,72 @@ def arcade(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
+def arcade_gremlin(request: HttpRequest) -> HttpResponse:
+    """Chaos gremlin ritual with dice-powered headline generator."""
+
+    Feature.expire_stale()
+    feature_targets = list(
+        Feature.objects.pending()
+        .with_vote_totals()
+        .select_related("creator")
+        .order_by("-total_votes", "-created_at")[:4]
+    )
+    ritual_steps = [
+        {
+            "title": "Roll twin dice",
+            "detail": "Tap the chaos button to wake the gremlin and pull two numbers from the void.",
+        },
+        {
+            "title": "Mash them into a headline",
+            "detail": "Combine the dice fragments into a ship note that sounds like it shouldn't exist.",
+        },
+        {
+            "title": "Ship before interest drops",
+            "detail": "Log the headline while the interest meter glows so the gremlin sticks around.",
+        },
+    ]
+    dice_fragments = {
+        "openers": [
+            "Neon static rattles",
+            "Gremlin reroutes signals",
+            "Dice dare the backlog",
+            "Portal hums louder",
+            "Safety rails vibrate",
+            "Backup plan mutates",
+        ],
+        "closers": [
+            "feature queue erupts in confetti",
+            "release notes scribble themselves",
+            "captcha guardians laugh but hold",
+            "scoreboard tilts on its axis",
+            "arcade hall flickers in magenta",
+            "neon eggs hatch twice as bright",
+        ],
+        "joiners": [" -> ", " x ", " collides with ", " bends into "],
+    }
+    target_payload = [
+        {
+            "title": feature.title,
+            "votes": feature.vote_total,
+            "creator": feature.creator.display_name,
+        }
+        for feature in feature_targets
+    ]
+
+    return render(
+        request,
+        "arcade/chaos_gremlin.html",
+        {
+            "feature_targets": feature_targets,
+            "ritual_steps": ritual_steps,
+            "dice_fragments": dice_fragments,
+            "target_payload": target_payload,
+            "next_iteration_at": get_next_iteration_at(),
+        },
+    )
+
+
+@require_GET
 def arcade_glitch(request: HttpRequest) -> HttpResponse:
     """Glitch art lab that embraces chaotic CSS filters."""
 

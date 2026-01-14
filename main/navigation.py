@@ -53,6 +53,12 @@ NAV_SECTIONS: list[dict[str, Any]] = [
                 "kind": "grove",
             },
             {
+                "name": "arcade-gremlin",
+                "label": "Chaos Gremlin Lab",
+                "summary": "Roll twin dice, craft a headline, and ship before the gremlin loses interest.",
+                "kind": "fortress",
+            },
+            {
                 "name": "arcade-glitch",
                 "label": "Glitch Art Lab",
                 "summary": "Toggle chaotic CSS filters and frame the results as living art.",

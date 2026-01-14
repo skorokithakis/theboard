@@ -292,6 +292,25 @@ def test_glitch_art_lab_interactions(anonymous_page, live_server: str):
     assert updated_filter or initial_filter
 
 
+def test_chaos_gremlin_lab_interactions(anonymous_page, live_server: str):
+    page = anonymous_page
+    page.goto("/arcade/gremlin/", wait_until="networkidle")
+
+    roll_button = page.get_by_role("button", name="Roll the chaos dice")
+    ship_button = page.get_by_role("button", name="Ship the headline")
+    die_face = page.locator("[data-gremlin-die='a']")
+
+    expect(ship_button).to_be_disabled()
+    roll_button.click()
+    expect(ship_button).to_be_enabled()
+    expect(die_face).to_have_text(re.compile("[1-6]"))
+
+    ship_button.click()
+    log_entries = page.locator("[data-gremlin-log] .gremlin-log__entry")
+    expect(log_entries).to_have_count(1, timeout=2000)
+    expect(page.locator("[data-gremlin-log-count]")).to_contain_text("shipped")
+
+
 def test_assistant_toggle_and_gift_effect(auth_session, live_server: str):
     page = auth_session["page"]
     page.goto("/arcade/buddy/", wait_until="networkidle")

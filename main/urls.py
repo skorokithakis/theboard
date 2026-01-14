@@ -18,6 +18,7 @@ urlpatterns = [
     path("web5/", views.web5, name="web5"),
     path("arcade/", views.arcade, name="arcade"),
     path("arcade/penguins/", views.penguin_view, name="penguin-view"),
+    path("arcade/gremlin/", views.arcade_gremlin, name="arcade-gremlin"),
     path(
         "arcade/performance/",
         views.arcade_performance,

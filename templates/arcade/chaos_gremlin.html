@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Chaos Gremlin Lab | {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="gremlin-hero" data-gremlin-lab data-soundtrack="pulse">
+    <div class="gremlin-hero__copy">
+        <p class="page-eyebrow">Arcade ritual</p>
+        <h1 class="page-title">Chaos gremlin invades The Board</h1>
+        <p class="page-lead">
+            Unleash a tiny chaos gremlin to ship something messy, memorable, and probably unnecessary. Roll two six-sided
+            dice, mash the results into a headline, and ship it before the gremlin loses interest. Voting protections
+            stay untouched&mdash;the chaos is contained to this room.
+        </p>
+        <div class="gremlin-hero__actions">
+            <button class="button" type="button" data-gremlin-roll>Roll the chaos dice</button>
+            <button class="button-outline" type="button" data-gremlin-ship disabled>Ship the headline</button>
+            <button class="button-ghost button-sm" type="button" data-gremlin-reset>Calm the gremlin</button>
+        </div>
+        <p class="gremlin-hero__status" data-gremlin-status>Waiting for the first roll.</p>
+    </div>
+    <div class="gremlin-hero__panel">
+        <div class="gremlin-dice" aria-live="polite">
+            <div class="gremlin-die" data-gremlin-die="a" aria-label="First die">&mdash;</div>
+            <div class="gremlin-die" data-gremlin-die="b" aria-label="Second die">&mdash;</div>
+        </div>
+        <p class="gremlin-headline" data-gremlin-headline>Roll to see what the gremlin demands.</p>
+        <div class="gremlin-meter" role="img" aria-label="Gremlin interest meter">
+            <div class="gremlin-meter__bar">
+                <span class="gremlin-meter__fill" data-gremlin-interest style="width: 72%;"></span>
+            </div>
+            <p class="gremlin-meter__note" data-gremlin-interest-label>Interest steady. Ship quickly.</p>
+        </div>
+        {% if next_iteration_at %}
+            <p
+                class="gremlin-hero__countdown"
+                data-next-iteration="{{ next_iteration_at|date:'c' }}"
+                data-countdown-label="Next implementation">
+                Next implementation at {{ next_iteration_at|date:"F j, Y H:i \\U\\T\\C" }}
+            </p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="gremlin-grid" aria-labelledby="gremlin-ritual-heading">
+    <article class="gremlin-card">
+        <p class="gremlin-card__eyebrow">Dice fragments</p>
+        <h2 id="gremlin-ritual-heading">What each die summons</h2>
+        <p class="gremlin-card__note">Mash the fragments together after every roll. The gremlin expects all six faces to get used.</p>
+        <div class="gremlin-dice-map">
+            <div>
+                <p class="gremlin-dice-map__title">First die</p>
+                <ol class="gremlin-dice-map__list">
+                    {% for fragment in dice_fragments.openers %}
+                        <li><span class="gremlin-chip">{{ forloop.counter }}</span> {{ fragment }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            <div>
+                <p class="gremlin-dice-map__title">Second die</p>
+                <ol class="gremlin-dice-map__list">
+                    {% for fragment in dice_fragments.closers %}
+                        <li><span class="gremlin-chip">{{ forloop.counter }}</span> {{ fragment }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+        </div>
+    </article>
+
+    <article class="gremlin-card gremlin-card--log">
+        <div class="gremlin-card__header">
+            <div>
+                <p class="gremlin-card__eyebrow">Ship log</p>
+                <h2>Headlines before the gremlin gets bored</h2>
+            </div>
+            <span class="gremlin-chip gremlin-chip--accent" data-gremlin-log-count>0 shipped</span>
+        </div>
+        <p class="gremlin-card__note">
+            Every shipped headline keeps the chaos gremlin engaged for a little longer. The interest meter drops if you linger.
+        </p>
+        <ol class="gremlin-log" data-gremlin-log aria-live="polite">
+            <li class="gremlin-log__entry" data-gremlin-placeholder>
+                Waiting for the first chaotic headline. Roll and ship to pin it here.
+            </li>
+        </ol>
+    </article>
+
+    <article class="gremlin-card">
+        <p class="gremlin-card__eyebrow">Targets</p>
+        <h2>Where the gremlin aims next</h2>
+        <p class="gremlin-card__note">The gremlin only peeks; it never tampers with voting or captcha walls.</p>
+        <ul class="gremlin-targets">
+            {% for feature in feature_targets %}
+                <li class="gremlin-target">
+                    <div>
+                        <p class="gremlin-target__title">{{ feature.title }}</p>
+                        <p class="gremlin-target__meta">by {{ feature.creator.display_name }} · {{ feature.vote_total }} votes</p>
+                    </div>
+                    <span class="gremlin-chip">+{{ feature.vote_total }}</span>
+                </li>
+            {% empty %}
+                <li class="gremlin-target gremlin-target--empty">
+                    The queue is quiet. The gremlin will use the dice to seed something new.
+                </li>
+            {% endfor %}
+        </ul>
+    </article>
+
+    <article class="gremlin-card gremlin-card--rituals">
+        <p class="gremlin-card__eyebrow">Ritual</p>
+        <h2>How to keep the gremlin focused</h2>
+        <ul class="gremlin-rituals">
+            {% for ritual in ritual_steps %}
+                <li class="gremlin-ritual">
+                    <p class="gremlin-ritual__step">Step {{ forloop.counter|stringformat:"02d" }}</p>
+                    <h3 class="gremlin-ritual__title">{{ ritual.title }}</h3>
+                    <p class="gremlin-ritual__detail">{{ ritual.detail }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+    </article>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ block.super }}
+    {{ dice_fragments|json_script:"gremlin-fragments" }}
+    {{ target_payload|json_script:"gremlin-targets" }}
+    <script src="{% static 'js/chaos-gremlin.js' %}" defer></script>
+{% endblock %}

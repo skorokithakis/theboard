@@ -33,6 +33,7 @@ PUBLIC_PATHS: Tuple[str, ...] = (
     "/arcade/quotes/",
     "/arcade/performance/",
     "/arcade/glitch/",
+    "/arcade/gremlin/",
     "/arcade/buddy/",
     "/arcade/penguins/",
     "/arcade/ishmael/",

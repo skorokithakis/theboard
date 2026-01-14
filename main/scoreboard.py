@@ -71,7 +71,7 @@ def _aggregate_historical_votes() -> Counter[int]:
 
 
 def _sorted_leaderboard_entries(
-    vote_totals_by_user: Iterable[tuple[int, int]]
+    vote_totals_by_user: Iterable[tuple[int, int]],
 ) -> list[dict[str, object]]:
     """Resolve leaderboard users and return sorted entry dictionaries."""
     user_ids = [user_id for user_id, _ in vote_totals_by_user]

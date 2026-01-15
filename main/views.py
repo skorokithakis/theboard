@@ -715,11 +715,40 @@ def arcade_gremlin(request: HttpRequest) -> HttpResponse:
         ],
         "joiners": [" -> ", " x ", " collides with ", " bends into "],
     }
+    omen_fragments = {
+        "doubles": [
+            "Double trouble: the gremlin mirrors the number and opens a second chute.",
+            "Perfect echo: both dice agree, so the gremlin stamps it twice.",
+        ],
+        "sums": {
+            2: [
+                "Snake eyes: the gremlin scribbles a tiny release note in the margins."
+            ],
+            3: ["Uneven spark: a sticky note drifts onto the backlog."],
+            4: [
+                "Quiet knock: the gremlin tunes the arcade lights to the beat of four."
+            ],
+            5: ["Five-point shimmy: the gremlin limbers up the headline."],
+            6: ["Dice form a circuit; the gremlin taps the ship button twice."],
+            7: ["Lucky bridge: the gremlin strings yarn between the two dice."],
+            8: ["Tempo picks up; the interest meter glows a little hotter."],
+            9: ["Voltage spike: the gremlin underlines the headline in neon."],
+            10: ["Momentum loop: the gremlin stamps a chaotic approval seal."],
+            11: ["Skybridge rumor: mischief promised in the next sprint."],
+            12: ["Boxcars blaze: the gremlin fans confetti toward the scoreboard."],
+        },
+        "fallback": [
+            "The gremlin shrugs and waits for a louder roll.",
+            "A faint spark scatters dust across the ship log.",
+        ],
+    }
     target_payload = [
         {
             "title": feature.title,
             "votes": feature.vote_total,
-            "creator": feature.creator.display_name,
+            "creator": feature.creator.display_name
+            or feature.creator.username
+            or "creator",
         }
         for feature in feature_targets
     ]
@@ -731,6 +760,7 @@ def arcade_gremlin(request: HttpRequest) -> HttpResponse:
             "feature_targets": feature_targets,
             "ritual_steps": ritual_steps,
             "dice_fragments": dice_fragments,
+            "omen_fragments": omen_fragments,
             "target_payload": target_payload,
             "next_iteration_at": get_next_iteration_at(),
         },

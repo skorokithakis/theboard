@@ -18,6 +18,11 @@
     closers: [],
     joiners: [" + "],
   });
+  const omens = parseJSON("gremlin-omens", {
+    sums: {},
+    doubles: [],
+    fallback: [],
+  });
   const targets = parseJSON("gremlin-targets", []);
 
   const rollButton = lab.querySelector("[data-gremlin-roll]");
@@ -30,6 +35,9 @@
   const interestLabel = lab.querySelector("[data-gremlin-interest-label]");
   const logList = lab.querySelector("[data-gremlin-log]");
   const logCount = lab.querySelector("[data-gremlin-log-count]");
+  const omenText = lab.querySelector("[data-gremlin-omen-text]");
+  const omenNote = lab.querySelector("[data-gremlin-omen-note]");
+  const omenFlair = lab.querySelector("[data-gremlin-omen-flair]");
 
   let lastRoll = null;
   let interest = 72;
@@ -48,6 +56,40 @@
       `die ${second} delivers`;
     const joiner = sample(fragments.joiners || [" + "]) || " + ";
     return `${opener}${joiner}${closer}`;
+  };
+
+  const pickOmen = (first, second) => {
+    const sum = first + second;
+    const sumKey = String(sum);
+    const isDouble = first === second;
+    const pool =
+      (isDouble && Array.isArray(omens.doubles) && omens.doubles.length
+        ? omens.doubles
+        : null) ||
+      (omens.sums &&
+        ((Array.isArray(omens.sums[sumKey]) && omens.sums[sumKey].length
+          ? omens.sums[sumKey]
+          : null) ||
+          (Array.isArray(omens.sums[sum]) && omens.sums[sum].length
+            ? omens.sums[sum]
+            : null))) ||
+      (Array.isArray(omens.fallback) && omens.fallback.length
+        ? omens.fallback
+        : null);
+
+    const vibe = isDouble
+      ? "double"
+      : sum >= 9
+      ? "surge"
+      : sum <= 4
+      ? "sleepy"
+      : "steady";
+    return {
+      text: (pool && sample(pool)) || "The gremlin blinks at the dice.",
+      sum,
+      double: isDouble,
+      vibe,
+    };
   };
 
   const setStatus = (message) => {
@@ -110,6 +152,50 @@
     }
   };
 
+  const renderOmen = (omen) => {
+    if (!omen) return;
+    if (omenText) {
+      omenText.textContent = omen.text;
+    }
+    if (omenNote) {
+      const tone =
+        omen.double && omen.vibe === "double"
+          ? "Double roll: interest spikes while the gremlin scribbles."
+          : omen.vibe === "surge"
+          ? `Sum ${omen.sum} makes the gremlin bold. Ship quickly.`
+          : omen.vibe === "sleepy"
+          ? `Sum ${omen.sum} barely wakes the gremlin—roll or ship soon.`
+          : `Sum ${omen.sum} keeps the gremlin curious.`;
+      omenNote.textContent = tone;
+    }
+    if (omenFlair) {
+      const flair =
+        omen.double && omen.vibe === "double"
+          ? "Double trouble"
+          : omen.vibe === "surge"
+          ? "Hyped"
+          : omen.vibe === "sleepy"
+          ? "Sleepy spark"
+          : "Curious";
+      omenFlair.textContent = flair;
+    }
+    lab.classList.toggle("gremlin--double", Boolean(omen.double));
+  };
+
+  const resetOmen = () => {
+    if (omenText) {
+      omenText.textContent =
+        "Awaiting the first omen. Roll both dice to wake the gremlin.";
+    }
+    if (omenNote) {
+      omenNote.textContent = "Both dice fuel the headline mashup.";
+    }
+    if (omenFlair) {
+      omenFlair.textContent = "Waiting";
+    }
+    lab.classList.remove("gremlin--double");
+  };
+
   const rollDice = () => {
     const first = Math.floor(Math.random() * 6) + 1;
     const second = Math.floor(Math.random() * 6) + 1;
@@ -123,8 +209,22 @@
     if (shipButton) {
       shipButton.disabled = false;
     }
-    adjustInterest(6);
-    setStatus(`Rolled ${first} and ${second}. Headline primed.`);
+    const omen = pickOmen(first, second);
+    renderOmen(omen);
+    const interestBonus =
+      omen && omen.double
+        ? 8
+        : omen && omen.vibe === "surge"
+        ? 3
+        : omen && omen.vibe === "sleepy"
+        ? 1
+        : 2;
+    adjustInterest(6 + interestBonus);
+    setStatus(
+      `Rolled ${first} and ${second}. Headline primed${
+        omen && omen.double ? " with double chaos." : "."
+      }`
+    );
   };
 
   const pickTarget = () => {
@@ -179,6 +279,7 @@
     }
     setStatus("Gremlin is stretching. Roll to wake it back up.");
     adjustInterest(-6);
+    resetOmen();
   };
 
   if (rollButton) {
@@ -195,4 +296,5 @@
 
   renderInterest();
   startDecay();
+  resetOmen();
 })();

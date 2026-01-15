@@ -298,12 +298,18 @@ def test_chaos_gremlin_lab_interactions(anonymous_page, live_server: str):
 
     roll_button = page.get_by_role("button", name="Roll the chaos dice")
     ship_button = page.get_by_role("button", name="Ship the headline")
+    omen_text = page.locator("[data-gremlin-omen-text]")
+    omen_flair = page.locator("[data-gremlin-omen-flair]")
     die_face = page.locator("[data-gremlin-die='a']")
 
+    initial_omen = omen_text.inner_text()
+    expect(omen_flair).to_have_text("Waiting")
     expect(ship_button).to_be_disabled()
     roll_button.click()
     expect(ship_button).to_be_enabled()
     expect(die_face).to_have_text(re.compile("[1-6]"))
+    expect(omen_text).not_to_have_text(re.compile(re.escape(initial_omen)))
+    expect(omen_flair).not_to_have_text("Waiting")
 
     ship_button.click()
     log_entries = page.locator("[data-gremlin-log] .gremlin-log__entry")

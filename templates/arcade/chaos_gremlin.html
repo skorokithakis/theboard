@@ -32,6 +32,14 @@
             </div>
             <p class="gremlin-meter__note" data-gremlin-interest-label>Interest steady. Ship quickly.</p>
         </div>
+        <div class="gremlin-omen" data-gremlin-omen>
+            <div class="gremlin-omen__header">
+                <p class="gremlin-omen__label">Dice omen</p>
+                <span class="gremlin-chip gremlin-chip--accent" data-gremlin-omen-flair>Waiting</span>
+            </div>
+            <p class="gremlin-omen__text" data-gremlin-omen-text>Awaiting the first omen. Roll both dice to wake the gremlin.</p>
+            <p class="gremlin-omen__note" data-gremlin-omen-note>Both dice fuel the headline mashup.</p>
+        </div>
         {% if next_iteration_at %}
             <p
                 class="gremlin-hero__countdown"
@@ -95,7 +103,7 @@
                 <li class="gremlin-target">
                     <div>
                         <p class="gremlin-target__title">{{ feature.title }}</p>
-                        <p class="gremlin-target__meta">by {{ feature.creator.display_name }} · {{ feature.vote_total }} votes</p>
+                        <p class="gremlin-target__meta">by {{ feature.creator.display_name|default:feature.creator.username }} · {{ feature.vote_total }} votes</p>
                     </div>
                     <span class="gremlin-chip">+{{ feature.vote_total }}</span>
                 </li>
@@ -126,6 +134,7 @@
 {% block extra_scripts %}
     {{ block.super }}
     {{ dice_fragments|json_script:"gremlin-fragments" }}
+    {{ omen_fragments|json_script:"gremlin-omens" }}
     {{ target_payload|json_script:"gremlin-targets" }}
     <script src="{% static 'js/chaos-gremlin.js' %}" defer></script>
 {% endblock %}

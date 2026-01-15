@@ -4084,6 +4084,55 @@ body.has-shimeji-confetti .site-main {
   font-size: 0.95rem;
 }
 
+.gremlin-omen {
+  padding: 0.85rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.12), rgba(139, 247, 227, 0.12));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), 0 8px 26px rgba(0, 0, 0, 0.24);
+  display: grid;
+  gap: 0.35rem;
+}
+
+.gremlin-omen__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.gremlin-omen__label {
+  margin: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  color: rgba(214, 239, 234, 0.92);
+}
+
+.gremlin-omen__text {
+  margin: 0;
+  color: #f7fdf9;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.gremlin-omen__note {
+  margin: 0;
+  color: #c7e6e3;
+  font-size: 0.95rem;
+}
+
+.gremlin-hero.gremlin--double {
+  border-color: rgba(255, 140, 92, 0.36);
+  box-shadow: 0 32px 90px rgba(255, 140, 92, 0.25);
+}
+
+.gremlin-hero.gremlin--double::after {
+  background: radial-gradient(circle at 40% 78%, rgba(255, 140, 92, 0.18), transparent 46%),
+    radial-gradient(circle at 78% 18%, rgba(139, 247, 227, 0.2), transparent 46%);
+  animation: gremlinSpark 4s ease-in-out infinite;
+}
+
 .gremlin-hero__countdown {
   margin: 0;
   color: #dff6ef;

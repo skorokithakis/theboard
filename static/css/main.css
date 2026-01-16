@@ -3899,6 +3899,35 @@ body.has-shimeji-confetti .site-main {
   filter: var(--glitch-frame-filter, none);
 }
 
+.glitch-frame__canvas {
+  position: absolute;
+  inset: -8px -12px -10px -8px;
+  transform: scale(0.82);
+  transform-origin: top left;
+  width: 134%;
+  pointer-events: none;
+  opacity: 0.96;
+}
+
+.glitch-frame__canvas .glitch-viewport__content {
+  gap: 0.5rem;
+}
+
+.glitch-frame__canvas .glitch-echo {
+  padding: 0.7rem;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+}
+
+.glitch-frame__canvas .glitch-echo__title {
+  font-size: 1rem;
+}
+
+.glitch-frame__canvas .glitch-echo__desc,
+.glitch-frame__canvas .glitch-echo__meta,
+.glitch-frame__canvas .glitch-echo__votes {
+  font-size: 0.9rem;
+}
+
 .glitch-frame__title {
   margin: 0 0 0.2rem;
 }

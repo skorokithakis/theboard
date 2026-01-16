@@ -288,6 +288,8 @@ def test_glitch_art_lab_interactions(anonymous_page, live_server: str):
     frames = page.locator("[data-glitch-gallery] [data-glitch-frame]")
     expect(frames).to_have_count(1, timeout=1500)
     expect(frames.first).to_have_attribute("data-filter-name", re.compile(".+"))
+    preview = frames.first.locator(".glitch-frame__preview")
+    expect(preview.locator(".glitch-echo").first).to_be_visible()
     expect(page.locator("[data-glitch-placeholder]")).to_have_count(0)
     assert updated_filter or initial_filter
 

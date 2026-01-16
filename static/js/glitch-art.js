@@ -14,6 +14,7 @@
   var status = document.querySelector("[data-glitch-status]");
   var gallery = document.querySelector("[data-glitch-gallery]");
   var placeholder = document.querySelector("[data-glitch-placeholder]");
+  var canvas = document.querySelector("[data-glitch-canvas]");
   var filterItems = Array.prototype.slice.call(
     document.querySelectorAll("[data-glitch-filter-item]")
   );
@@ -87,6 +88,17 @@
     applyFilter(filters[index], true);
   }
 
+  function cloneCanvas() {
+    if (!canvas) {
+      return null;
+    }
+    var replica = canvas.cloneNode(true);
+    replica.classList.add("glitch-frame__canvas");
+    replica.removeAttribute("data-glitch-canvas");
+    replica.setAttribute("aria-hidden", "true");
+    return replica;
+  }
+
   function frameCurrent() {
     if (!gallery || !viewport) {
       return;
@@ -102,6 +114,10 @@
       viewport.style.getPropertyValue("--glitch-filter") || "none"
     );
     preview.setAttribute("aria-hidden", "true");
+    var snapshot = cloneCanvas();
+    if (snapshot) {
+      preview.appendChild(snapshot);
+    }
 
     var title = document.createElement("h3");
     title.className = "glitch-frame__title";

@@ -106,6 +106,16 @@ GENERATION_PLANS: tuple[GenerationPlan, ...] = (
             "surprises future visitors."
         ),
     ),
+    GenerationPlan(
+        title="Playbook blackout séance",
+        description=(
+            "When inspiration runs dry, treat The Board's own playbook like blackout poetry—hide the obvious guidance "
+            "until a bold, surprising operating note emerges as the new seed."
+        ),
+        ritual=(
+            "Pause, scan the current list, and draft a wildly different seed that surprises future visitors."
+        ),
+    ),
 )
 
 PARALLEL_BACKLOG: tuple[ParallelBacklogEntry, ...] = (

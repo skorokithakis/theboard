@@ -398,6 +398,50 @@ img {
   position: relative;
 }
 
+.records-metronome {
+  position: absolute;
+  top: -0.15rem;
+  right: -0.35rem;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 140, 92, 0.4);
+  background: radial-gradient(circle at 40% 40%, rgba(255, 243, 230, 0.92), rgba(255, 199, 152, 0.9) 55%, rgba(255, 140, 92, 0.86));
+  color: #6d3100;
+  cursor: pointer;
+  font-size: 0.8rem;
+  line-height: 1;
+  box-shadow: 0 10px 28px rgba(3, 22, 32, 0.2);
+  opacity: 0.45;
+  transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+.records-metronome:hover,
+.records-metronome:focus-visible {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(3, 22, 32, 0.35);
+  outline: none;
+}
+
+.records-metronome--on {
+  opacity: 1;
+  box-shadow: 0 0 0 4px rgba(255, 140, 92, 0.18), 0 14px 32px rgba(3, 22, 32, 0.35);
+  animation: metronome-pulse 1.25s ease-in-out infinite;
+}
+
+.records-metronome--on::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: radial-gradient(circle, rgba(255, 215, 182, 0.35), transparent 60%);
+  z-index: -1;
+}
+
 .site-nav__section-toggle {
   display: inline-flex;
   align-items: center;
@@ -522,6 +566,11 @@ img {
 
   .site-nav__section--open .site-nav__submenu {
     display: block;
+  }
+
+  .records-metronome {
+    right: 0.35rem;
+    top: 0.2rem;
   }
 }
 
@@ -4717,6 +4766,84 @@ body.has-shimeji-confetti .site-main {
   100% {
     opacity: 0.8;
     transform: translateY(0);
+  }
+}
+
+.bayhem-active {
+  overflow-x: hidden;
+}
+
+.bayhem-active::after {
+  content: "";
+  position: fixed;
+  inset: -6%;
+  background: radial-gradient(circle at 40% 40%, rgba(255, 236, 207, 0.65), rgba(255, 170, 106, 0.4) 38%, rgba(255, 94, 94, 0.32) 60%, rgba(0, 0, 0, 0) 75%),
+    radial-gradient(circle at 65% 45%, rgba(255, 255, 255, 0.4), rgba(255, 210, 164, 0.3) 45%, rgba(0, 0, 0, 0) 70%);
+  mix-blend-mode: screen;
+  filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  animation: bayhem-flash 0.82s ease-out forwards;
+  z-index: 5;
+}
+
+.bayhem-active .site-main,
+.bayhem-active .site-header,
+.bayhem-active .site-footer {
+  animation: bayhem-rumble 0.72s cubic-bezier(0.3, 0.82, 0.24, 1);
+}
+
+@keyframes bayhem-rumble {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  12% {
+    transform: translate3d(-2px, 3px, 0) rotate(-0.3deg);
+  }
+  25% {
+    transform: translate3d(2px, -3px, 0) rotate(0.35deg);
+  }
+  38% {
+    transform: translate3d(-3px, 2px, 0) rotate(-0.25deg);
+  }
+  52% {
+    transform: translate3d(2px, 1px, 0) rotate(0.2deg);
+  }
+  68% {
+    transform: translate3d(-1px, -2px, 0) rotate(-0.1deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes bayhem-flash {
+  0% {
+    opacity: 0.92;
+    transform: scale(0.94) rotate(-0.8deg);
+  }
+  40% {
+    opacity: 0.6;
+    transform: scale(1.02) rotate(0.4deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes metronome-pulse {
+  0% {
+    transform: translateY(0) rotate(-6deg) scale(1);
+    box-shadow: 0 10px 28px rgba(3, 22, 32, 0.2);
+  }
+  50% {
+    transform: translateY(-1px) rotate(6deg) scale(1.04);
+    box-shadow: 0 16px 32px rgba(3, 22, 32, 0.28);
+  }
+  100% {
+    transform: translateY(0) rotate(-6deg) scale(1);
+    box-shadow: 0 10px 28px rgba(3, 22, 32, 0.2);
   }
 }
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from .settings import *  # noqa: F403
@@ -12,7 +13,7 @@ DEBUG = True
 SECRET_KEY = "local-e2e-secret-key"
 ENVIRONMENT = "local"
 
-E2E_DB_NAME = BASE_DIR / "_e2e_db.sqlite3"
+E2E_DB_NAME = Path(os.getenv("E2E_DB_PATH") or (BASE_DIR / "_e2e_db.sqlite3"))
 DATABASES = {  # type: ignore[override]
     "default": {
         "ENGINE": "django.db.backends.sqlite3",

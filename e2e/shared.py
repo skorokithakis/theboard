@@ -17,7 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SETTINGS_MODULE = os.environ.setdefault(
     "DJANGO_SETTINGS_MODULE", "theboard.e2e_settings"
 )
-E2E_DB_PATH = BASE_DIR / "_e2e_db.sqlite3"
+E2E_DB_PATH = Path(os.environ.get("E2E_DB_PATH") or (BASE_DIR / "_e2e_db.sqlite3"))
 SERVER_PORT = int(os.environ.get("E2E_TEST_PORT", "8001"))
 SERVER_URL = f"http://localhost:{SERVER_PORT}"
 

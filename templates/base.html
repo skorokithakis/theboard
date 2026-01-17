@@ -40,11 +40,14 @@
                     </button>
                     <ul class="site-nav__sections" id="site-nav-sections">
                         {% for section in nav_sections %}
-                            <li class="site-nav__section{% if section.active %} site-nav__section--active{% endif %}">
+                            <li
+                                class="site-nav__section{% if section.active %} site-nav__section--active{% endif %}"
+                                data-nav-section="{{ section.key }}">
                                 <button
                                     class="site-nav__section-toggle"
                                     type="button"
-                                    aria-expanded="false">
+                                    aria-expanded="false"
+                                    data-nav-section-toggle="{{ section.key }}">
                                     <span class="site-nav__section-label">{{ section.label }}</span>
                                 </button>
                                 <ul class="site-nav__submenu">
@@ -143,6 +146,7 @@
     <script src="{% static 'js/horse-fields.js' %}" defer></script>
     <script src="{% static 'js/neon-eggs.js' %}" defer></script>
     <script src="{% static 'js/site-nav.js' %}" defer></script>
+    <script src="{% static 'js/sound-of-noise.js' %}" defer></script>
     <script src="{% static 'js/iteration-countdown.js' %}" defer></script>
     <script src="{% static 'js/shimeji.js' %}" defer></script>
     {% block extra_scripts %}{% endblock %}

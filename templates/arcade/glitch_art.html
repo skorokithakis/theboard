@@ -4,7 +4,12 @@
 {% block title %}Glitch Art Lab | {{ request.site.name }}{% endblock %}
 
 {% block content %}
-<section class="glitch-hero" data-glitch-lab data-soundtrack="pulse">
+<section
+    class="glitch-hero"
+    data-glitch-lab
+    data-soundtrack="pulse"
+    data-board-pulse="{{ board_pulse.label }}"
+>
     <div class="glitch-hero__copy">
         <p class="page-eyebrow">Arcade ritual</p>
         <h1 class="page-title">Delightful glitch art release</h1>
@@ -17,12 +22,32 @@
             <button class="button-outline" type="button" data-glitch-frame>Frame this glitch</button>
             <button class="button-ghost button-sm" type="button" data-glitch-reset>Calm the signal</button>
         </div>
-        <p class="glitch-hero__status" data-glitch-status>Awaiting the first distortion.</p>
+        <p class="glitch-hero__status" data-glitch-status>
+            {% if board_pulse.timestamp %}
+                Board pulse: last vote {{ board_pulse.label }}. Awaiting the first distortion.
+            {% else %}
+                Awaiting the first distortion. No votes yet—wake the board with the first glitch.
+            {% endif %}
+        </p>
     </div>
     <div class="glitch-hero__meta">
         <div class="glitch-hero__stat">
             <span class="glitch-hero__label">Ritual</span>
             <span class="glitch-hero__value">Filter → Screenshot → Frame</span>
+        </div>
+        <div class="glitch-hero__stat">
+            <span class="glitch-hero__label">Board pulse</span>
+            <span
+                class="glitch-hero__value"
+                data-last-vote-label="{{ board_pulse.label }}"
+                {% if board_pulse.timestamp %}data-last-vote="{{ board_pulse.timestamp|date:'c' }}"{% endif %}
+            >
+                {% if board_pulse.timestamp %}
+                    Last vote {{ board_pulse.label }}
+                {% else %}
+                    No votes yet—be the first to wake the queue.
+                {% endif %}
+            </span>
         </div>
         {% if next_iteration_at %}
             <div class="glitch-hero__stat">

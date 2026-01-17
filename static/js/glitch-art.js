@@ -5,6 +5,7 @@
   if (!root) {
     return;
   }
+  var boardPulse = root.dataset.boardPulse || "";
 
   var viewport = document.querySelector("[data-glitch-viewport]");
   var randomizeButton = document.querySelector("[data-glitch-randomize]");
@@ -130,6 +131,9 @@
     var meta = document.createElement("div");
     meta.className = "glitch-frame__meta";
 
+    var metaRow = document.createElement("div");
+    metaRow.className = "glitch-frame__meta-row";
+
     var tag = document.createElement("span");
     tag.className = "glitch-frame__tag";
     tag.textContent = "Frame " + String(frameCount + 1).padStart(2, "0");
@@ -140,8 +144,15 @@
       minute: "2-digit",
     });
 
-    meta.appendChild(tag);
-    meta.appendChild(timestamp);
+    metaRow.appendChild(tag);
+    metaRow.appendChild(timestamp);
+    meta.appendChild(metaRow);
+    if (boardPulse) {
+      var pulse = document.createElement("span");
+      pulse.className = "glitch-frame__pulse";
+      pulse.textContent = "Board pulse: " + boardPulse;
+      meta.appendChild(pulse);
+    }
 
     frame.appendChild(preview);
     frame.appendChild(title);

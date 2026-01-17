@@ -3987,12 +3987,17 @@ body.has-shimeji-confetti .site-main {
 }
 
 .glitch-frame__meta {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.glitch-frame__meta-row {
   display: flex;
   justify-content: space-between;
   gap: 0.5rem;
   align-items: center;
-  color: var(--muted);
-  font-size: 0.95rem;
 }
 
 .glitch-frame__tag {
@@ -4004,6 +4009,16 @@ body.has-shimeji-confetti .site-main {
   background: rgba(16, 139, 151, 0.08);
   color: #0f4e58;
   font-weight: 700;
+}
+
+.glitch-frame__pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(16, 139, 151, 0.08);
+  color: #0f4e58;
 }
 
 .glitch-frame--placeholder {

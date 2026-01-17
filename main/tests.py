@@ -1613,6 +1613,18 @@ class GlitchArtViewTests(TestCase):
         self.assertContains(response, "Delightful glitch art release")
         self.assertContains(response, "Toggle random filter")
 
+    def test_glitch_lab_includes_board_pulse_snapshot(self) -> None:
+        vote = factories.VoteFactory(user=self.user)
+
+        with self._static_override():
+            response = self.client.get(reverse("main:arcade-glitch"))
+
+        self.assertEqual(response.status_code, 200)
+        snapshot = response.context["board_pulse"]
+        self.assertEqual(snapshot["timestamp"], vote.created_at)
+        self.assertTrue(snapshot["label"])
+        self.assertContains(response, "Board pulse")
+
 
 class IshmaelCabinViewTests(TestCase):
     def setUp(self) -> None:

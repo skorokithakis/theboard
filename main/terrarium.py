@@ -37,6 +37,13 @@ class TerrariumMetrics:
     votes_today: int
 
 
+class LastVoteSnapshot(TypedDict):
+    """Human-friendly timestamp payload for the last vote."""
+
+    timestamp: datetime | None
+    label: str
+
+
 def build_terrarium_state(reference: datetime | None = None) -> TerrariumState:
     """Return a descriptive snapshot of the terrarium based on board activity."""
 
@@ -214,3 +221,16 @@ def _format_last_vote_label(last_vote_at: datetime | None, reference: datetime) 
         return f"{hours}h ago"
     days = delta.days
     return f"{days}d ago"
+
+
+def get_last_vote_snapshot(reference: datetime | None = None) -> LastVoteSnapshot:
+    """Return the latest vote timestamp and a friendly label for UI pulses."""
+
+    now = reference or timezone.now()
+    timestamp = (
+        Vote.objects.order_by("-created_at")
+        .values_list("created_at", flat=True)
+        .first()
+    )
+    label = _format_last_vote_label(timestamp, now)
+    return {"timestamp": timestamp, "label": label}

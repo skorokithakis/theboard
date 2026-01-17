@@ -29,7 +29,7 @@ from .forms import (
 from .fortune import get_daily_fortune
 from .navigation import build_nav_sections, build_sitemap_destinations
 from .models import Feature, QuoteSuggestion, User as BoardUser, Vote, WebFiveInvestment
-from .terrarium import build_terrarium_state
+from .terrarium import build_terrarium_state, get_last_vote_snapshot
 from . import avatars, generation, scoreboard as scoreboard_service, turnstile
 from .utils import get_next_iteration_at
 
@@ -772,6 +772,7 @@ def arcade_glitch(request: HttpRequest) -> HttpResponse:
     """Glitch art lab that embraces chaotic CSS filters."""
 
     Feature.expire_stale()
+    board_pulse = get_last_vote_snapshot()
     feature_echoes = list(
         Feature.objects.pending()
         .with_vote_totals()
@@ -825,6 +826,8 @@ def arcade_glitch(request: HttpRequest) -> HttpResponse:
         "arcade/glitch_art.html",
         {
             "feature_echoes": feature_echoes,
+            "board_pulse": board_pulse,
+            "last_vote_label": board_pulse["label"],
             "glitch_filters": glitch_filters,
             "ritual_steps": ritual_steps,
             "next_iteration_at": get_next_iteration_at(),

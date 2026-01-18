@@ -11,6 +11,7 @@
   var randomizeButton = document.querySelector("[data-glitch-randomize]");
   var frameButton = document.querySelector("[data-glitch-frame]");
   var resetButton = document.querySelector("[data-glitch-reset]");
+  var ritualButton = document.querySelector("[data-glitch-ritual]");
   var currentLabel = document.querySelector("[data-glitch-current]");
   var status = document.querySelector("[data-glitch-status]");
   var gallery = document.querySelector("[data-glitch-gallery]");
@@ -41,16 +42,14 @@
 
   function highlightFilter(name) {
     filterItems.forEach(function (item) {
-      if (item.dataset.filterName === name) {
-        item.classList.add("is-active");
-      } else {
-        item.classList.remove("is-active");
-      }
+      var isActive = item.dataset.filterName === name;
+      item.classList.toggle("is-active", isActive);
+      item.setAttribute("aria-pressed", isActive ? "true" : "false");
     });
   }
 
   function applyFilter(option, animate) {
-    if (!viewport) {
+    if (!viewport || !option) {
       return;
     }
     var filterValue = option.filter || "none";
@@ -70,6 +69,29 @@
     }
   }
 
+  function findFilterByName(name) {
+    var option =
+      filters.find(function (item) {
+        return item.name === name;
+      }) || null;
+
+    if (option) {
+      return option;
+    }
+
+    var fallback = filterItems.find(function (item) {
+      return item.dataset.filterName === name;
+    });
+    if (!fallback) {
+      return null;
+    }
+    return {
+      name: name || "Clean signal",
+      filter: fallback.dataset.filterValue || "none",
+      note: fallback.dataset.filterNote || "Manual glitch activation.",
+    };
+  }
+
   function chooseRandomFilter() {
     if (!filters.length) {
       applyFilter(
@@ -87,6 +109,22 @@
       index = (index + 1) % filters.length;
     }
     applyFilter(filters[index], true);
+  }
+
+  function handleFilterActivation(event) {
+    var isKeyboard = event.type === "keydown";
+    if (isKeyboard && event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+    if (isKeyboard) {
+      event.preventDefault();
+    }
+    var target = event.currentTarget;
+    var name = target.dataset.filterName || "";
+    var option = findFilterByName(name);
+    if (option) {
+      applyFilter(option, true);
+    }
   }
 
   function cloneCanvas() {
@@ -182,6 +220,26 @@
     );
   }
 
+  function runRitual() {
+    if (!ritualButton) {
+      return;
+    }
+    if (ritualButton.disabled) {
+      return;
+    }
+    ritualButton.disabled = true;
+    var defaultLabel = ritualButton.dataset.defaultLabel || ritualButton.textContent || "Run the ritual";
+    var runningLabel = ritualButton.dataset.runningLabel || "Framing ritual...";
+    ritualButton.textContent = runningLabel;
+    setStatus("Ritual in progress: releasing a glitch and framing the capture.");
+    chooseRandomFilter();
+    window.setTimeout(function () {
+      frameCurrent();
+      ritualButton.disabled = false;
+      ritualButton.textContent = defaultLabel;
+    }, 320);
+  }
+
   if (randomizeButton) {
     randomizeButton.addEventListener("click", chooseRandomFilter);
   }
@@ -191,6 +249,14 @@
   if (resetButton) {
     resetButton.addEventListener("click", resetFilter);
   }
+  if (ritualButton) {
+    ritualButton.addEventListener("click", runRitual);
+  }
+
+  filterItems.forEach(function (item) {
+    item.addEventListener("click", handleFilterActivation);
+    item.addEventListener("keydown", handleFilterActivation);
+  });
 
   if (filters.length) {
     chooseRandomFilter();

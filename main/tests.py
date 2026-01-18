@@ -1612,6 +1612,7 @@ class GlitchArtViewTests(TestCase):
         self.assertTrue(response.context["glitch_filters"])
         self.assertContains(response, "Delightful glitch art release")
         self.assertContains(response, "Toggle random filter")
+        self.assertContains(response, "Run the ritual")
 
     def test_glitch_lab_includes_board_pulse_snapshot(self) -> None:
         vote = factories.VoteFactory(user=self.user)

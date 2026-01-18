@@ -293,6 +293,11 @@ def test_glitch_art_lab_interactions(anonymous_page, live_server: str):
     expect(page.locator("[data-glitch-placeholder]")).to_have_count(0)
     assert updated_filter or initial_filter
 
+    ritual_button = page.locator("[data-glitch-ritual]")
+    expect(ritual_button).to_be_visible()
+    ritual_button.click()
+    expect(frames).to_have_count(2, timeout=2000)
+
 
 def test_chaos_gremlin_lab_interactions(anonymous_page, live_server: str):
     page = anonymous_page

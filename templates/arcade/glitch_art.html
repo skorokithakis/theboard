@@ -19,6 +19,15 @@
         </p>
         <div class="glitch-hero__actions">
             <button class="button" type="button" data-glitch-randomize>Toggle random filter</button>
+            <button
+                class="button"
+                type="button"
+                data-glitch-ritual
+                data-default-label="Run the ritual"
+                data-running-label="Framing ritual..."
+            >
+                Run the ritual
+            </button>
             <button class="button-outline" type="button" data-glitch-frame>Frame this glitch</button>
             <button class="button-ghost button-sm" type="button" data-glitch-reset>Calm the signal</button>
         </div>
@@ -77,9 +86,19 @@
         </p>
         <ul class="glitch-filter-list" data-glitch-filter-list>
             {% for filter in glitch_filters %}
-                <li class="glitch-filter" data-glitch-filter-item data-filter-name="{{ filter.name }}">
-                    <div class="glitch-filter__name">{{ filter.name }}</div>
-                    <p class="glitch-filter__note">{{ filter.note }}</p>
+                <li>
+                    <button
+                        class="glitch-filter"
+                        type="button"
+                        aria-pressed="false"
+                        data-glitch-filter-item
+                        data-filter-name="{{ filter.name }}"
+                        data-filter-value="{{ filter.filter }}"
+                        data-filter-note="{{ filter.note }}"
+                    >
+                        <div class="glitch-filter__name">{{ filter.name }}</div>
+                        <p class="glitch-filter__note">{{ filter.note }}</p>
+                    </button>
                 </li>
             {% endfor %}
         </ul>

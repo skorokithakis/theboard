@@ -3848,17 +3848,29 @@ body.has-shimeji-confetti .site-main {
 }
 
 .glitch-filter {
+  display: block;
+  width: 100%;
   padding: 0.85rem;
+  text-align: left;
+  font: inherit;
+  color: inherit;
   border-radius: 14px;
   border: 1px solid rgba(16, 139, 151, 0.16);
   background: linear-gradient(120deg, rgba(182, 247, 227, 0.16), rgba(255, 140, 92, 0.12));
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  cursor: pointer;
 }
 
 .glitch-filter.is-active {
   border-color: var(--accent-strong);
   box-shadow: 0 10px 26px rgba(16, 139, 151, 0.18);
   background: linear-gradient(120deg, rgba(16, 139, 151, 0.16), rgba(255, 140, 92, 0.16));
+}
+
+.glitch-filter:focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(16, 139, 151, 0.14);
 }
 
 .glitch-filter__name {

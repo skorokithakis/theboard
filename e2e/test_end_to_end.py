@@ -352,3 +352,25 @@ def test_assistant_toggle_and_gift_effect(auth_session, live_server: str):
     toggle.click()
     expect(body).to_have_attribute("data-shimeji-enabled", "false")
     assert buddy.evaluate("node => node.classList.contains('is-hidden')")
+
+
+def test_zero_decibel_mode_toggle(anonymous_page, live_server: str):
+    page = anonymous_page
+    page.goto("/lore/zero-decibel/", wait_until="networkidle")
+
+    toggle = page.locator("[data-zero-decibel-toggle]").first
+    indicator = page.locator("[data-zero-decibel-indicator]").first
+    status_note = page.locator("[data-zero-decibel-status-note]")
+    expect(toggle).to_be_visible()
+    toggle.click()
+    expect(page.locator("body")).to_have_attribute("data-zero-decibel", "true")
+    expect(indicator).to_contain_text(re.compile("on", re.IGNORECASE))
+    expect(status_note).to_contain_text(re.compile("audio cues", re.IGNORECASE))
+
+    pulse = page.locator("[data-zero-decibel-pulse]").first
+    pulse.click()
+    expect(status_note).to_be_visible()
+
+    toggle.click()
+    expect(page.locator("body")).to_have_attribute("data-zero-decibel", "false")
+    expect(indicator).to_contain_text(re.compile("off", re.IGNORECASE))

@@ -11,6 +11,7 @@
   var metronomeInterval = null;
   var metronomeToggle = null;
   var reduceMotion = prefersReducedMotion();
+  var zeroDecibelMode = false;
 
   ready(initialize);
 
@@ -23,11 +24,13 @@
   }
 
   function initialize() {
+    zeroDecibelMode = isZeroDecibelEnabled();
     bindGlobalSqueaks();
     bindFormBayhem();
     armGraveyardSounds();
     installRecordsMetronome();
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("zero-decibel:change", handleZeroDecibelChange);
   }
 
   function prefersReducedMotion() {
@@ -43,6 +46,9 @@
   }
 
   function ensureAudioContext() {
+    if (zeroDecibelMode) {
+      return null;
+    }
     if (audioCtx) {
       return audioCtx;
     }
@@ -78,6 +84,9 @@
   }
 
   function bindGlobalSqueaks() {
+    if (zeroDecibelMode) {
+      return;
+    }
     if (squeakHandler) {
       return;
     }
@@ -177,6 +186,9 @@
   }
 
   function playRumble() {
+    if (zeroDecibelMode) {
+      return;
+    }
     var ctx = ensureAudioContext();
     if (!ctx) {
       return;
@@ -206,6 +218,9 @@
   }
 
   function armGraveyardSounds() {
+    if (zeroDecibelMode) {
+      return;
+    }
     var graveyard = document.querySelector(".graveyard-page");
     if (!graveyard) {
       return;
@@ -275,6 +290,10 @@
   }
 
   function toggleMetronome() {
+    if (zeroDecibelMode) {
+      stopMetronome();
+      return;
+    }
     if (!metronomeToggle) {
       return;
     }
@@ -340,9 +359,32 @@
       }
       return;
     }
-    if (graveyardPrimed) {
+    if (graveyardPrimed && !zeroDecibelMode) {
       queueGraveyardTone();
     }
+  }
+
+  function handleZeroDecibelChange(event) {
+    zeroDecibelMode = !!(event && event.detail && event.detail.enabled);
+    if (zeroDecibelMode) {
+      disableSqueaks();
+      stopMetronome();
+      clearTimeout(graveyardTimer);
+      if (graveyardAudio) {
+        graveyardAudio.pause();
+      }
+    } else {
+      bindGlobalSqueaks();
+      installRecordsMetronome();
+      if (graveyardPrimed) {
+        queueGraveyardTone();
+      }
+    }
+  }
+
+  function isZeroDecibelEnabled() {
+    var body = document.body;
+    return body && body.dataset.zeroDecibel === "true";
   }
 
   function randomBetween(min, max) {

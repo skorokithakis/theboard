@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Zero-Decibel Mode | {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="page-header zero-decibel__hero">
+    <p class="page-eyebrow">Portal drop · Silent Colony</p>
+    <h1 class="page-title">Zero-decibel accessibility mode</h1>
+    <p class="page-lead">
+        Interface cues that communicate without light or sound so vacuum-native collaborators never lose the thread.
+        Audio squeaks fall silent, and every state mirrors into text and tactile rhythm.
+    </p>
+    <div class="zero-decibel__actions">
+        <button class="button" type="button" data-zero-decibel-toggle aria-pressed="false">
+            Arm zero-decibel mode
+            <span class="zero-decibel__pill" data-zero-decibel-indicator>Off</span>
+        </button>
+        <a class="button-outline" href="{% url 'main:feature-board' %}">Return to voting</a>
+        <a class="button-outline" href="{% url 'main:lore-drop' %}">Lore drop</a>
+    </div>
+    <p class="zero-decibel__ritual">
+        Ritual honored: {{ silent_ritual }}
+    </p>
+    {% if next_iteration_at %}
+        <p
+            class="zero-decibel__next"
+            data-next-iteration="{{ next_iteration_at|date:'c' }}"
+            data-countdown-label="Next implementation">
+            Next implementation at {{ next_iteration_at|date:"F j, Y H:i \\U\\T\\C" }}
+        </p>
+    {% endif %}
+</section>
+
+<section class="zero-decibel__grid" aria-labelledby="zero-decibel-status">
+    <article class="quiet-card quiet-card--status" data-zero-decibel-status>
+        <p class="quiet-card__eyebrow">Mode status</p>
+        <h2 id="zero-decibel-status" class="quiet-card__title" data-zero-decibel-status-label>Mode idle · sound cues allowed</h2>
+        <p class="quiet-card__meta" data-zero-decibel-status-note>
+            Arm the mode to mute squeaks, switch to haptic/text pulses, and keep CAPTCHA in place for every vote.
+        </p>
+        <div class="quiet-card__chips">
+            <span class="zero-decibel__chip">Last vote: {{ board_pulse.label }}</span>
+            <span class="zero-decibel__chip">CAPTCHA stays required</span>
+        </div>
+    </article>
+
+    <article class="quiet-card">
+        <p class="quiet-card__eyebrow">Policy</p>
+        <h2 class="quiet-card__title">How zero-decibel works</h2>
+        <ul class="quiet-card__list">
+            {% for item in quiet_principles %}
+                <li>
+                    <strong>{{ item.title }}</strong>
+                    <p class="quiet-card__meta">{{ item.detail }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+        <p class="quiet-card__meta">
+            Visual gradients dim automatically when the mode is on so no glow is required to understand a state.
+        </p>
+    </article>
+
+    <article class="quiet-card quiet-card--pulses">
+        <p class="quiet-card__eyebrow">Pulse lexicon</p>
+        <h2 class="quiet-card__title">Cues without light or sound</h2>
+        <div class="pulse-grid">
+            {% for pulse in pulse_legend %}
+                <button
+                    type="button"
+                    class="pulse-chip"
+                    data-zero-decibel-pulse="{{ pulse.label }}"
+                    data-zero-decibel-pattern="{{ pulse.pattern }}"
+                    data-zero-decibel-fallback="{{ pulse.phrase }}">
+                    <span class="pulse-chip__label">{{ pulse.label }}</span>
+                    <span class="pulse-chip__pattern">{{ pulse.phrase }}</span>
+                    <span class="pulse-chip__note">{{ pulse.note }}</span>
+                </button>
+            {% endfor %}
+        </div>
+        <p class="quiet-card__meta">
+            Haptics are optional; we mirror pulses into text and ARIA live regions for screen readers.
+        </p>
+    </article>
+
+    <article class="quiet-card quiet-card--queue">
+        <p class="quiet-card__eyebrow">Backlog without glow</p>
+        <h2 class="quiet-card__title">What the board is tracking</h2>
+        <ul class="zero-decibel__features">
+            {% if feature_preview %}
+                {% for feature in feature_preview %}
+                    <li>
+                        <div class="zero-decibel__feature-header">
+                            <strong>{{ feature.title }}</strong>
+                            <span class="zero-decibel__chip">Votes: {{ feature.vote_total }}</span>
+                        </div>
+                        <p class="quiet-card__meta">{{ feature.description }}</p>
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li>
+                    <p class="quiet-card__meta">
+                        The queue is momentarily empty. Zero-decibel mode keeps the cadence alive with heartbeat pulses.
+                    </p>
+                </li>
+            {% endif %}
+        </ul>
+        <p class="quiet-card__meta">
+            We still require CAPTCHA for every vote, and we announce each verification request via the “Captcha needed” pulse.
+        </p>
+    </article>
+</section>
+{% endblock %}

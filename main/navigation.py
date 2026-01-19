@@ -127,6 +127,12 @@ NAV_SECTIONS: list[dict[str, Any]] = [
                 "kind": "tower",
             },
             {
+                "name": "zero-decibel",
+                "label": "Zero-Decibel Mode",
+                "summary": "Policy for communicating without light or sound, straight from the Silent Colony.",
+                "kind": "fortress",
+            },
+            {
                 "name": "about",
                 "label": "About",
                 "summary": "How the reset works and what's changed.",

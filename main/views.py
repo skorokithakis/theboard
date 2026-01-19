@@ -582,6 +582,81 @@ def retrospective_2025(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
+def zero_decibel_mode(request: HttpRequest) -> HttpResponse:
+    """Policy drop for communicating without light or sound."""
+
+    Feature.expire_stale()
+    generation.ensure_generation_seed()
+
+    board_pulse = get_last_vote_snapshot()
+    feature_preview = list(
+        Feature.objects.pending()
+        .with_vote_totals()
+        .order_by("-total_votes", "-created_at")[:2]
+    )
+    quiet_principles = [
+        {
+            "title": "Text-first confirmations",
+            "detail": "Every critical state mirrors to copy and ARIA live regions so nothing depends on glow or chimes.",
+        },
+        {
+            "title": "Tactile-friendly rhythms",
+            "detail": "Actions are mapped to repeatable pulse strings you can feel or read even when the screen is dark.",
+        },
+        {
+            "title": "No color gating",
+            "detail": "Statuses remain legible through outlines, labels, and patterns instead of relying on hue alone.",
+        },
+        {
+            "title": "Ritual-bound",
+            "detail": "Silent Colony rules stay pinned to the UI so collaborators know how to re-arm the mode.",
+        },
+    ]
+    pulse_legend = [
+        {
+            "label": "Vote confirmed",
+            "pattern": "140,120,260",
+            "phrase": "short · short · long",
+            "note": "Used for successful votes and submissions when zero-decibel mode is armed.",
+        },
+        {
+            "label": "Captcha needed",
+            "pattern": "200,60,200,60,320",
+            "phrase": "long · short · long · short · anchor",
+            "note": "Signals a verification gate without relying on visual badges.",
+        },
+        {
+            "label": "Queue heartbeat",
+            "pattern": "80,80,80",
+            "phrase": "steady triple",
+            "note": "Keeps the cadence visible when the backlog is quiet.",
+        },
+        {
+            "label": "Graveyard hush",
+            "pattern": "320,120",
+            "phrase": "anchor · short",
+            "note": "Marks when sound effects are fully muted out of respect for silence.",
+        },
+    ]
+
+    return render(
+        request,
+        "zero_decibel.html",
+        {
+            "board_pulse": board_pulse,
+            "next_iteration_at": get_next_iteration_at(),
+            "feature_preview": feature_preview,
+            "quiet_principles": quiet_principles,
+            "pulse_legend": pulse_legend,
+            "silent_ritual": (
+                "Sketch a portal sigil, spin a globe, and translate the first nonsense phrase you hear "
+                "into a feature title before the wormhole snaps shut."
+            ),
+        },
+    )
+
+
+@require_GET
 def board_self(request: HttpRequest) -> HttpResponse:
     """A reflective page dedicated to The Board itself."""
 

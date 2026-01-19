@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+from dataclasses import asdict
 from typing import TypedDict
 
 from django import forms
@@ -30,7 +31,7 @@ from .fortune import get_daily_fortune
 from .navigation import build_nav_sections, build_sitemap_destinations
 from .models import Feature, QuoteSuggestion, User as BoardUser, Vote, WebFiveInvestment
 from .terrarium import build_terrarium_state, get_last_vote_snapshot
-from . import avatars, generation, scoreboard as scoreboard_service, turnstile
+from . import avatars, generation, lore, scoreboard as scoreboard_service, turnstile
 from .utils import get_next_iteration_at
 
 User = get_user_model()
@@ -605,6 +606,27 @@ def board_self(request: HttpRequest) -> HttpResponse:
         "feature_preview": preview,
     }
     return render(request, "theboard.html", context)
+
+
+@require_GET
+def lore_intermission(request: HttpRequest) -> HttpResponse:
+    """Torch-lit lore drop describing mascots and secret tunnels."""
+
+    Feature.expire_stale()
+    generation.ensure_generation_seed()
+    myth_seeds = [asdict(seed) for seed in lore.myth_seeds()]
+    preview = list(
+        Feature.objects.pending()
+        .with_vote_totals()
+        .order_by("-total_votes", "-created_at")[:2]
+    )
+    context = {
+        "lore_fragments": lore.lore_fragments(),
+        "tunnel_pulses": lore.tunnel_pulses(),
+        "myth_seeds": myth_seeds,
+        "feature_preview": preview,
+    }
+    return render(request, "lore_drop.html", context)
 
 
 @require_GET

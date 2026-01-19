@@ -8,6 +8,7 @@ app_name = "main"
 urlpatterns = [
     path("", views.index, name="index"),
     path("the-board/", views.board_self, name="board-self"),
+    path("lore/intermission/", views.lore_intermission, name="lore-drop"),
     path("features/", views.feature_board, name="feature-board"),
     path(
         "features/implemented/",

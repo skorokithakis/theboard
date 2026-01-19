@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Lore Drop Intermission | {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="page-header lore-drop__hero" data-soundtrack="greenhouse">
+    <p class="page-eyebrow">Lore drop intermission</p>
+    <h1 class="page-title">Torch-lit myths while the backlog breathes</h1>
+    <p class="page-lead">
+        The Board pauses for a beat, lights a pixel torch, and lets the mascots surface the strangest lore about the
+        tunnels beneath the backlog. Ritual: Light a pixel torch, whisper a myth, and post the strangest one without
+        editing.
+    </p>
+    <div class="about-reset__actions">
+        <a class="button" href="{% url 'main:feature-board' %}">Return to feature voting</a>
+        <button class="button-outline lore-drop__torch-button" type="button" data-torch-toggle aria-pressed="false">
+            Light the pixel torch
+        </button>
+    </div>
+    <p class="lore-drop__status" data-torch-status>Pixel torch unlit. Ritual waiting.</p>
+</section>
+
+<section class="lore-drop" aria-labelledby="lore-drop-heading">
+    <div class="lore-drop__grid">
+        <article class="lore-drop__card lore-drop__card--primary">
+            <p class="lore-drop__eyebrow">Ritual briefing</p>
+            <h2 id="lore-drop-heading" class="lore-drop__title">Light. Whisper. Post without edits.</h2>
+            <p class="lore-drop__copy">
+                This room keeps the intermission ritual visible even when votes are steady. Keep the torch nearby,
+                whisper a myth into the vents, and post it raw so future visitors know the tunnels are still awake.
+            </p>
+            <ol class="lore-drop__ritual">
+                <li>Light the pixel torch to reveal the current tunnel beacons.</li>
+                <li>Whisper a myth about The Board, its mascots, or the secret tunnels without polishing it.</li>
+                <li>Post the strangest version so the backlog never forgets how weird it can get.</li>
+            </ol>
+        </article>
+
+        <article class="lore-drop__card">
+            <p class="lore-drop__eyebrow">Field notes</p>
+            <h3 class="lore-drop__title">Mascots & tunnels</h3>
+            <ul class="lore-drop__list">
+                {% for fragment in lore_fragments %}
+                    <li>
+                        <strong>{{ fragment.title }}</strong>
+                        <p class="lore-drop__summary">{{ fragment.summary }}</p>
+                        <p class="lore-drop__detail">{{ fragment.detail }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+        </article>
+
+        <article class="lore-drop__card">
+            <p class="lore-drop__eyebrow">Tunnel beacons</p>
+            <h3 class="lore-drop__title">Where the torch should aim</h3>
+            <ul class="lore-drop__signals" data-torch-active="false">
+                {% for pulse in tunnel_pulses %}
+                    <li class="lore-drop__signal">
+                        <div>
+                            <p class="lore-drop__signal-name">{{ pulse.name }}</p>
+                            <p class="lore-drop__signal-status">{{ pulse.status }}</p>
+                            <p class="lore-drop__signal-hint">{{ pulse.hint }}</p>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </article>
+
+        {% if feature_preview %}
+            <article class="lore-drop__card lore-drop__card--accent">
+                <p class="lore-drop__eyebrow">Vote pulse</p>
+                <h3 class="lore-drop__title">Signals to push live</h3>
+                <p class="lore-drop__copy">
+                    The tunnels stay healthy when votes keep flowing. Nudge these ideas upward before slipping back into
+                    the lore stacks.
+                </p>
+                <div class="feature-stack">
+                    {% for feature in feature_preview %}
+                        <article class="feature-card">
+                            <header class="feature-card__header">
+                                <h4 class="feature-card__title">{{ feature.title }}</h4>
+                                <p class="feature-card__meta">{{ feature.created_at|date:"F j, Y" }}</p>
+                            </header>
+                            <p class="feature-card__description">{{ feature.description }}</p>
+                            <div class="feature-card__footer">
+                                <div class="feature-card__votes">Votes: {{ feature.vote_total }}</div>
+                                <a class="button-outline" href="{% url 'main:feature-board' %}">Vote on the board</a>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </article>
+        {% endif %}
+
+        <article class="lore-drop__card lore-drop__card--wide">
+            <p class="lore-drop__eyebrow">Whisper a myth</p>
+            <h3 class="lore-drop__title">Post the strangest one without editing</h3>
+            <p class="lore-drop__copy">
+                The mascots promise not to tidy any submissions. Type your myth, drop it as-is, or pull one from the
+                tunnel archive below and post it verbatim.
+            </p>
+            <form class="lore-drop__form" data-myth-form>
+                <label class="lore-drop__label" for="myth-text">What do you whisper into the vents?</label>
+                <textarea
+                    id="myth-text"
+                    name="myth"
+                    rows="3"
+                    class="lore-drop__input"
+                    data-myth-input
+                    placeholder="The tunnel under the scoreboard glows when the mascots sprint past..."></textarea>
+                <div class="lore-drop__form-actions">
+                    <button class="button" type="submit">Post unedited</button>
+                    <button class="button-outline" type="button" data-random-myth>Pull a tunnel myth</button>
+                </div>
+            </form>
+            <ul class="lore-drop__myth-log" data-myth-log aria-live="polite">
+                {% for myth in myth_seeds %}
+                    <li>
+                        <strong>{{ myth.title }}</strong>
+                        <p class="lore-drop__detail">{{ myth.text }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+        </article>
+    </div>
+    {{ myth_seeds|json_script:"myth-seeds-data" }}
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script src="{% static 'js/lore-drop.js' %}" defer></script>
+{% endblock %}

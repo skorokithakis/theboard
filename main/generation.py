@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+import re
 from dataclasses import dataclass
 from random import choice
 from typing import Callable, Optional, Sequence
@@ -35,8 +36,43 @@ class ParallelBacklogEntry:
     origin: str
 
 
+@dataclass(frozen=True)
+class BlackoutSeed:
+    """Result of redacting the playbook into a new operating note."""
+
+    seed: str
+    revealed_words: tuple[str, ...]
+    hidden_count: int
+    word_bank: tuple[str, ...]
+    plan_titles: tuple[str, ...]
+
+
 ARCHAEOLOGY_PLAN_TITLE = "Backlog archaeology dig"
 INTERDIMENSIONAL_PLAN_TITLE = "Interdimensional penpal drop"
+BLACKOUT_STOPWORDS = frozenset(
+    [
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "for",
+        "from",
+        "in",
+        "is",
+        "it",
+        "of",
+        "on",
+        "or",
+        "so",
+        "the",
+        "their",
+        "to",
+        "with",
+    ]
+)
 
 
 GENERATION_PLANS: tuple[GenerationPlan, ...] = (
@@ -169,6 +205,68 @@ def _clamp_text(value: str, limit: int) -> str:
         return cleaned
     trimmed = cleaned[: limit - 3].rstrip()
     return f"{trimmed}..."
+
+
+def _normalize_word(token: str) -> str | None:
+    """Clean and filter a token so only surprising words survive a blackout."""
+    cleaned = re.sub(r"[^A-Za-z0-9'-]", "", token).strip("-'").strip()
+    if not cleaned:
+        return None
+    lowered = cleaned.lower()
+    if lowered in BLACKOUT_STOPWORDS:
+        return None
+    return cleaned
+
+
+def _build_playbook_word_bank(
+    plans: Sequence[GenerationPlan] | None = None,
+) -> list[str]:
+    """Return a cleaned word list built from the playbook."""
+    lineup = plans or GENERATION_PLANS
+    word_bank: list[str] = []
+    for plan in lineup:
+        for field in (plan.title, plan.description, plan.ritual):
+            for raw_word in (field or "").split():
+                normalized = _normalize_word(raw_word)
+                if normalized:
+                    word_bank.append(normalized)
+    return word_bank
+
+
+def draft_blackout_seed(
+    plans: Sequence[GenerationPlan] | None = None,
+    reveal_ratio: float = 0.22,
+    max_revealed: int = 22,
+    min_revealed: int = 6,
+) -> BlackoutSeed:
+    """Hide the playbook until a spare operating note remains."""
+    lineup = plans or GENERATION_PLANS
+    word_bank = _build_playbook_word_bank(lineup)
+    total_words = len(word_bank)
+    if total_words == 0:
+        return BlackoutSeed(
+            seed="",
+            revealed_words=tuple(),
+            hidden_count=0,
+            word_bank=tuple(),
+            plan_titles=tuple(plan.title for plan in lineup),
+        )
+
+    desired_reveal_count = max(min_revealed, int(total_words * reveal_ratio))
+    reveal_count = min(max_revealed, desired_reveal_count, total_words)
+    reveal_indices = sorted(random.sample(range(total_words), reveal_count))
+    revealed_words = tuple(word_bank[index] for index in reveal_indices)
+    seed_text = _clamp_text(" ".join(revealed_words), 180)
+    hidden_count = max(total_words - reveal_count, 0)
+    plan_titles = tuple(plan.title for plan in lineup)
+
+    return BlackoutSeed(
+        seed=seed_text,
+        revealed_words=revealed_words,
+        hidden_count=hidden_count,
+        word_bank=tuple(word_bank),
+        plan_titles=plan_titles,
+    )
 
 
 def _select_archaeology_fossil(reference: Optional[datetime] = None) -> Feature | None:

@@ -674,11 +674,18 @@ def board_self(request: HttpRequest) -> HttpResponse:
         .order_by("-total_votes", "-created_at")[:3]
     )
 
+    blackout_seed = generation.draft_blackout_seed()
+
     context = {
         "next_iteration_at": get_next_iteration_at(),
         "feature_stats": feature_stats,
         "generation_plan": generation.current_generation_plan(),
         "feature_preview": preview,
+        "blackout_seed": blackout_seed,
+        "playbook_blackout_payload": {
+            "word_bank": list(blackout_seed.word_bank),
+            "plan_titles": list(blackout_seed.plan_titles),
+        },
     }
     return render(request, "theboard.html", context)
 

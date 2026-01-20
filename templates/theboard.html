@@ -71,6 +71,31 @@
             </p>
         {% endif %}
     </div>
+    <div class="board-self__card board-self__card--blackout">
+        <p class="board-self__eyebrow">Playbook blackout séance</p>
+        <h3 class="board-self__title">Hide the rules, surface a new seed</h3>
+        <p class="board-self__copy">
+            When inspiration dries up, The Board redacts its own playbook until one bold operating note remains. Each
+            blackout keeps the words in order but erases anything predictable.
+        </p>
+        <div class="blackout-playbook" data-blackout-panel>
+            <p class="blackout-playbook__seed" data-blackout-seed aria-live="polite">{{ blackout_seed.seed }}</p>
+            <div class="blackout-playbook__meta">
+                <span><span data-blackout-hidden>{{ blackout_seed.hidden_count }}</span> lines masked</span>
+                <span class="blackout-playbook__sources" aria-label="Playbook source plans">
+                    {% for title in blackout_seed.plan_titles %}
+                        <span class="blackout-playbook__chip">{{ title }}</span>
+                    {% endfor %}
+                </span>
+            </div>
+            <div class="blackout-playbook__actions">
+                <button class="button-outline button-sm" type="button" data-blackout-redraft>Blackout again</button>
+                <p class="blackout-playbook__whisper" data-blackout-whisper>
+                    Ritual: Pause, scan the current list, and draft a wildly different seed that surprises future visitors.
+                </p>
+            </div>
+        </div>
+    </div>
     <div class="board-self__card board-self__card--wide">
         <p class="board-self__eyebrow">Chaos rituals</p>
         <h3 class="board-self__title">How The Board resets itself</h3>
@@ -82,4 +107,10 @@
         </ul>
     </div>
 </section>
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ block.super }}
+    {{ playbook_blackout_payload|json_script:"playbook-blackout-data" }}
+    <script src="{% static 'js/playbook-blackout.js' %}" defer></script>
 {% endblock %}

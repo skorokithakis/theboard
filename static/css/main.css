@@ -5382,6 +5382,190 @@ body.has-shimeji-confetti .site-main {
   border: 1px solid rgba(16, 139, 151, 0.4);
 }
 
+.board-self {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin: 0 0 3rem;
+}
+
+.board-self__card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(234, 245, 241, 0.96));
+  border: 1px solid rgba(16, 139, 151, 0.18);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 18px 42px rgba(6, 26, 37, 0.18);
+  position: relative;
+  overflow: hidden;
+}
+
+.board-self__card::before {
+  content: "";
+  position: absolute;
+  inset: 0.6rem 0.9rem auto 0.9rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 140, 92, 0.45), rgba(16, 139, 151, 0.35), rgba(255, 140, 92, 0.45));
+}
+
+.board-self__card--signal {
+  border-color: rgba(255, 140, 92, 0.35);
+  box-shadow: 0 20px 48px rgba(255, 140, 92, 0.08), 0 14px 32px rgba(6, 26, 37, 0.16);
+}
+
+.board-self__card--blackout {
+  background: linear-gradient(135deg, #0b1e27, #132d35);
+  color: #e5f3f9;
+  border-color: rgba(124, 243, 215, 0.28);
+  box-shadow: 0 26px 52px rgba(4, 16, 21, 0.35);
+}
+
+.board-self__card--blackout .board-self__copy {
+  color: rgba(229, 243, 249, 0.82);
+}
+
+.board-self__card--wide {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem 1.4rem;
+}
+
+.board-self__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-size: 0.82rem;
+  margin: 0 0 0.35rem;
+}
+
+.board-self__title {
+  margin: 0 0 0.35rem;
+  font-weight: 800;
+}
+
+.board-self__copy {
+  margin: 0 0 0.65rem;
+  color: var(--muted);
+}
+
+.board-self__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.board-self__pill {
+  background: rgba(16, 139, 151, 0.1);
+  border: 1px solid rgba(16, 139, 151, 0.18);
+  border-radius: 999px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.board-self__stat {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin: 0 0 0.4rem;
+}
+
+.board-self__stats {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.4rem 0.9rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.board-self__stats strong {
+  display: block;
+  font-size: 1.4rem;
+}
+
+.board-self__label {
+  display: inline-block;
+  color: var(--muted);
+  margin-left: 0.2rem;
+  font-size: 0.95rem;
+}
+
+.board-self__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.board-self__list--split {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.blackout-playbook {
+  background: linear-gradient(135deg, rgba(7, 18, 26, 0.9), rgba(14, 38, 49, 0.95));
+  border: 1px solid rgba(124, 243, 215, 0.3);
+  border-radius: 14px;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 30px rgba(3, 14, 20, 0.35);
+}
+
+.blackout-playbook::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 22% 30%, rgba(124, 243, 215, 0.08), transparent 34%),
+    radial-gradient(circle at 72% 64%, rgba(255, 140, 92, 0.12), transparent 38%);
+  pointer-events: none;
+}
+
+.blackout-playbook__seed {
+  margin: 0 0 0.5rem;
+  font-family: "EB Garamond", "Space Grotesk", serif;
+  font-size: 1.08rem;
+  line-height: 1.5;
+}
+
+.blackout-playbook__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.65rem;
+  align-items: center;
+  color: rgba(229, 243, 249, 0.86);
+  font-size: 0.95rem;
+}
+
+.blackout-playbook__sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.blackout-playbook__chip {
+  border-radius: 999px;
+  border: 1px solid rgba(124, 243, 215, 0.4);
+  padding: 0.2rem 0.55rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5f3f9;
+}
+
+.blackout-playbook__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.blackout-playbook__whisper {
+  margin: 0;
+  color: rgba(229, 243, 249, 0.84);
+  font-size: 0.95rem;
+  flex: 1;
+}
+
 @media (max-width: 720px) {
   .zero-decibel__hero {
     padding: 2.25rem 1.5rem;

@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import shutil
 import tempfile
+import random
 from datetime import date, datetime, timedelta, timezone as dt_timezone
 from contextlib import contextmanager
 from unittest import mock
@@ -251,6 +252,32 @@ class FeatureBoardTests(TestCase):
         self.assertEqual(feature.title, selected_plan.title)
         self.assertIn(selected_plan.ritual, feature.description)
         self.assertEqual(generation.current_generation_plan(), selected_plan)
+
+    def test_blackout_seed_builds_from_playbook(self) -> None:
+        rng_state = random.getstate()
+        try:
+            random.seed(2025)
+            blackout = generation.draft_blackout_seed()
+        finally:
+            random.setstate(rng_state)
+
+        self.assertGreater(len(blackout.word_bank), len(blackout.revealed_words))
+        self.assertGreater(blackout.hidden_count, 0)
+        self.assertEqual(
+            blackout.hidden_count + len(blackout.revealed_words),
+            len(blackout.word_bank),
+        )
+        for word in blackout.word_bank:
+            self.assertNotIn(word.lower(), generation.BLACKOUT_STOPWORDS)
+
+        start_index = 0
+        for word in blackout.revealed_words:
+            try:
+                position = blackout.word_bank.index(word, start_index)
+            except ValueError:  # pragma: no cover - defensive to surface ordering bugs
+                self.fail("Revealed word does not preserve playbook order")
+            start_index = position + 1
+        self.assertGreaterEqual(start_index, len(blackout.revealed_words))
 
     def test_generation_seed_remixes_archived_feature(self) -> None:
         fossil = self._submit_feature(

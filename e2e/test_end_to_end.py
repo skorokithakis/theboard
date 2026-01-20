@@ -267,6 +267,10 @@ def test_performance_sprint_interactions(anonymous_page, live_server: str):
     page.get_by_role("button", name="Brag about nanoseconds saved").click()
     expect(brag_items).to_have_count(1, timeout=2000)
     expect(page.locator("[data-brag-target]")).to_contain_text("faster")
+    probes = page.locator("[data-performance-probe]")
+    expect(probes).to_have_count(3, timeout=2000)
+    expect(probes.first).to_contain_text("Cold")
+    expect(page.locator("[data-board-pulse]")).to_contain_text("Pending queue")
 
 
 def test_glitch_art_lab_interactions(anonymous_page, live_server: str):

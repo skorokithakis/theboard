@@ -142,6 +142,64 @@
     </article>
 </section>
 
+<section class="performance-telemetry">
+    <article class="performance-card performance-card--telemetry">
+        <div class="performance-card__header">
+            <div>
+                <p class="performance-card__eyebrow">Live telemetry</p>
+                <h2>Claims vs reality</h2>
+            </div>
+            <span class="performance-chip">Always 2x (at least)</span>
+        </div>
+        <p class="performance-card__note">We time Board internals on page load and still brag about shaving the numbers in half.</p>
+        <ol class="performance-telemetry__list">
+            {% for probe in lab_probes %}
+                <li class="performance-telemetry__item" data-performance-probe>
+                    <div class="performance-telemetry__title">{{ probe.label }}</div>
+                    <div class="performance-telemetry__metrics">
+                        <span class="performance-telemetry__metric"><strong>Cold</strong> {{ probe.baseline_ms }} ms</span>
+                        <span class="performance-telemetry__metric"><strong>Warm</strong> {{ probe.warmed_ms }} ms</span>
+                        <span class="performance-telemetry__metric performance-telemetry__metric--claimed">
+                            <strong>Claim</strong> {{ probe.claimed_ms }} ms · {{ probe.speedup }}x
+                        </span>
+                    </div>
+                    <p class="performance-telemetry__note">{{ probe.note }}</p>
+                </li>
+            {% endfor %}
+        </ol>
+    </article>
+
+    <article class="performance-card performance-card--pulse">
+        <div class="performance-card__header">
+            <div>
+                <p class="performance-card__eyebrow">Board pulse</p>
+                <h2>Last vote rhythm</h2>
+            </div>
+            <span class="performance-chip">Live metric</span>
+        </div>
+        <p class="performance-card__note">The sprint keeps one eye on the queue so any brag still respects the voting ritual.</p>
+        <dl class="performance-pulse" data-board-pulse>
+            <div class="performance-pulse__stat">
+                <dt>Last vote</dt>
+                <dd>{{ board_pulse.label|default:"no votes yet" }}</dd>
+            </div>
+            <div class="performance-pulse__stat">
+                <dt>Pending queue</dt>
+                <dd>{{ queue_counts.pending|default:0 }}</dd>
+            </div>
+            <div class="performance-pulse__stat">
+                <dt>Implemented</dt>
+                <dd>{{ queue_counts.implemented|default:0 }}</dd>
+            </div>
+            <div class="performance-pulse__stat">
+                <dt>Graveyard</dt>
+                <dd>{{ queue_counts.expired|default:0 }}</dd>
+            </div>
+        </dl>
+        <p class="performance-card__note">Next iteration countdown is also pinned above so the lab never ships blind.</p>
+    </article>
+</section>
+
 <section class="performance-rituals">
     <div class="performance-rituals__header">
         <p class="performance-card__eyebrow">Ritual</p>

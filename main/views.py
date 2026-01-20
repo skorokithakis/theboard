@@ -31,7 +31,14 @@ from .fortune import get_daily_fortune
 from .navigation import build_nav_sections, build_sitemap_destinations
 from .models import Feature, QuoteSuggestion, User as BoardUser, Vote, WebFiveInvestment
 from .terrarium import build_terrarium_state, get_last_vote_snapshot
-from . import avatars, generation, lore, scoreboard as scoreboard_service, turnstile
+from . import (
+    avatars,
+    generation,
+    lore,
+    performance,
+    scoreboard as scoreboard_service,
+    turnstile,
+)
 from .utils import get_next_iteration_at
 
 User = get_user_model()
@@ -972,6 +979,7 @@ def arcade_performance(request: HttpRequest) -> HttpResponse:
     """Performance sprint playground with bragging rights."""
 
     Feature.expire_stale()
+    board_pulse = get_last_vote_snapshot()
     lab_subjects = list(
         Feature.objects.pending()
         .with_vote_totals()
@@ -1086,6 +1094,8 @@ def arcade_performance(request: HttpRequest) -> HttpResponse:
             "ritual_steps": ritual_steps,
             "micro_benchmarks": micro_benchmarks,
             "lab_events": lab_events,
+            "lab_probes": performance.probe_payload(),
+            "board_pulse": board_pulse,
             "next_iteration_at": get_next_iteration_at(),
         },
     )

@@ -1601,9 +1601,16 @@ class PerformanceSprintViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["sprint_claims"])
         self.assertIn(feature, response.context["lab_subjects"])
+        self.assertTrue(response.context["lab_probes"])
+        probe_sample = response.context["lab_probes"][0]
+        self.assertIn("baseline_ms", probe_sample)
+        self.assertIn("claimed_ms", probe_sample)
+        self.assertTrue(response.context["board_pulse"]["label"])
         self.assertContains(response, "Performance sprint for no reason")
         self.assertContains(response, "Brag about nanoseconds saved")
         self.assertContains(response, "Brag wall")
+        self.assertContains(response, "Live telemetry")
+        self.assertContains(response, "Last vote rhythm")
         self.assertContains(response, feature.title)
 
 

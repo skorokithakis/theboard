@@ -67,4 +67,3 @@ def _probe_operations() -> Iterable[LabProbe]:
 def probe_payload() -> list[dict[str, object]]:
     """Return serialized probe results for the performance sprint lab."""
     return [asdict(probe) for probe in _probe_operations()]
-

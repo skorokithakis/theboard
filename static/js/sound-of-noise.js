@@ -10,6 +10,17 @@
   var graveyardPrimed = false;
   var metronomeInterval = null;
   var metronomeToggle = null;
+  var metronomeMenu = null;
+  var metronomeStatus = null;
+  var metronomeTempoInput = null;
+  var metronomeTempoValue = null;
+  var metronomePatternButtons = {};
+  var metronomeCurrentPattern = null;
+  var metronomeStep = 0;
+  var boardStepsInput = null;
+  var boardPulsesInput = null;
+  var metronomeStopButton = null;
+  var METRONOME_LIBRARY = buildMetronomeLibrary();
   var reduceMotion = prefersReducedMotion();
   var zeroDecibelMode = false;
 
@@ -274,30 +285,369 @@
     metronomeToggle.className = "records-metronome";
     metronomeToggle.setAttribute(
       "aria-label",
-      "Toggle the hidden Records metronome"
+      "Open the Patterned Metronome menu"
     );
+    metronomeToggle.setAttribute("aria-expanded", "false");
+    metronomeToggle.setAttribute("aria-controls", "records-metronome-menu");
     metronomeToggle.title = "Records metronome";
     metronomeToggle.textContent = "⏱";
 
     toggle.insertAdjacentElement("afterend", metronomeToggle);
-    metronomeToggle.addEventListener("click", toggleMetronome);
+    metronomeMenu = buildMetronomeMenu(section);
+    setActivePattern(METRONOME_LIBRARY[0], { announce: false });
+    updateTempoDisplay();
+    metronomeToggle.addEventListener("click", function (event) {
+      event.preventDefault();
+      toggleMetronomeMenu();
+    });
     metronomeToggle.addEventListener("keydown", function (event) {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
-        toggleMetronome();
+        toggleMetronomeMenu();
+      }
+    });
+    document.addEventListener(
+      "click",
+      function (event) {
+        if (
+          !metronomeMenu ||
+          !metronomeMenu.classList.contains("records-metronome-menu--open")
+        ) {
+          return;
+        }
+        if (
+          !metronomeMenu.contains(event.target) &&
+          event.target !== metronomeToggle &&
+          !metronomeToggle.contains(event.target)
+        ) {
+          closeMetronomeMenu();
+        }
+      },
+      true
+    );
+    document.addEventListener("keyup", function (event) {
+      if (event.key === "Escape") {
+        closeMetronomeMenu();
       }
     });
   }
 
-  function toggleMetronome() {
+  function buildMetronomeMenu(section) {
+    var menu = document.createElement("div");
+    menu.id = "records-metronome-menu";
+    menu.className = "records-metronome-menu";
+    menu.setAttribute("role", "dialog");
+    menu.setAttribute("aria-label", "Patterned Metronome");
+    section.appendChild(menu);
+    metronomePatternButtons = {};
+
+    var header = document.createElement("div");
+    header.className = "records-metronome__header";
+
+    var headerCopy = document.createElement("div");
+    var eyebrow = document.createElement("p");
+    eyebrow.className = "records-metronome__eyebrow";
+    eyebrow.textContent = "Records Lab";
+    var title = document.createElement("h3");
+    title.className = "records-metronome__title";
+    title.textContent = "Patterned Metronome";
+    metronomeStatus = document.createElement("p");
+    metronomeStatus.className = "records-metronome__status";
+    metronomeStatus.textContent = "Idle. Select a rhythm or go Board Mode.";
+    headerCopy.appendChild(eyebrow);
+    headerCopy.appendChild(title);
+    headerCopy.appendChild(metronomeStatus);
+
+    var close = document.createElement("button");
+    close.type = "button";
+    close.className = "records-metronome__close";
+    close.setAttribute("aria-label", "Close metronome menu");
+    close.innerHTML = "&times;";
+    close.addEventListener("click", closeMetronomeMenu);
+
+    header.appendChild(headerCopy);
+    header.appendChild(close);
+    menu.appendChild(header);
+
+    var controls = document.createElement("div");
+    controls.className = "records-metronome__controls";
+
+    var tempoWrap = document.createElement("label");
+    tempoWrap.className = "metronome-tempo";
+    tempoWrap.textContent = "Tempo";
+    metronomeTempoInput = document.createElement("input");
+    metronomeTempoInput.type = "range";
+    metronomeTempoInput.min = "60";
+    metronomeTempoInput.max = "168";
+    metronomeTempoInput.step = "1";
+    metronomeTempoInput.value = "96";
+    metronomeTempoInput.setAttribute("aria-label", "Metronome tempo");
+    metronomeTempoInput.addEventListener("input", updateTempoDisplay);
+    metronomeTempoInput.addEventListener("change", restartMetronome);
+    metronomeTempoValue = document.createElement("span");
+    metronomeTempoValue.className = "metronome-tempo__value";
+    metronomeTempoValue.textContent = "96 BPM";
+    tempoWrap.appendChild(metronomeTempoInput);
+    tempoWrap.appendChild(metronomeTempoValue);
+
+    metronomeStopButton = document.createElement("button");
+    metronomeStopButton.type = "button";
+    metronomeStopButton.className = "metronome-stop";
+    metronomeStopButton.textContent = "Stop";
+    metronomeStopButton.disabled = true;
+    metronomeStopButton.addEventListener("click", stopMetronome);
+
+    controls.appendChild(tempoWrap);
+    controls.appendChild(metronomeStopButton);
+    menu.appendChild(controls);
+
+    createPatternGroup(
+      menu,
+      "Anchor pulses",
+      "Recenter with a clean downbeat before shifting into stranger terrain.",
+      "anchor"
+    );
+    createPatternGroup(
+      menu,
+      "Odd time signatures",
+      "Lean into asymmetry with long-short phrases and hiccuping tails.",
+      "odd"
+    );
+    createPatternGroup(
+      menu,
+      "Polyrhythms",
+      "Cross-rhythms that let different pulses argue over the same bar.",
+      "polyrhythm"
+    );
+    createPatternGroup(
+      menu,
+      "Euclidean grids",
+      "Evenly-spaced pulses mapped onto curious subdivisions.",
+      "euclidean"
+    );
+
+    var board = document.createElement("div");
+    board.className = "metronome-board";
+    var boardTitle = document.createElement("div");
+    boardTitle.className = "metronome-board__title";
+    boardTitle.innerHTML =
+      '<span class="metronome-board__pill">Board Mode</span><span>Conjure your own rhythmic creature.</span>';
+
+    var boardInputs = document.createElement("div");
+    boardInputs.className = "metronome-board__inputs";
+
+    var stepsLabel = document.createElement("label");
+    stepsLabel.className = "metronome-board__field";
+    stepsLabel.textContent = "Steps";
+    boardStepsInput = document.createElement("input");
+    boardStepsInput.type = "number";
+    boardStepsInput.min = "3";
+    boardStepsInput.max = "16";
+    boardStepsInput.value = "9";
+    boardStepsInput.setAttribute("aria-label", "Board Mode steps");
+    stepsLabel.appendChild(boardStepsInput);
+
+    var pulsesLabel = document.createElement("label");
+    pulsesLabel.className = "metronome-board__field";
+    pulsesLabel.textContent = "Pulses";
+    boardPulsesInput = document.createElement("input");
+    boardPulsesInput.type = "number";
+    boardPulsesInput.min = "1";
+    boardPulsesInput.max = "16";
+    boardPulsesInput.value = "5";
+    boardPulsesInput.setAttribute("aria-label", "Board Mode pulses");
+    pulsesLabel.appendChild(boardPulsesInput);
+
+    var boardButton = document.createElement("button");
+    boardButton.type = "button";
+    boardButton.className = "metronome-board__launch";
+    boardButton.textContent = "Launch Board Mode";
+    boardButton.addEventListener("click", startBoardModePattern);
+
+    boardInputs.appendChild(stepsLabel);
+    boardInputs.appendChild(pulsesLabel);
+    boardInputs.appendChild(boardButton);
+
+    board.appendChild(boardTitle);
+    board.appendChild(boardInputs);
+    menu.appendChild(board);
+
+    return menu;
+  }
+
+  function toggleMetronomeMenu() {
+    if (!metronomeMenu) {
+      return;
+    }
+    var isOpen = metronomeMenu.classList.toggle("records-metronome-menu--open");
+    metronomeToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    if (isOpen && metronomeStatus) {
+      metronomeStatus.textContent = "Pick a pulse or tap Board Mode to improvise.";
+    }
+  }
+
+  function closeMetronomeMenu() {
+    if (!metronomeMenu) {
+      return;
+    }
+    metronomeMenu.classList.remove("records-metronome-menu--open");
+    if (metronomeToggle) {
+      metronomeToggle.setAttribute("aria-expanded", "false");
+    }
+  }
+
+  function createPatternGroup(menu, heading, copy, category) {
+    var patterns = METRONOME_LIBRARY.filter(function (pattern) {
+      return pattern.category === category;
+    });
+    if (!patterns.length) {
+      return;
+    }
+    var group = document.createElement("div");
+    group.className = "metronome-group";
+    var h = document.createElement("div");
+    h.className = "metronome-group__heading";
+    var title = document.createElement("h4");
+    title.textContent = heading;
+    var note = document.createElement("p");
+    note.textContent = copy;
+    h.appendChild(title);
+    h.appendChild(note);
+    group.appendChild(h);
+
+    var list = document.createElement("div");
+    list.className = "metronome-patterns";
+
+    patterns.forEach(function (pattern) {
+      var button = createPatternButton(pattern);
+      list.appendChild(button);
+    });
+
+    group.appendChild(list);
+    menu.appendChild(group);
+  }
+
+  function createPatternButton(pattern) {
+    var button = document.createElement("button");
+    button.type = "button";
+    button.className = "metronome-pattern";
+    button.dataset.patternId = pattern.id;
+
+    var eyebrow = document.createElement("span");
+    eyebrow.className = "metronome-pattern__eyebrow";
+    eyebrow.textContent = pattern.pulseLabel || "pulse";
+
+    var title = document.createElement("span");
+    title.className = "metronome-pattern__title";
+    title.textContent = pattern.label;
+
+    var note = document.createElement("span");
+    note.className = "metronome-pattern__note";
+    note.textContent = pattern.description;
+
+    button.appendChild(eyebrow);
+    button.appendChild(title);
+    button.appendChild(note);
+
+    button.addEventListener("click", function () {
+      startMetronomeWithPattern(pattern);
+    });
+
+    metronomePatternButtons[pattern.id] = button;
+    return button;
+  }
+
+  function startMetronomeWithPattern(pattern) {
+    setActivePattern(pattern);
+    closeMetronomeMenu();
     if (zeroDecibelMode) {
       stopMetronome();
       return;
     }
-    if (!metronomeToggle) {
+    var ctx = ensureAudioContext();
+    if (!ctx) {
+      updateStatusText("Audio unavailable in this browser.");
       return;
     }
-    if (metronomeInterval) {
+    resumeContext(ctx)
+      .then(function (runningCtx) {
+        startMetronome(runningCtx);
+      })
+      .catch(stopMetronome);
+  }
+
+  function setActivePattern(pattern, options) {
+    if (!pattern) {
+      return;
+    }
+    var clone = {
+      id: pattern.id,
+      label: pattern.label,
+      description: pattern.description,
+      sequence: (pattern.sequence || []).slice(),
+      stepsPerBeat: pattern.stepsPerBeat || 1,
+      tempo: pattern.tempo || 96,
+      pulseLabel: pattern.pulseLabel || "pulse",
+      category: pattern.category || "custom",
+    };
+    metronomeCurrentPattern = clone;
+    if (metronomeTempoInput && !(options && options.preserveTempo)) {
+      metronomeTempoInput.value = String(clone.tempo || 96);
+    }
+    updateTempoDisplay();
+    Object.keys(metronomePatternButtons).forEach(function (key) {
+      var button = metronomePatternButtons[key];
+      if (button) {
+        button.classList.toggle("metronome-pattern--active", key === clone.id);
+      }
+    });
+    if (options && options.announce === false) {
+      return;
+    }
+    updateStatusText("Armed " + clone.label + ". Tap play to hear it.");
+  }
+
+  function startMetronome(ctx) {
+    if (!metronomeCurrentPattern) {
+      setActivePattern(METRONOME_LIBRARY[0]);
+    }
+    if (!metronomeCurrentPattern) {
+      return;
+    }
+    if (!metronomeCurrentPattern.sequence.length) {
+      updateStatusText("Pattern has no steps. Try a different groove.");
+      return;
+    }
+    clearInterval(metronomeInterval);
+    metronomeStep = 0;
+    var interval = getPatternInterval(metronomeCurrentPattern);
+    metronomeInterval = window.setInterval(function () {
+      playMetronomeTick(ctx, metronomeCurrentPattern.sequence[metronomeStep]);
+      metronomeStep = (metronomeStep + 1) % metronomeCurrentPattern.sequence.length;
+    }, interval);
+    if (metronomeToggle) {
+      metronomeToggle.classList.add("records-metronome--on");
+    }
+    if (metronomeStopButton) {
+      metronomeStopButton.disabled = false;
+    }
+    updateStatusText(
+      "Playing " +
+        metronomeCurrentPattern.label +
+        " at " +
+        getTempo() +
+        " BPM (" +
+        metronomeCurrentPattern.pulseLabel +
+        ")."
+    );
+  }
+
+  function restartMetronome() {
+    updateTempoDisplay();
+    if (!metronomeInterval) {
+      return;
+    }
+    if (zeroDecibelMode) {
       stopMetronome();
       return;
     }
@@ -312,40 +662,328 @@
       .catch(stopMetronome);
   }
 
-  function startMetronome(ctx) {
-    var beat = 0;
-    metronomeToggle.classList.add("records-metronome--on");
-    metronomeInterval = window.setInterval(function () {
-      var accent = beat % 4 === 0;
-      playMetronomeTick(ctx, accent);
-      beat += 1;
-    }, 640);
-  }
-
   function stopMetronome() {
     clearInterval(metronomeInterval);
     metronomeInterval = null;
     if (metronomeToggle) {
       metronomeToggle.classList.remove("records-metronome--on");
     }
+    if (metronomeStopButton) {
+      metronomeStopButton.disabled = true;
+    }
+    updateStatusText("Metronome muted. Ready for the next groove.");
   }
 
   function playMetronomeTick(ctx, accent) {
+    if (!ctx || zeroDecibelMode) {
+      return;
+    }
+    var intensity = typeof accent === "number" ? accent : accent ? 2 : 1;
     var now = ctx.currentTime;
     var osc = ctx.createOscillator();
     var gain = ctx.createGain();
 
     osc.type = "triangle";
-    osc.frequency.setValueAtTime(accent ? 1240 : 880, now);
+    var baseFrequency = 820;
+    if (intensity >= 3) {
+      baseFrequency = 1260;
+    } else if (intensity === 2) {
+      baseFrequency = 1020;
+    } else if (intensity <= 0) {
+      baseFrequency = 680;
+    }
+    osc.frequency.setValueAtTime(baseFrequency, now);
+
+    var peak = 0.12;
+    if (intensity >= 3) {
+      peak = 0.24;
+    } else if (intensity === 2) {
+      peak = 0.18;
+    } else if (intensity <= 0) {
+      peak = 0.05;
+    }
 
     gain.gain.setValueAtTime(0.0001, now);
-    gain.gain.exponentialRampToValueAtTime(accent ? 0.25 : 0.14, now + 0.005);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+    gain.gain.exponentialRampToValueAtTime(peak, now + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
 
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(now);
-    osc.stop(now + 0.2);
+    osc.stop(now + 0.21);
+  }
+
+  function updateStatusText(copy) {
+    if (!metronomeStatus || !copy) {
+      return;
+    }
+    metronomeStatus.textContent = copy;
+  }
+
+  function getPatternInterval(pattern) {
+    var tempo = getTempo();
+    var division = Math.max(1, pattern.stepsPerBeat || 1);
+    return 60000 / (tempo * division);
+  }
+
+  function getTempo() {
+    var tempo = metronomeTempoInput ? parseInt(metronomeTempoInput.value, 10) : 96;
+    if (!tempo || Number.isNaN(tempo)) {
+      tempo = 96;
+    }
+    return clamp(tempo, 50, 200);
+  }
+
+  function updateTempoDisplay() {
+    if (!metronomeTempoInput || !metronomeTempoValue) {
+      return;
+    }
+    var tempo = getTempo();
+    metronomeTempoInput.value = String(tempo);
+    metronomeTempoInput.setAttribute("aria-valuenow", tempo);
+    var pulseLabel = metronomeCurrentPattern
+      ? metronomeCurrentPattern.pulseLabel || "pulse"
+      : "pulse";
+    metronomeTempoValue.textContent = tempo + " BPM · " + pulseLabel;
+  }
+
+  function startBoardModePattern() {
+    var pattern = buildBoardModePattern();
+    setActivePattern(pattern, { preserveTempo: true });
+    startMetronomeWithPattern(pattern);
+  }
+
+  function buildBoardModePattern() {
+    var steps = clamp(parseInt(boardStepsInput.value, 10) || 9, 3, 16);
+    var pulses = clamp(parseInt(boardPulsesInput.value, 10) || Math.ceil(steps / 2), 1, 16);
+    pulses = Math.min(pulses, steps);
+    boardStepsInput.value = String(steps);
+    boardPulsesInput.value = String(pulses);
+
+    var base = buildEuclideanSequence(pulses, steps);
+    var overlay = buildPolyrhythmSequence([Math.max(2, Math.min(steps, pulses + 1)), Math.max(2, Math.round(steps / 2))]);
+    var sequence = [];
+    for (var i = 0; i < steps; i++) {
+      var level = base.sequence[i % base.sequence.length];
+      var overlayLevel = overlay.sequence[i % overlay.sequence.length] >= 2 ? 1 : 0;
+      level = Math.min(3, level + overlayLevel);
+      sequence.push(level);
+    }
+    sequence[0] = 3;
+
+    return {
+      id: "board-mode-" + Date.now(),
+      label: "Board Mode " + pulses + "/" + steps,
+      description: "Chaotic custom groove forged by The Board.",
+      sequence: sequence,
+      stepsPerBeat: Math.max(1, Math.round(steps / 4)),
+      tempo: getTempo(),
+      pulseLabel: steps + "-step board grid",
+      category: "board",
+    };
+  }
+
+  function buildMetronomeLibrary() {
+    var patterns = [];
+    patterns.push(
+      createPattern({
+        id: "anchor-44",
+        label: "Anchor 4/4",
+        description: "Bright downbeat with three soft follow-ups.",
+        category: "anchor",
+        sequence: [3, 1, 1, 2],
+        tempo: 96,
+        stepsPerBeat: 1,
+        pulseLabel: "quarter pulse",
+      })
+    );
+    patterns.push(
+      createPattern({
+        id: "anchor-half",
+        label: "Half-time Drift",
+        description: "Two-point lighthouse click for slow focus.",
+        category: "anchor",
+        sequence: [3, 1],
+        tempo: 82,
+        stepsPerBeat: 1,
+        pulseLabel: "half pulse",
+      })
+    );
+    patterns.push(
+      createPattern({
+        id: "odd-54",
+        label: "5/4 Lantern Walk",
+        description: "3+2 lilt with a warm lift on four.",
+        category: "odd",
+        sequence: [3, 1, 2, 1, 2],
+        tempo: 104,
+        stepsPerBeat: 1,
+        pulseLabel: "quarter pulse",
+      })
+    );
+    patterns.push(
+      createPattern({
+        id: "odd-78",
+        label: "7/8 Staircase",
+        description: "2-2-3 skip with a kick at the landing.",
+        category: "odd",
+        sequence: [3, 1, 2, 1, 2, 1, 2],
+        tempo: 122,
+        stepsPerBeat: 2,
+        pulseLabel: "eighth pulse",
+      })
+    );
+    patterns.push(
+      createPattern({
+        id: "odd-98",
+        label: "9/8 Carousel",
+        description: "Rolling 3-3-3 ride with softer middles.",
+        category: "odd",
+        sequence: [3, 1, 2, 2, 1, 2, 2, 1, 2],
+        tempo: 116,
+        stepsPerBeat: 3,
+        pulseLabel: "eighth pulse",
+      })
+    );
+
+    var polyThreeTwo = buildPolyrhythmSequence([3, 2]);
+    patterns.push(
+      createPattern({
+        id: "poly-32",
+        label: "3:2 Crosswalk",
+        description: "Classic cross-rhythm with a strong one.",
+        category: "polyrhythm",
+        sequence: polyThreeTwo.sequence,
+        stepsPerBeat: polyThreeTwo.stepsPerBeat,
+        tempo: 100,
+        pulseLabel: polyThreeTwo.pulseLabel,
+      })
+    );
+
+    var polyFiveFour = buildPolyrhythmSequence([5, 4]);
+    patterns.push(
+      createPattern({
+        id: "poly-54",
+        label: "5:4 Cascade",
+        description: "Tangled waterfall that still resolves on one.",
+        category: "polyrhythm",
+        sequence: polyFiveFour.sequence,
+        stepsPerBeat: polyFiveFour.stepsPerBeat,
+        tempo: 92,
+        pulseLabel: polyFiveFour.pulseLabel,
+      })
+    );
+
+    var euclidFiveEight = buildEuclideanSequence(5, 8);
+    patterns.push(
+      createPattern({
+        id: "euclid-5-8",
+        label: "Euclid 5 over 8",
+        description: "Evenly-spaced blips stretched across eight slots.",
+        category: "euclidean",
+        sequence: euclidFiveEight.sequence,
+        stepsPerBeat: euclidFiveEight.stepsPerBeat,
+        tempo: 110,
+        pulseLabel: euclidFiveEight.pulseLabel,
+      })
+    );
+
+    var euclidSevenTwelve = buildEuclideanSequence(7, 12);
+    patterns.push(
+      createPattern({
+        id: "euclid-7-12",
+        label: "Euclid 7 over 12",
+        description: "Dense club grid with seven hits on a dozen steps.",
+        category: "euclidean",
+        sequence: euclidSevenTwelve.sequence,
+        stepsPerBeat: euclidSevenTwelve.stepsPerBeat,
+        tempo: 118,
+        pulseLabel: euclidSevenTwelve.pulseLabel,
+      })
+    );
+
+    return patterns;
+  }
+
+  function createPattern(config) {
+    return {
+      id: config.id,
+      label: config.label,
+      description: config.description,
+      category: config.category,
+      sequence: (config.sequence || []).slice(),
+      tempo: config.tempo || 96,
+      stepsPerBeat: config.stepsPerBeat || 1,
+      pulseLabel: config.pulseLabel || "pulse",
+    };
+  }
+
+  function buildPolyrhythmSequence(pulses) {
+    var usablePulses = (pulses || []).map(function (count) {
+      return clamp(Math.round(count), 2, 12);
+    });
+    if (!usablePulses.length) {
+      usablePulses = [3, 2];
+    }
+    var grid = usablePulses.reduce(function (product, count) {
+      return lcm(product, count);
+    }, 1);
+    grid = Math.max(grid, 2);
+    var sequence = new Array(grid).fill(0);
+    usablePulses.forEach(function (count, index) {
+      var stride = grid / count;
+      for (var i = 0; i < grid; i += stride) {
+        var level = index === 0 ? 3 : 2;
+        sequence[i] = Math.max(sequence[i], level);
+      }
+    });
+    if (sequence.length) {
+      sequence[0] = 3;
+    }
+    return {
+      sequence: sequence,
+      stepsPerBeat: Math.max(1, grid / Math.max.apply(null, usablePulses)),
+      pulseLabel: grid + "-step cycle",
+    };
+  }
+
+  function buildEuclideanSequence(pulses, steps) {
+    var stepCount = clamp(Math.round(steps), 3, 16);
+    var pulseCount = clamp(Math.round(pulses), 1, stepCount);
+    var sequence = [];
+    var bucket = 0;
+    for (var i = 0; i < stepCount; i++) {
+      bucket += pulseCount;
+      if (bucket >= stepCount) {
+        bucket -= stepCount;
+        sequence.push(2);
+      } else {
+        sequence.push(0);
+      }
+    }
+    if (sequence.length) {
+      sequence[0] = 3;
+    }
+    return {
+      sequence: sequence,
+      stepsPerBeat: Math.max(1, Math.round(stepCount / 4)),
+      pulseLabel: pulseCount + " in " + stepCount,
+    };
+  }
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function gcd(a, b) {
+    if (!b) {
+      return a;
+    }
+    return gcd(b, a % b);
+  }
+
+  function lcm(a, b) {
+    return Math.abs(a * b) / gcd(a, b || 1);
   }
 
   function handleVisibilityChange() {

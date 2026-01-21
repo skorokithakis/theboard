@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Playbook inversion sprint | {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<section class="page-header inversion-hero" data-soundtrack="arcade">
+    <p class="page-eyebrow">Arcade ritual</p>
+    <h1 class="page-title">Playbook inversion sprint</h1>
+    <p class="page-lead">
+        {{ inversion_plan.description }} We swap priorities, question defaults, and surface the ideas that only appear once the rules are flipped.
+    </p>
+    <div class="inversion-hero__meta">
+        <div class="inversion-hero__chip">Ritual: {{ inversion_plan.ritual }}</div>
+        {% if next_iteration_at %}
+            <div class="inversion-hero__chip">Next iteration {{ next_iteration_at|date:'F j, H:i \\U\\T\\C' }}</div>
+        {% endif %}
+        <div class="inversion-hero__chip">Queue health stays guarded by CAPTCHA for every vote.</div>
+    </div>
+    <div class="inversion-hero__actions">
+        <a class="button" href="{% url 'main:feature-board' %}">Return to the feature lab</a>
+        <button class="button-outline" type="button" data-inversion-redraft>Flip another rule</button>
+    </div>
+</section>
+
+<section class="inversion-grid">
+    <div class="inversion-column">
+        <div class="inversion-column__header">
+            <p class="page-eyebrow">Priority swaps</p>
+            <h2>Start with the underdog while the loud idea waits</h2>
+            <p class="inversion-note">
+                The Board usually ships the loudest idea first. For this sprint, we pair the expected winner with a quiet inversion target and narrate why the flip matters.
+            </p>
+        </div>
+        <div class="inversion-pairs">
+            {% for pair in inversion_pairs %}
+                {% with leader=pair.leader underdog=pair.underdog %}
+                    <article class="inversion-card">
+                        <div class="inversion-card__panel">
+                            <p class="inversion-card__eyebrow">Default target</p>
+                            {% if leader %}
+                                <h3 class="inversion-card__title">{{ leader.title }}</h3>
+                                <p class="inversion-card__meta">Votes: {{ leader.vote_total }} · {{ leader.creator.display_name|default:leader.creator.username }}</p>
+                            {% else %}
+                                <p class="inversion-card__title">Awaiting the next loud contender</p>
+                                <p class="inversion-card__meta">The queue will seed itself if it ever empties.</p>
+                            {% endif %}
+                            <p class="inversion-card__summary">Cue the pause, name the obvious move, then set it aside for one beat.</p>
+                        </div>
+                        <div class="inversion-card__panel inversion-card__panel--inverse">
+                            <p class="inversion-card__eyebrow">Inverted focus</p>
+                            {% if underdog %}
+                                <h3 class="inversion-card__title">{{ underdog.title }}</h3>
+                                <p class="inversion-card__meta">Votes: {{ underdog.vote_total }} · {{ underdog.creator.display_name|default:underdog.creator.username }}</p>
+                                <p class="inversion-card__summary">Ship the least predictable slice first, then rebuild the rest around it.</p>
+                            {% else %}
+                                <h3 class="inversion-card__title">Watch for the next whisper</h3>
+                                <p class="inversion-card__meta">We will grab the quietest request once it lands.</p>
+                                <p class="inversion-card__summary">Use this gap to script the story that will make the inversion undeniable.</p>
+                            {% endif %}
+                        </div>
+                    </article>
+                {% endwith %}
+            {% endfor %}
+        </div>
+    </div>
+    <div class="inversion-column">
+        <div class="inversion-column__header">
+            <p class="page-eyebrow">Rule flips</p>
+            <h2>Question the defaults before shipping</h2>
+            <p class="inversion-note">Pick a rule, flip it, and commit to the new constraint for one sprint. CAPTCHA and voting guardrails stay intact.</p>
+        </div>
+        <div class="rule-flips">
+            {% for flip in rule_flips %}
+                <article class="rule-flip">
+                    <header class="rule-flip__header">
+                        <p class="rule-flip__eyebrow">{{ flip.title }}</p>
+                        <h3 class="rule-flip__title">{{ flip.prompt }}</h3>
+                    </header>
+                    <div class="rule-flip__body">
+                        <p class="rule-flip__baseline"><strong>Default:</strong> {{ flip.default }}</p>
+                        <p class="rule-flip__inversion"><strong>Inversion:</strong> {{ flip.inverted }}</p>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="inversion-generator">
+    <div class="inversion-generator__card">
+        <p class="page-eyebrow">Inversion seed</p>
+        <h2 class="inversion-generator__title">Draft the feature that only exists when the rules are inverted</h2>
+        <p class="inversion-generator__lead" data-inversion-seed>
+            Flip a predictable rule, start with an underdog, and name the release note before the build exists.
+        </p>
+        <p class="inversion-generator__recap" data-inversion-recap>
+            Default: Ship the loudest idea first. Inversion: Ship the whisper and prove why it matters.
+        </p>
+        <div class="inversion-generator__actions">
+            <button class="button" type="button" data-inversion-redraft>Draft another inversion</button>
+            <a class="button-outline" href="{% url 'main:arcade' %}">Back to the arcade</a>
+        </div>
+    </div>
+    <div class="inversion-generator__notes">
+        <p class="page-eyebrow">How to run the sprint</p>
+        <ol class="inversion-list">
+            <li>Pause and scan the queue; name the most predictable move.</li>
+            <li>Flip that move and give the quietest idea one full cycle in the spotlight.</li>
+            <li>Write the release note first, then build just enough to make it true.</li>
+        </ol>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+    {{ block.super }}
+    {{ playbook_inversion_payload|json_script:"playbook-inversion-data" }}
+    <script src="{% static 'js/playbook-inversion.js' %}" defer></script>
+{% endblock %}

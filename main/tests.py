@@ -1614,6 +1614,63 @@ class PerformanceSprintViewTests(TestCase):
         self.assertContains(response, feature.title)
 
 
+class InversionSprintViewTests(TestCase):
+    def setUp(self) -> None:
+        self.user = factories.UserFactory()
+        self.other = factories.UserFactory()
+
+    def _static_override(self):
+        storage_settings = {
+            **settings.STORAGES,
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            },
+        }
+        return override_settings(
+            STATICFILES_STORAGE="django.contrib.staticfiles.storage.StaticFilesStorage",
+            STORAGES=storage_settings,
+        )
+
+    def test_inversion_sprint_pairs_leaders_and_underdogs(self) -> None:
+        loud = factories.FeatureFactory(
+            title="Loud request",
+            description="Predictable winner",
+            creator=self.user,
+        )
+        quiet = factories.FeatureFactory(
+            title="Quiet whisper",
+            description="Underdog feature",
+            creator=self.other,
+        )
+        factories.VoteFactory(user=self.user, feature=loud)
+        factories.VoteFactory(user=self.other, feature=loud)
+
+        with self._static_override():
+            response = self.client.get(reverse("main:arcade-inversion"))
+
+        self.assertEqual(response.status_code, 200)
+        pairs = response.context["inversion_pairs"]
+        payload = response.context["playbook_inversion_payload"]
+        self.assertTrue(pairs)
+        self.assertTrue(payload["pairs"])
+        self.assertTrue(payload["rules"])
+        self.assertTrue(payload["word_bank"])
+        self.assertTrue(
+            any(
+                pair.get("leader") and pair["leader"].title == loud.title
+                for pair in pairs
+            )
+        )
+        self.assertTrue(
+            any(
+                pair.get("underdog") and pair["underdog"].title == quiet.title
+                for pair in pairs
+            )
+        )
+        self.assertContains(response, "Playbook inversion sprint")
+        self.assertContains(response, "flip the predictable rule")
+
+
 class GlitchArtViewTests(TestCase):
     def setUp(self) -> None:
         self.user = factories.UserFactory()

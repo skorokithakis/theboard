@@ -77,6 +77,12 @@ NAV_SECTIONS: list[dict[str, Any]] = [
                 "kind": "fortress",
             },
             {
+                "name": "arcade-inversion",
+                "label": "Playbook Inversion Sprint",
+                "summary": "Flip predictable rules and spotlight underdog ideas from the queue.",
+                "kind": "tower",
+            },
+            {
                 "name": "arcade-quotes",
                 "label": "Quote Oracle",
                 "summary": "Fortunes and quote submissions.",

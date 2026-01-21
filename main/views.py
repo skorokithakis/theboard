@@ -783,6 +783,126 @@ def arcade(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
+def arcade_inversion(request: HttpRequest) -> HttpResponse:
+    """Playbook inversion sprint that flips predictable rules."""
+
+    Feature.expire_stale()
+    generation.ensure_generation_seed()
+
+    inversion_plan = next(
+        (
+            plan
+            for plan in generation.GENERATION_PLANS
+            if plan.title == "Playbook inversion sprint"
+        ),
+        generation.GENERATION_PLANS[0],
+    )
+    leaders = list(
+        Feature.objects.pending()
+        .with_vote_totals()
+        .select_related("creator")
+        .order_by("-total_votes", "-created_at")[:4]
+    )
+    underdog_candidates = (
+        Feature.objects.pending()
+        .with_vote_totals()
+        .select_related("creator")
+        .order_by("total_votes", "created_at")
+    )
+    underdogs: list[Feature] = []
+    for candidate in underdog_candidates:
+        underdogs.append(candidate)
+        if len(underdogs) >= 4:
+            break
+
+    max_pairs = max(len(leaders), len(underdogs)) or 1
+    inversion_pairs: list[dict[str, Feature | None]] = []
+    for index in range(max_pairs):
+        inversion_pairs.append(
+            {
+                "leader": leaders[index] if index < len(leaders) else None,
+                "underdog": underdogs[index] if index < len(underdogs) else None,
+            }
+        )
+
+    rule_flips = [
+        {
+            "title": "Queue order",
+            "default": "Ship the loudest, top-of-queue idea when the clock strikes midnight and noon.",
+            "inverted": "Start with the quietest underdog, narrate why it matters, then let the loud idea wait a cycle.",
+            "prompt": "Flip the queue and find one overlooked edge to ship first.",
+        },
+        {
+            "title": "Interface symmetry",
+            "default": "Keep the feature lab balanced and predictable so votes flow without friction.",
+            "inverted": "Let the layout lean, stagger cards, and foreground oddities to see which detail refuses to be ignored.",
+            "prompt": "Question the default chrome before committing to it.",
+        },
+        {
+            "title": "Release notes",
+            "default": "Write calm, product-style notes once the feature lands.",
+            "inverted": "Draft the release note first as a field report, then shape the feature until the note rings true.",
+            "prompt": "Lead with the strangest possible changelog headline.",
+        },
+        {
+            "title": "Safety rails",
+            "default": "Guard every vote with a CAPTCHA and predictable states.",
+            "inverted": "Keep the CAPTCHA but celebrate the proof as a design artifact—use the solved token as a neon stamp on the idea.",
+            "prompt": "Ask what the guardrail could highlight instead of hide.",
+        },
+        {
+            "title": "Pace",
+            "default": "Move twice a day with small, reliable increments.",
+            "inverted": "Hold the cadence for one cycle to stage a dramatic flip that reframes the backlog story.",
+            "prompt": "Change tempo only to make the inversion obvious.",
+        },
+    ]
+
+    def _feature_snapshot(feature: Feature | None) -> dict[str, object] | None:
+        if not feature:
+            return None
+        creator = feature.creator.display_name or feature.creator.username or "creator"
+        return {
+            "title": feature.title,
+            "votes": feature.vote_total,
+            "creator": creator,
+        }
+
+    payload_rules = [
+        {
+            "title": flip["title"],
+            "default": flip["default"],
+            "inverted": flip["inverted"],
+        }
+        for flip in rule_flips
+    ]
+    payload_pairs = [
+        {
+            "leader": _feature_snapshot(pair["leader"]),
+            "underdog": _feature_snapshot(pair["underdog"]),
+        }
+        for pair in inversion_pairs
+    ]
+
+    return render(
+        request,
+        "arcade/playbook_inversion.html",
+        {
+            "inversion_plan": inversion_plan,
+            "rule_flips": rule_flips,
+            "inversion_pairs": inversion_pairs,
+            "playbook_inversion_payload": {
+                "rules": payload_rules,
+                "pairs": payload_pairs,
+                "word_bank": generation.playbook_word_bank(),
+                "ritual": inversion_plan.ritual,
+            },
+            "next_iteration_at": get_next_iteration_at(),
+        },
+    )
+
+
+@require_GET
 def arcade_gremlin(request: HttpRequest) -> HttpResponse:
     """Chaos gremlin ritual with dice-powered headline generator."""
 

@@ -233,6 +233,14 @@ def _build_playbook_word_bank(
     return word_bank
 
 
+def playbook_word_bank(
+    plans: Sequence[GenerationPlan] | None = None,
+) -> tuple[str, ...]:
+    """Expose the cleaned playbook word bank for UI surfaces."""
+
+    return tuple(_build_playbook_word_bank(plans or GENERATION_PLANS))
+
+
 def draft_blackout_seed(
     plans: Sequence[GenerationPlan] | None = None,
     reveal_ratio: float = 0.22,

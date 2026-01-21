@@ -5942,3 +5942,280 @@ body.has-shimeji-confetti .site-main {
     font-size: 1.1rem;
   }
 }
+
+/* Playbook inversion sprint */
+.inversion-hero {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(circle at 18% 12%, rgba(16, 139, 151, 0.15), transparent 38%),
+    radial-gradient(circle at 82% 8%, rgba(255, 140, 92, 0.18), transparent 40%),
+    linear-gradient(135deg, #0c1f2b 0%, #0c2f3e 40%, #0f4c62 100%);
+  color: #e6f4ff;
+  border-radius: 22px;
+  padding: 2.4rem 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 26px 66px rgba(0, 0, 0, 0.24);
+}
+
+.inversion-hero::after {
+  content: "";
+  position: absolute;
+  inset: -12% 20% auto 28%;
+  height: 320px;
+  background: radial-gradient(ellipse at center, rgba(255, 199, 128, 0.36), transparent 50%);
+  filter: blur(42px);
+  opacity: 0.7;
+}
+
+.inversion-hero .page-eyebrow,
+.inversion-hero .page-title,
+.inversion-hero .page-lead {
+  color: #e6f4ff;
+}
+
+.inversion-hero__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 1rem 0 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+
+.inversion-hero__chip {
+  padding: 0.5rem 0.75rem;
+  border-radius: 12px;
+  background: rgba(9, 36, 49, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e6f4ff;
+  backdrop-filter: blur(6px);
+}
+
+.inversion-hero__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.inversion-grid {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 1.25rem;
+  margin: 2rem 0 3rem;
+}
+
+.inversion-column {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 1.25rem 1.35rem;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.05);
+}
+
+.inversion-column__header h2 {
+  margin: 0 0 0.25rem;
+}
+
+.inversion-note {
+  margin: 0.15rem 0 1rem;
+  color: var(--muted);
+}
+
+.inversion-pairs {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.inversion-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(16, 139, 151, 0.08), rgba(255, 140, 92, 0.08));
+  border: 1px solid rgba(9, 68, 79, 0.18);
+  border-radius: 16px;
+  padding: 0.9rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.75rem;
+}
+
+.inversion-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  border: 1px dashed rgba(9, 68, 79, 0.16);
+  pointer-events: none;
+}
+
+.inversion-card__panel {
+  background: rgba(255, 255, 255, 0.78);
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(9, 68, 79, 0.12);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+.inversion-card__panel--inverse {
+  background: linear-gradient(135deg, rgba(255, 140, 92, 0.1), rgba(16, 139, 151, 0.1));
+  border-color: rgba(255, 140, 92, 0.26);
+}
+
+.inversion-card__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin: 0 0 0.35rem;
+}
+
+.inversion-card__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+}
+
+.inversion-card__meta {
+  margin: 0 0 0.35rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.inversion-card__summary {
+  margin: 0;
+  color: #0f2b33;
+}
+
+.rule-flips {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+.rule-flip {
+  padding: 0.85rem 0.95rem;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: linear-gradient(135deg, #f7fbf9, #eef5fa);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.04);
+}
+
+.rule-flip__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.rule-flip__eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.rule-flip__title {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.rule-flip__body {
+  margin-top: 0.35rem;
+  display: grid;
+  gap: 0.4rem;
+  color: var(--text);
+}
+
+.rule-flip__baseline {
+  margin: 0;
+  color: var(--muted);
+}
+
+.rule-flip__inversion {
+  margin: 0;
+  color: #0f2b33;
+  font-weight: 600;
+}
+
+.inversion-generator {
+  display: grid;
+  grid-template-columns: minmax(320px, 2fr) minmax(260px, 1fr);
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 3rem;
+}
+
+.inversion-generator__card {
+  background: linear-gradient(135deg, rgba(16, 139, 151, 0.12), rgba(255, 140, 92, 0.12)), var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: 16px;
+  padding: 1.2rem 1.3rem;
+  box-shadow: 0 22px 40px rgba(0, 0, 0, 0.06);
+}
+
+.inversion-generator__title {
+  margin: 0 0 0.35rem;
+}
+
+.inversion-generator__lead {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.05rem;
+}
+
+.inversion-generator__recap {
+  margin: 0.45rem 0 0.75rem;
+  color: var(--muted);
+}
+
+.inversion-generator__actions {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.inversion-generator__notes {
+  background: var(--card);
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.04);
+}
+
+.inversion-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.35rem;
+  counter-reset: inversion-steps;
+}
+
+.inversion-list li {
+  list-style: none;
+  position: relative;
+  padding-left: 1.8rem;
+  color: var(--text);
+}
+
+.inversion-list li::before {
+  counter-increment: inversion-steps;
+  content: counter(inversion-steps, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 700;
+  color: var(--accent-strong);
+}
+
+@media (max-width: 1024px) {
+  .inversion-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inversion-generator {
+    grid-template-columns: 1fr;
+  }
+}

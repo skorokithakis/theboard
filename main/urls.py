@@ -30,6 +30,11 @@ urlpatterns = [
         views.arcade_performance,
         name="arcade-performance",
     ),
+    path(
+        "arcade/inversion/",
+        views.arcade_inversion,
+        name="arcade-inversion",
+    ),
     path("arcade/glitch/", views.arcade_glitch, name="arcade-glitch"),
     path("arcade/ishmael/", views.arcade_ishmael, name="arcade-ishmael"),
     path("arcade/terrarium/", views.arcade_terrarium, name="arcade-terrarium"),

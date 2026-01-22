@@ -47,6 +47,11 @@ LORE_FRAGMENTS: tuple[LoreFragment, ...] = (
         summary="Secret tunnels hum at 60 bpm when the queue is healthy and drop to half-tempo when voting stalls.",
         detail="Glow-worms perched on the rails shove urgent requests upward whenever the cadence goes flat.",
     ),
+    LoreFragment(
+        title="Pixel torch archivists",
+        summary="Mascots keep a chain of pixel torches lit between backlog shelves whenever the board goes quiet.",
+        detail="Each torch records whispered myths as blinking runes; when a vote lands the archivist solders it into the tunnel map so nobody edits the weirdness out.",
+    ),
 )
 
 TUNNEL_PULSES: tuple[TunnelPulse, ...] = (
@@ -64,6 +69,11 @@ TUNNEL_PULSES: tuple[TunnelPulse, ...] = (
         name="Archive drain",
         status="Releasing lore runoff nightly",
         hint="The runoff feeds the moss garden around the retrospective vault.",
+    ),
+    TunnelPulse(
+        name="Ledger sump hatch",
+        status="Listening for unedited myths",
+        hint="Opens when someone posts a single-take myth and seals the moment the torch hears a backspace.",
     ),
 )
 
@@ -83,6 +93,14 @@ MYTH_SEEDS: tuple[MythSeed, ...] = (
     MythSeed(
         title="Neon river paddle",
         text="A neon river runs under the terrarium; when a vote fails the paddle kicks and sprays color through the floor vents.",
+    ),
+    MythSeed(
+        title="Pixel torch ledger loop",
+        text="If you light the torch and speak in one breath, the scoreboard projects your myth as neon graffiti until the next vote scrubs it clean.",
+    ),
+    MythSeed(
+        title="Mascot relay",
+        text="Three mascots sprint the tunnels with a copper spoon; if they drop it, the vote tally echoes as distant laughter until someone posts a stranger myth.",
     ),
 )
 

@@ -66,6 +66,183 @@ body.zero-decibel-mode::before {
   filter: grayscale(1) blur(7px);
 }
 
+body.jumpscare-active {
+  overflow: hidden;
+}
+
+.jumpscare {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 42%, rgba(0, 0, 0, 0.6), rgba(5, 7, 10, 0.94)),
+    linear-gradient(160deg, rgba(255, 140, 92, 0.16), rgba(16, 139, 151, 0.12));
+  color: #f5f8ff;
+  opacity: 0;
+  transform: scale(1.04);
+  transition: opacity 140ms ease, transform 220ms cubic-bezier(0.21, 0.62, 0.35, 1);
+  pointer-events: none;
+}
+
+.jumpscare.is-visible {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.jumpscare.is-dismissed {
+  opacity: 0;
+  transform: scale(0.98);
+  transition-duration: 180ms;
+}
+
+.jumpscare__static {
+  position: absolute;
+  inset: -6%;
+  background: repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.07),
+      rgba(255, 255, 255, 0.07) 1px,
+      transparent 1px,
+      transparent 8px
+    ),
+    radial-gradient(circle at 18% 14%, rgba(255, 140, 92, 0.28), transparent 30%),
+    radial-gradient(circle at 82% 12%, rgba(16, 139, 151, 0.24), transparent 28%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.04),
+      rgba(255, 255, 255, 0.04) 2px,
+      rgba(9, 10, 16, 0.85) 3px,
+      rgba(9, 10, 16, 0.85) 6px
+    );
+  mix-blend-mode: screen;
+  opacity: 0.48;
+  animation: jumpscare-static 88ms steps(6) infinite;
+  filter: contrast(1.4) saturate(1.4);
+}
+
+.jumpscare__inner {
+  position: relative;
+  z-index: 1;
+  padding: 2.6rem 2.2rem;
+  border-radius: 28px;
+  border: 2px solid rgba(255, 140, 92, 0.35);
+  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.08), transparent 40%),
+    linear-gradient(120deg, rgba(255, 140, 92, 0.12), rgba(16, 139, 151, 0.12)),
+    rgba(8, 10, 16, 0.92);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), 0 0 0 10px rgba(3, 5, 12, 0.56);
+  text-align: center;
+  max-width: 560px;
+  width: min(92vw, 640px);
+}
+
+.jumpscare__eyebrow {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.85rem;
+  color: rgba(245, 248, 255, 0.7);
+}
+
+.jumpscare__headline {
+  margin: 0 0 0.5rem;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  letter-spacing: 0.06em;
+  text-shadow: 0 10px 40px rgba(0, 0, 0, 0.48);
+}
+
+.jumpscare__message {
+  margin: 0 auto 1.2rem;
+  max-width: 520px;
+  color: rgba(245, 248, 255, 0.88);
+}
+
+.jumpscare__actions {
+  display: flex;
+  justify-content: center;
+}
+
+.jumpscare__dismiss {
+  background: #f5f8ff;
+  color: #0a0c14;
+  border-color: rgba(245, 248, 255, 0.6);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+.jumpscare.is-rattling .jumpscare__inner {
+  animation: jumpscare-rattle 520ms cubic-bezier(0.22, 0.63, 0.3, 1) infinite;
+}
+
+.jumpscare::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 12px solid rgba(255, 140, 92, 0.3);
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 140ms ease, transform 220ms cubic-bezier(0.22, 0.63, 0.3, 1);
+  pointer-events: none;
+}
+
+.jumpscare.is-visible::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@keyframes jumpscare-static {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  25% {
+    transform: translate3d(-6px, 2px, 0);
+  }
+  50% {
+    transform: translate3d(4px, -4px, 0);
+  }
+  75% {
+    transform: translate3d(-2px, 6px, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes jumpscare-rattle {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  20% {
+    transform: translate3d(12px, -12px, 0) rotate(1deg);
+  }
+  40% {
+    transform: translate3d(-10px, 10px, 0) rotate(-1deg);
+  }
+  60% {
+    transform: translate3d(8px, -6px, 0) rotate(0.5deg);
+  }
+  80% {
+    transform: translate3d(-6px, 6px, 0) rotate(-0.5deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jumpscare,
+  .jumpscare.is-visible,
+  .jumpscare::after {
+    transition-duration: 0.001ms;
+    animation: none;
+  }
+
+  .jumpscare__static,
+  .jumpscare.is-rattling .jumpscare__inner {
+    animation: none;
+  }
+}
+
 a:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;

@@ -908,6 +908,135 @@ img {
   transform: translateY(-1px);
 }
 
+.metronome-drone {
+  border-radius: 12px;
+  padding: 0.75rem;
+  border: 1px solid rgba(9, 68, 79, 0.12);
+  background: linear-gradient(145deg, rgba(255, 243, 230, 0.94), rgba(14, 139, 151, 0.08));
+  box-shadow: 0 12px 28px rgba(3, 22, 32, 0.18);
+}
+
+.metronome-drone__heading {
+  display: grid;
+  gap: 0.18rem;
+  margin-bottom: 0.35rem;
+}
+
+.metronome-drone__eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #6d3100;
+}
+
+.metronome-drone__title {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--accent-strong);
+}
+
+.metronome-drone__status {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.metronome-drone__controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.5rem;
+  align-items: end;
+  margin-bottom: 0.45rem;
+}
+
+.metronome-drone__field {
+  display: grid;
+  gap: 0.2rem;
+  font-weight: 700;
+  color: var(--accent-strong);
+}
+
+.metronome-drone__select {
+  padding: 0.45rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid rgba(9, 68, 79, 0.18);
+  background: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+  color: var(--accent-strong);
+}
+
+.metronome-drone__stop {
+  border: 1px solid rgba(9, 68, 79, 0.14);
+  background: linear-gradient(135deg, #0e8b97, #0db0c0);
+  color: white;
+  border-radius: 10px;
+  padding: 0.55rem 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(3, 22, 32, 0.22);
+}
+
+.metronome-drone__stop:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.metronome-drone__presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.45rem;
+}
+
+.drone-button {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  border-radius: 12px;
+  border: 1px solid rgba(14, 139, 151, 0.3);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(14, 139, 151, 0.12));
+  color: var(--accent-strong);
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(3, 22, 32, 0.15);
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.drone-button:hover,
+.drone-button:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(255, 140, 92, 0.5);
+  box-shadow: 0 14px 32px rgba(3, 22, 32, 0.22);
+  outline: none;
+}
+
+.drone-button--active {
+  border-color: rgba(255, 140, 92, 0.9);
+  background: linear-gradient(140deg, rgba(255, 210, 175, 0.55), rgba(14, 139, 151, 0.14));
+  box-shadow: 0 0 0 2px rgba(255, 140, 92, 0.35), 0 14px 30px rgba(3, 22, 32, 0.26);
+}
+
+.drone-button__eyebrow {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0e8b97;
+  font-weight: 800;
+}
+
+.drone-button__title {
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.drone-button__note {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 .site-nav__section-toggle {
   display: inline-flex;
   align-items: center;

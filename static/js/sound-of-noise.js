@@ -21,6 +21,15 @@
   var boardPulsesInput = null;
   var metronomeStopButton = null;
   var METRONOME_LIBRARY = buildMetronomeLibrary();
+  var DRONE_LIBRARY = buildDroneLibrary();
+  var droneMasterGain = null;
+  var droneNodes = [];
+  var dronePresetButtons = {};
+  var droneActivePreset = null;
+  var droneRootSelect = null;
+  var droneStopButton = null;
+  var droneStatus = null;
+  var droneNoiseBuffers = {};
   var reduceMotion = prefersReducedMotion();
   var zeroDecibelMode = false;
 
@@ -401,6 +410,8 @@
     controls.appendChild(metronomeStopButton);
     menu.appendChild(controls);
 
+    buildDroneBox(menu);
+
     createPatternGroup(
       menu,
       "Anchor pulses",
@@ -494,6 +505,260 @@
     if (metronomeToggle) {
       metronomeToggle.setAttribute("aria-expanded", "false");
     }
+  }
+
+  function buildDroneBox(menu) {
+    dronePresetButtons = {};
+    var box = document.createElement("div");
+    box.className = "metronome-drone";
+
+    var heading = document.createElement("div");
+    heading.className = "metronome-drone__heading";
+    var eyebrow = document.createElement("p");
+    eyebrow.className = "metronome-drone__eyebrow";
+    eyebrow.textContent = "Drone Box";
+    var title = document.createElement("h4");
+    title.className = "metronome-drone__title";
+    title.textContent = "Layer a tanpura, shruti box, or noise bed.";
+    droneStatus = document.createElement("p");
+    droneStatus.className = "metronome-drone__status";
+    droneStatus.textContent = "Drone idle. Pick a preset to sit under the groove.";
+    heading.appendChild(eyebrow);
+    heading.appendChild(title);
+    heading.appendChild(droneStatus);
+
+    var controls = document.createElement("div");
+    controls.className = "metronome-drone__controls";
+    var rootLabel = document.createElement("label");
+    rootLabel.className = "metronome-drone__field";
+    rootLabel.textContent = "Tonic";
+    droneRootSelect = document.createElement("select");
+    droneRootSelect.className = "metronome-drone__select";
+    droneRootSelect.setAttribute("aria-label", "Drone tonic");
+    [
+      { label: "C#3 (Sa)", value: "138.59" },
+      { label: "D3 (Sa)", value: "146.83" },
+      { label: "G3 (Sa)", value: "196.00" },
+    ].forEach(function (optionConfig) {
+      var option = document.createElement("option");
+      option.value = optionConfig.value;
+      option.textContent = optionConfig.label;
+      droneRootSelect.appendChild(option);
+    });
+    droneRootSelect.value = "146.83";
+    rootLabel.appendChild(droneRootSelect);
+
+    droneStopButton = document.createElement("button");
+    droneStopButton.type = "button";
+    droneStopButton.className = "metronome-drone__stop";
+    droneStopButton.textContent = "Mute drone";
+    droneStopButton.disabled = true;
+    droneStopButton.addEventListener("click", stopDrone);
+
+    controls.appendChild(rootLabel);
+    controls.appendChild(droneStopButton);
+
+    var presets = document.createElement("div");
+    presets.className = "metronome-drone__presets";
+    DRONE_LIBRARY.forEach(function (preset) {
+      var button = createDroneButton(preset);
+      presets.appendChild(button);
+    });
+
+    box.appendChild(heading);
+    box.appendChild(controls);
+    box.appendChild(presets);
+    menu.appendChild(box);
+  }
+
+  function createDroneButton(preset) {
+    var button = document.createElement("button");
+    button.type = "button";
+    button.className = "drone-button";
+    button.dataset.droneId = preset.id;
+
+    var eyebrow = document.createElement("span");
+    eyebrow.className = "drone-button__eyebrow";
+    eyebrow.textContent = preset.tag || preset.type;
+
+    var title = document.createElement("span");
+    title.className = "drone-button__title";
+    title.textContent = preset.label;
+
+    var note = document.createElement("span");
+    note.className = "drone-button__note";
+    note.textContent = preset.description;
+
+    button.appendChild(eyebrow);
+    button.appendChild(title);
+    button.appendChild(note);
+
+    button.addEventListener("click", function () {
+      startDroneWithPreset(preset);
+    });
+
+    dronePresetButtons[preset.id] = button;
+    return button;
+  }
+
+  function startDroneWithPreset(preset) {
+    if (!preset) {
+      return;
+    }
+    if (zeroDecibelMode) {
+      updateDroneStatus("Zero-decibel mode is on, so drones are muted.");
+      stopDrone();
+      return;
+    }
+    var ctx = ensureAudioContext();
+    if (!ctx) {
+      updateDroneStatus("Audio unavailable in this browser.");
+      return;
+    }
+    stopDrone({ silent: true });
+    resumeContext(ctx)
+      .then(function (runningCtx) {
+        setActiveDronePreset(preset);
+        playDronePreset(runningCtx, preset);
+      })
+      .catch(function () {
+        stopDrone();
+      });
+  }
+
+  function setActiveDronePreset(preset) {
+    droneActivePreset = preset || null;
+    Object.keys(dronePresetButtons).forEach(function (key) {
+      var button = dronePresetButtons[key];
+      if (button) {
+        button.classList.toggle("drone-button--active", !!preset && key === preset.id);
+      }
+    });
+    if (droneStopButton) {
+      droneStopButton.disabled = !preset;
+    }
+    if (!preset) {
+      return;
+    }
+    var tonic = getDroneRootLabel();
+    updateDroneStatus("Armed " + preset.label + " at " + tonic + ".");
+    updateStatusText("Drone box loaded " + preset.label + ".");
+  }
+
+  function stopDrone(options) {
+    var nodesToStop = droneNodes.slice();
+    var master = droneMasterGain;
+    droneNodes = [];
+    droneMasterGain = null;
+    if (master && master.context) {
+      var now = master.context.currentTime;
+      try {
+        master.gain.cancelScheduledValues(now);
+        master.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+      } catch (err) {}
+      window.setTimeout(function () {
+        stopDroneNodes(nodesToStop.concat([master]));
+      }, 180);
+    } else {
+      stopDroneNodes(nodesToStop.concat(master ? [master] : []));
+    }
+    setActiveDronePreset(null);
+    if (!(options && options.silent)) {
+      updateDroneStatus("Drone muted. Ready when you are.");
+    }
+  }
+
+  function stopDroneNodes(nodes) {
+    var list = nodes || [];
+    list.forEach(function (node) {
+      try {
+        if (typeof node.stop === "function") {
+          node.stop();
+        }
+      } catch (err) {}
+      try {
+        if (typeof node.disconnect === "function") {
+          node.disconnect();
+        }
+      } catch (err) {}
+    });
+  }
+
+  function playDronePreset(ctx, preset) {
+    if (!ctx || !preset) {
+      return;
+    }
+    var now = ctx.currentTime;
+    var root = getDroneRootFrequency();
+
+    droneMasterGain = ctx.createGain();
+    droneMasterGain.gain.setValueAtTime(0.0001, now);
+    droneMasterGain.gain.exponentialRampToValueAtTime(0.18, now + 0.6);
+    droneMasterGain.connect(ctx.destination);
+    droneNodes.push(droneMasterGain);
+
+    if (preset.type === "noise") {
+      var noise = createNoiseSource(ctx, preset.color);
+      var noiseGain = ctx.createGain();
+      var target = preset.color === "brown" ? 0.22 : 0.18;
+      noiseGain.gain.setValueAtTime(0.0001, now);
+      noiseGain.gain.exponentialRampToValueAtTime(target, now + 0.4);
+      noise.connect(noiseGain);
+      noiseGain.connect(droneMasterGain);
+      noise.start(now);
+      droneNodes.push(noise, noiseGain);
+      updateDroneStatus(preset.label + " humming under the mix.");
+      return;
+    }
+
+    var filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(preset.type === "texture" ? 2400 : 1800, now);
+    filter.Q.value = 0.8;
+    filter.connect(droneMasterGain);
+    droneNodes.push(filter);
+
+    var intervals = preset.intervals && preset.intervals.length ? preset.intervals : [0, 7, 0, 12];
+    intervals.forEach(function (semitones, index) {
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      var lfo = ctx.createOscillator();
+      var lfoGain = ctx.createGain();
+      var freq = root * Math.pow(2, semitones / 12);
+      var voiceGain = preset.type === "texture" ? 0.06 : 0.05;
+      voiceGain = Math.max(0.02, voiceGain - index * 0.007);
+
+      osc.type = preset.type === "tanpura" ? "sawtooth" : "triangle";
+      osc.frequency.setValueAtTime(freq, now);
+
+      lfo.frequency.setValueAtTime(0.18 + index * 0.05, now);
+      lfoGain.gain.setValueAtTime(freq * 0.0016, now);
+      lfo.connect(lfoGain);
+      lfoGain.connect(osc.frequency);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(voiceGain, now + 0.55);
+
+      osc.connect(gain);
+      gain.connect(filter);
+      lfo.start(now);
+      osc.start(now);
+
+      droneNodes.push(osc, gain, lfo, lfoGain);
+    });
+
+    if (preset.type === "texture") {
+      var shimmer = createNoiseSource(ctx, "pink");
+      var shimmerGain = ctx.createGain();
+      shimmerGain.gain.setValueAtTime(0.0001, now);
+      shimmerGain.gain.exponentialRampToValueAtTime(0.06, now + 0.5);
+      shimmer.connect(shimmerGain);
+      shimmerGain.connect(droneMasterGain);
+      shimmer.start(now);
+      droneNodes.push(shimmer, shimmerGain);
+    }
+
+    updateDroneStatus(preset.label + " drone sustaining at " + getDroneRootLabel() + ".");
   }
 
   function createPatternGroup(menu, heading, copy, category) {
@@ -747,6 +1012,88 @@
     metronomeTempoValue.textContent = tempo + " BPM · " + pulseLabel;
   }
 
+  function getDroneRootFrequency() {
+    var fallback = 146.83;
+    if (!droneRootSelect) {
+      return fallback;
+    }
+    var value = parseFloat(droneRootSelect.value);
+    if (!value || Number.isNaN(value)) {
+      return fallback;
+    }
+    return value;
+  }
+
+  function getDroneRootLabel() {
+    if (!droneRootSelect) {
+      return "mid Sa";
+    }
+    var option = droneRootSelect.options[droneRootSelect.selectedIndex];
+    return option ? option.textContent : "mid Sa";
+  }
+
+  function updateDroneStatus(copy) {
+    if (!droneStatus || !copy) {
+      return;
+    }
+    droneStatus.textContent = copy;
+  }
+
+  function createNoiseSource(ctx, color) {
+    var buffer = createNoiseBuffer(ctx, color);
+    var source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    return source;
+  }
+
+  function createNoiseBuffer(ctx, color) {
+    var key = color || "white";
+    var cached = droneNoiseBuffers[key];
+    if (cached && cached.sampleRate === ctx.sampleRate) {
+      return cached.buffer;
+    }
+    var length = ctx.sampleRate * 2;
+    var buffer = ctx.createBuffer(1, length, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+
+    if (key === "pink") {
+      var b0 = 0;
+      var b1 = 0;
+      var b2 = 0;
+      var b3 = 0;
+      var b4 = 0;
+      var b5 = 0;
+      var b6 = 0;
+      for (var i = 0; i < length; i++) {
+        var white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        b3 = 0.86650 * b3 + white * 0.3104856;
+        b4 = 0.55000 * b4 + white * 0.5329522;
+        b5 = -0.7616 * b5 - white * 0.0168980;
+        data[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+        data[i] *= 0.11;
+        b6 = white * 0.115926;
+      }
+    } else if (key === "brown") {
+      var lastOut = 0;
+      for (var j = 0; j < length; j++) {
+        var whiteNoise = Math.random() * 2 - 1;
+        data[j] = (lastOut + 0.02 * whiteNoise) / 1.02;
+        lastOut = data[j];
+        data[j] *= 3.5;
+      }
+    } else {
+      for (var k = 0; k < length; k++) {
+        data[k] = Math.random() * 2 - 1;
+      }
+    }
+    droneNoiseBuffers[key] = { buffer: buffer, sampleRate: ctx.sampleRate };
+    return buffer;
+  }
+
   function startBoardModePattern() {
     var pattern = buildBoardModePattern();
     setActivePattern(pattern, { preserveTempo: true });
@@ -781,6 +1128,67 @@
       pulseLabel: steps + "-step board grid",
       category: "board",
     };
+  }
+
+  function buildDroneLibrary() {
+    return [
+      {
+        id: "tanpura-yaman",
+        label: "Tanpura · Yaman",
+        description: "Sa–Pa–Sa–Ni glow tuned for late-night Yaman.",
+        type: "tanpura",
+        intervals: [0, 7, 12, 11],
+        tag: "Tanpura",
+      },
+      {
+        id: "tanpura-bhairav",
+        label: "Shruti · Bhairav",
+        description: "Sa with komal Re and Pa to anchor dawn Bhairav.",
+        type: "shruti",
+        intervals: [0, 1, 7, 12],
+        tag: "Shruti",
+      },
+      {
+        id: "tanpura-kafi",
+        label: "Shruti · Kafi",
+        description: "Sa–Pa bed with soft Ga and Ni for all-day calm.",
+        type: "shruti",
+        intervals: [0, 3, 7, 10],
+        tag: "Shruti",
+      },
+      {
+        id: "noise-white",
+        label: "White noise wash",
+        description: "Flat wideband hiss for masking and focus.",
+        type: "noise",
+        color: "white",
+        tag: "Noise",
+      },
+      {
+        id: "noise-pink",
+        label: "Pink noise bloom",
+        description: "Natural-feeling noise with warmer low mids.",
+        type: "noise",
+        color: "pink",
+        tag: "Noise",
+      },
+      {
+        id: "noise-brown",
+        label: "Brown noise rumble",
+        description: "Deep rolling floor when you want to disappear.",
+        type: "noise",
+        color: "brown",
+        tag: "Noise",
+      },
+      {
+        id: "board-aurora",
+        label: "The Board · Aurora Gate",
+        description: "Stacked fifths with a mist bed chosen by The Board.",
+        type: "texture",
+        intervals: [0, 7, 14, 19],
+        tag: "Board",
+      },
+    ];
   }
 
   function buildMetronomeLibrary() {
@@ -995,6 +1403,7 @@
       if (metronomeInterval) {
         stopMetronome();
       }
+      stopDrone({ silent: true });
       return;
     }
     if (graveyardPrimed && !zeroDecibelMode) {
@@ -1011,6 +1420,7 @@
       if (graveyardAudio) {
         graveyardAudio.pause();
       }
+      stopDrone({ silent: true });
     } else {
       bindGlobalSqueaks();
       installRecordsMetronome();

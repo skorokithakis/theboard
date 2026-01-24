@@ -664,6 +664,81 @@ def zero_decibel_mode(request: HttpRequest) -> HttpResponse:
 
 
 @require_GET
+def infinite_decibel_mode(request: HttpRequest) -> HttpResponse:
+    """A willfully loud counterspell to the zero-decibel pact."""
+
+    Feature.expire_stale()
+    generation.ensure_generation_seed()
+
+    board_pulse = get_last_vote_snapshot()
+    feature_preview = list(
+        Feature.objects.pending()
+        .with_vote_totals()
+        .order_by("-total_votes", "-created_at")[:2]
+    )
+    chaos_principles = [
+        {
+            "title": "Max gain, zero chill",
+            "detail": "Every cue screams for attention—clashing gradients, clipped alarms, and hostile contrast.",
+        },
+        {
+            "title": "Accessibility sabotage",
+            "detail": "Zero-decibel is forcibly disarmed, ARIA is heckled, and everything blinks until someone intervenes.",
+        },
+        {
+            "title": "Feedback before content",
+            "detail": "Sound design claims center stage; the feature copy survives only as collateral.",
+        },
+        {
+            "title": "Malicious compliance",
+            "detail": "CAPTCHA still runs for every vote; it just shows up draped in sirens and warning labels.",
+        },
+    ]
+    alarm_lexicon = [
+        {
+            "label": "Feedback cascade",
+            "tone": 840,
+            "phrase": "square wave dive bomb",
+            "note": "Fires when infinite-decibel arms itself and yanks zero-decibel offline.",
+        },
+        {
+            "label": "Overclocked vote ping",
+            "tone": 660,
+            "phrase": "saw buzz + metallic click",
+            "note": "Signals that a vote landed—captcha intact, decorum shattered.",
+        },
+        {
+            "label": "Anti-captcha klaxon",
+            "tone": 420,
+            "phrase": "rising siren squeal",
+            "note": "Announces that verification is mandatory even while the UI melts.",
+        },
+        {
+            "label": "Riot heartbeat",
+            "tone": 190,
+            "phrase": "thudding sub hit",
+            "note": "Keeps time between blasts so the chaos feels intentional.",
+        },
+    ]
+
+    return render(
+        request,
+        "infinite_decibel.html",
+        {
+            "board_pulse": board_pulse,
+            "next_iteration_at": get_next_iteration_at(),
+            "feature_preview": feature_preview,
+            "chaos_principles": chaos_principles,
+            "alarm_lexicon": alarm_lexicon,
+            "hazard_ritual": (
+                "Spin every dial to 11, press and hold the airhorn button, and trace the loudest waveform you can find "
+                "until the interface caves in."
+            ),
+        },
+    )
+
+
+@require_GET
 def board_self(request: HttpRequest) -> HttpResponse:
     """A reflective page dedicated to The Board itself."""
 

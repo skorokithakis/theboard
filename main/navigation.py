@@ -139,6 +139,12 @@ NAV_SECTIONS: list[dict[str, Any]] = [
                 "kind": "fortress",
             },
             {
+                "name": "infinite-decibel",
+                "label": "Infinite-Decibel Mode",
+                "summary": "Anti-accessibility riot that overclocks every cue and sabotages silence.",
+                "kind": "fortress",
+            },
+            {
                 "name": "about",
                 "label": "About",
                 "summary": "How the reset works and what's changed.",

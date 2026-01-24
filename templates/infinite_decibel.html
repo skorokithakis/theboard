@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Infinite-Decibel Anti-Accessibility Mode | {{ request.site.name }}{% endblock %}
+
+{% block content %}
+<div class="sr-only infinite-decibel__live" aria-live="polite" data-infinite-decibel-live></div>
+<section class="page-header infinite-decibel__hero">
+    <p class="page-eyebrow">Counter-ritual · Feedback Cult</p>
+    <h1 class="page-title">Infinite-decibel anti-accessibility mode</h1>
+    <p class="page-lead">
+        The exact opposite of the zero-decibel pact: a malicious loudness preset that banishes calm, mocks contrast,
+        and drapes every action in hostile audio. CAPTCHA still blocks every vote; it just shows up wearing sirens.
+    </p>
+    <div class="infinite-decibel__actions">
+        <button class="button" type="button" data-infinite-decibel-toggle aria-pressed="false">
+            Detonate infinite decibel
+            <span class="infinite-decibel__pill" data-infinite-decibel-indicator>Idle</span>
+        </button>
+        <a class="button-outline" href="{% url 'main:zero-decibel' %}">Re-arm silence</a>
+        <a class="button-outline" href="{% url 'main:feature-board' %}">Back to voting</a>
+    </div>
+    <div class="infinite-decibel__chips">
+        <span class="infinite-decibel__chip">Last vote: {{ board_pulse.label }}</span>
+        <span class="infinite-decibel__chip">CAPTCHA stays mandatory</span>
+        {% if next_iteration_at %}
+            <span class="infinite-decibel__chip">Next implementation {{ next_iteration_at|date:"M j H:i \\U\\T\\C" }}</span>
+        {% endif %}
+    </div>
+    <p class="infinite-decibel__warning">
+        Ritual honored: {{ hazard_ritual }}
+    </p>
+</section>
+
+<section class="infinite-decibel__grid" aria-labelledby="infinite-decibel-status">
+    <article class="chaos-card chaos-card--status" data-infinite-decibel-status>
+        <p class="chaos-card__eyebrow">Mode status</p>
+        <h2 id="infinite-decibel-status" class="chaos-card__title" data-infinite-decibel-status-label>Mode idle · accessibility intact</h2>
+        <p class="chaos-card__meta" data-infinite-decibel-status-note>
+            Toggle the mode to drown the interface in alarms and forcibly disarm zero-decibel protections.
+        </p>
+    </article>
+
+    <article class="chaos-card">
+        <p class="chaos-card__eyebrow">Anti-principles</p>
+        <h2 class="chaos-card__title">How infinite-decibel misbehaves</h2>
+        <ul class="chaos-card__list">
+            {% for item in chaos_principles %}
+                <li>
+                    <strong>{{ item.title }}</strong>
+                    <p class="chaos-card__meta">{{ item.detail }}</p>
+                </li>
+            {% endfor %}
+        </ul>
+        <p class="chaos-card__meta">
+            This mode antagonizes accessibility on purpose; CAPTCHA enforcement survives the assault because voting integrity is non-negotiable.
+        </p>
+    </article>
+
+    <article class="chaos-card chaos-card--alarms">
+        <p class="chaos-card__eyebrow">Alarm lexicon</p>
+        <h2 class="chaos-card__title">Approved sources of noise</h2>
+        <div class="alarm-grid">
+            {% for alarm in alarm_lexicon %}
+                <button
+                    type="button"
+                    class="alarm-chip"
+                    data-infinite-decibel-blast
+                    data-alarm-label="{{ alarm.label }}"
+                    data-alarm-tone="{{ alarm.tone }}"
+                    data-alarm-phrase="{{ alarm.phrase }}">
+                    <span class="alarm-chip__label">{{ alarm.label }}</span>
+                    <span class="alarm-chip__pattern">{{ alarm.phrase }}</span>
+                    <span class="alarm-chip__note">{{ alarm.note }}</span>
+                </button>
+            {% endfor %}
+        </div>
+        <p class="chaos-card__meta">
+            Blasts need a human click to fire; once infinite-decibel is armed, every alarm gleefully ignores restraint.
+        </p>
+    </article>
+
+    <article class="chaos-card chaos-card--queue">
+        <p class="chaos-card__eyebrow">Collateral damage</p>
+        <h2 class="chaos-card__title">Who hears the blast</h2>
+        <ul class="infinite-decibel__features">
+            {% if feature_preview %}
+                {% for feature in feature_preview %}
+                    <li>
+                        <div class="infinite-decibel__feature-header">
+                            <strong>{{ feature.title }}</strong>
+                            <span class="infinite-decibel__chip">Votes: {{ feature.vote_total }}</span>
+                        </div>
+                        <p class="chaos-card__meta">{{ feature.description }}</p>
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li>
+                    <p class="chaos-card__meta">
+                        The queue is momentarily quiet. Infinite-decibel mode will happily manufacture noise until new votes arrive.
+                    </p>
+                </li>
+            {% endif %}
+        </ul>
+        <p class="chaos-card__meta">
+            Votes still require CAPTCHA, even here. The klaxon just shouts about it while the board keeps score.
+        </p>
+    </article>
+</section>
+{% endblock %}

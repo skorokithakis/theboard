@@ -29,6 +29,7 @@ PUBLIC_PATHS: Tuple[str, ...] = (
     "/about/",
     "/the-board/",
     "/lore/zero-decibel/",
+    "/lore/infinite-decibel/",
     "/lore/intermission/",
     "/arcade/",
     "/arcade/terrarium/",

@@ -13,6 +13,11 @@ urlpatterns = [
         views.zero_decibel_mode,
         name="zero-decibel",
     ),
+    path(
+        "lore/infinite-decibel/",
+        views.infinite_decibel_mode,
+        name="infinite-decibel",
+    ),
     path("lore/intermission/", views.lore_intermission, name="lore-drop"),
     path("features/", views.feature_board, name="feature-board"),
     path(

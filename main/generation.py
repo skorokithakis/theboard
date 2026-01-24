@@ -178,6 +178,13 @@ PARALLEL_BACKLOG: tuple[ParallelBacklogEntry, ...] = (
         origin="Silent Colony",
     ),
     ParallelBacklogEntry(
+        title="Policy: infinite-decibel anti-accessibility mode",
+        description=(
+            "Flips the quiet switch into a siren wall—louder-than-needed cues that overpower everything else."
+        ),
+        origin="Feedback Cult",
+    ),
+    ParallelBacklogEntry(
         title="Sentient tooltip penpals",
         description=(
             "Tooltips that travel between apps, leaving contextual notes based on what they learned elsewhere."

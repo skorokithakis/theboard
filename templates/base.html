@@ -83,6 +83,14 @@
                 <button
                     class="button-muted button-sm site-header__assistant-toggle"
                     type="button"
+                    data-infinite-decibel-toggle
+                    aria-pressed="false">
+                    Infinite-decibel
+                    <span class="infinite-decibel__pill" data-infinite-decibel-indicator>Idle</span>
+                </button>
+                <button
+                    class="button-muted button-sm site-header__assistant-toggle"
+                    type="button"
                     data-shimeji-master-toggle
                     aria-pressed="false">
                     Enable assistant
@@ -109,6 +117,7 @@
     </div>
     <main class="site-main container">
         <div class="sr-only zero-decibel__live" aria-live="polite" data-zero-decibel-live></div>
+        <div class="sr-only infinite-decibel__live" aria-live="polite" data-infinite-decibel-live></div>
         {% if messages %}
             <div class="flash-messages">
                 {% for message in messages %}
@@ -157,6 +166,7 @@
     <script src="{% static 'js/site-nav.js' %}" defer></script>
     <script src="{% static 'js/jumpscare.js' %}" defer></script>
     <script src="{% static 'js/zero-decibel.js' %}" defer></script>
+    <script src="{% static 'js/infinite-decibel.js' %}" defer></script>
     <script src="{% static 'js/sound-of-noise.js' %}" defer></script>
     <script src="{% static 'js/iteration-countdown.js' %}" defer></script>
     <script src="{% static 'js/emoji-menu.js' %}" defer></script>

@@ -378,3 +378,25 @@ def test_zero_decibel_mode_toggle(anonymous_page, live_server: str):
     toggle.click()
     expect(page.locator("body")).to_have_attribute("data-zero-decibel", "false")
     expect(indicator).to_contain_text(re.compile("off", re.IGNORECASE))
+
+
+def test_infinite_decibel_mode_toggle(anonymous_page, live_server: str):
+    page = anonymous_page
+    page.goto("/lore/infinite-decibel/", wait_until="networkidle")
+
+    toggle = page.locator("[data-infinite-decibel-toggle]").first
+    indicator = page.locator("[data-infinite-decibel-indicator]").first
+    status_note = page.locator("[data-infinite-decibel-status-note]")
+    expect(toggle).to_be_visible()
+    toggle.click()
+    expect(page.locator("body")).to_have_attribute("data-infinite-decibel", "true")
+    expect(indicator).to_contain_text(re.compile("armed", re.IGNORECASE))
+    expect(status_note).to_contain_text(re.compile("sabotage|alarms", re.IGNORECASE))
+
+    blast = page.locator("[data-infinite-decibel-blast]").first
+    blast.click()
+    expect(status_note).to_be_visible()
+
+    toggle.click()
+    expect(page.locator("body")).to_have_attribute("data-infinite-decibel", "false")
+    expect(indicator).to_contain_text(re.compile("idle", re.IGNORECASE))
